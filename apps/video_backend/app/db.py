@@ -5,7 +5,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Date, Text, ForeignKey, DateTime, Boolean
 from datetime import datetime
 
-DATABASE_URL = "sqlite:///./db.sqlite3"
+DATABASE_URL = "sqlite:///./../../video.db"
 engine = create_engine(DATABASE_URL, echo=False)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

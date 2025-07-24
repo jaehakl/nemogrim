@@ -3,11 +3,26 @@ from sqlalchemy.orm import Session
 from typing import List, Dict
 from fastapi import HTTPException
 from datetime import datetime
+from pydantic import BaseModel
+from .thumbnail_service import ThumbnailService
+import os
+from initserver import VIDEO_DIR
+
+
+class HistoryCreateRequest(BaseModel):
+    video_id: int
+    current_time: float
+    is_favorite: bool = False
+    keywords: str = ""
 
 
 class HistoryService:
     @staticmethod
-    def create_history(video_id: int, current_time: float, is_favorite: bool = False, keywords: str = "") -> Dict:
+    async def create_history(data: dict) -> Dict:
+        video_id = data.get("video_id")
+        current_time = data.get("current_time")
+        is_favorite = data.get("is_favorite")
+        keywords = data.get("keywords")
         """
         시청 기록을 생성합니다.
         """
@@ -17,6 +32,22 @@ class HistoryService:
             video = db.query(Video).filter(Video.id == video_id).first()
             if not video:
                 raise HTTPException(status_code=404, detail="영상을 찾을 수 없습니다.")
+            # 썸네일 생성
+            thumbnail_filename = None
+            try:
+                # 비디오 파일 경로 구성
+                video_file_path = os.path.join(VIDEO_DIR, video.filename)
+                if os.path.exists(video_file_path):
+                    print("썸네일을 생성합니다.")
+                    thumbnail_filename = await ThumbnailService.create_thumbnail_from_video(
+                        video_file_path, 
+                        float(current_time)
+                    )
+                    print("썸네일을 생성했습니다.", thumbnail_filename)
+            except Exception as e:
+                print(f"썸네일 생성 실패: {str(e)}")
+                # 썸네일 생성 실패해도 시청 기록은 생성
+                thumbnail_filename = None
             
             # 시청 기록 생성
             history = VideoHistory(
@@ -24,7 +55,8 @@ class HistoryService:
                 timestamp=datetime.now(),
                 current_time=int(current_time),
                 keywords=keywords,
-                is_favorite=is_favorite
+                is_favorite=is_favorite,
+                thumbnail=thumbnail_filename
             )
             
             db.add(history)
@@ -37,7 +69,8 @@ class HistoryService:
                 "timestamp": history.timestamp.isoformat(),
                 "current_time": history.current_time,
                 "keywords": history.keywords,
-                "is_favorite": history.is_favorite
+                "is_favorite": history.is_favorite,
+                "thumbnail": history.thumbnail
             }
         except HTTPException:
             raise
@@ -68,7 +101,8 @@ class HistoryService:
                     "timestamp": history.timestamp.isoformat(),
                     "current_time": history.current_time,
                     "keywords": history.keywords,
-                    "is_favorite": history.is_favorite
+                    "is_favorite": history.is_favorite,
+                    "thumbnail": "videos/" + history.thumbnail if history.thumbnail else None,
                 }
                 for history in histories
             ]
@@ -92,6 +126,7 @@ class HistoryService:
                     "current_time": history.current_time,
                     "keywords": history.keywords,
                     "is_favorite": history.is_favorite,
+                    "thumbnail": "videos/" + history.thumbnail if history.thumbnail else None,
                     "video": {
                         "id": history.video.id,
                         "filename": history.video.filename,
@@ -125,7 +160,8 @@ class HistoryService:
                 "timestamp": history.timestamp.isoformat(),
                 "current_time": history.current_time,
                 "keywords": history.keywords,
-                "is_favorite": history.is_favorite
+                "is_favorite": history.is_favorite,
+                "thumbnail": history.thumbnail
             }
         except HTTPException:
             raise
@@ -145,6 +181,13 @@ class HistoryService:
             history = db.query(VideoHistory).filter(VideoHistory.id == history_id).first()
             if not history:
                 raise HTTPException(status_code=404, detail="시청 기록을 찾을 수 없습니다.")
+                        
+            # 썸네일 파일 삭제
+            if history.thumbnail:
+                try:
+                    ThumbnailService.delete_thumbnail(os.path.join(VIDEO_DIR, history.thumbnail))
+                except Exception as e:
+                    print(f"썸네일 삭제 실패: {str(e)}")
             
             db.delete(history)
             db.commit()

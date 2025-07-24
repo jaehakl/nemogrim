@@ -4,7 +4,7 @@ import { getVideo, updateVideo } from '../api/api';
 import VideoPlayer from './VideoPlayer';
 import './VideoDetail.css';
 
-function VideoDetail({ API_BASE_URL }) {
+function VideoDetail() {
   const { videoId } = useParams();
   const navigate = useNavigate();
   const [video, setVideo] = useState(null);
@@ -18,6 +18,7 @@ function VideoDetail({ API_BASE_URL }) {
     keywords: '',
     filename: ''
   });
+
 
   useEffect(() => {
     const fetchVideo = async () => {
@@ -71,6 +72,8 @@ function VideoDetail({ API_BASE_URL }) {
     }));
   };
 
+
+
   const handleSaveClick = async () => {
     try {
       setSaving(true);
@@ -81,9 +84,12 @@ function VideoDetail({ API_BASE_URL }) {
       formDataToSend.append('actor', formData.actor);
       formDataToSend.append('keywords', formData.keywords);
       
-      const response = await updateVideo(videoId, formDataToSend);
+
+      
+      const response = await updateVideo(videoId, {"title": formData.title, "actor": formData.actor, "keywords": formData.keywords});
       setVideo(response.data);
       setIsEditing(false);
+
       // 성공 메시지 표시 (선택사항)
       alert('메타정보가 성공적으로 저장되었습니다.');
     } catch (error) {
@@ -145,7 +151,6 @@ function VideoDetail({ API_BASE_URL }) {
         <div className="video-player-container">
           <VideoPlayer
             video={video}
-            API_BASE_URL={API_BASE_URL}
             videoStartTime={0}
             maxHistoryDisplay={-1}
           />
@@ -207,6 +212,8 @@ function VideoDetail({ API_BASE_URL }) {
                   />
                 </div>
                 
+
+                
                 <div className="form-actions">
                   <button 
                     onClick={handleSaveClick} 
@@ -244,6 +251,7 @@ function VideoDetail({ API_BASE_URL }) {
                     <span className="info-value">{video.keywords}</span>
                   </div>
                 )}
+
                 <div className="info-item">
                   <span className="info-label">ID:</span>
                   <span className="info-value">{video.id}</span>

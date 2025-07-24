@@ -3,7 +3,7 @@ import { getAllFavorites } from '../api/api';
 import VideoPlayer from './VideoPlayer';
 import './VideoFeed.css';
 
-function FavoritesPage({ API_BASE_URL }) {
+function FavoritesPage() {
   const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -20,6 +20,7 @@ function FavoritesPage({ API_BASE_URL }) {
           filename: favorite.video.filename,
           title: favorite.video.title,
           actor: favorite.video.actor,
+          thumbnail: favorite.thumbnail,
           url: favorite.video.url || `/videos/${favorite.video.filename}`,
           favoriteTime: favorite.current_time || 0,
           favoriteDate: new Date(favorite.timestamp).toLocaleDateString('ko-KR'),
@@ -41,10 +42,6 @@ function FavoritesPage({ API_BASE_URL }) {
   useEffect(() => {
     fetchFavorites();
   }, [fetchFavorites]);
-
-
-
-
 
   // 로딩 상태 표시
   if (loading) {
@@ -86,9 +83,9 @@ function FavoritesPage({ API_BASE_URL }) {
             <VideoPlayer
               key={`${video.filename}_${video.historyId}`}
               video={video}
-              API_BASE_URL={API_BASE_URL}
               videoStartTime={video.favoriteTime}
               maxHistoryDisplay={3}
+              defaultExpanded={false}
             />
           ))}
         </div>

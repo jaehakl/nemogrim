@@ -21,7 +21,7 @@ function Navbar({ onUploadClick }) {
     <nav className="navbar">
       <div className="navbar-container">
         <div className="navbar-brand">
-          <h1>비디오 플랫폼</h1>
+          <h1>NemoTV</h1>
         </div>
         <div className="navbar-nav">
           <button 

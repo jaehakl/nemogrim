@@ -9,7 +9,6 @@ import './App.css'; // 필요에 따라 CSS 파일 생성
 
 
 function App() {
-  const API_BASE_URL = 'http://localhost:8000';
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   const handleUploadClick = () => {
@@ -27,19 +26,15 @@ function App() {
         <Routes>
           <Route 
             path="/" 
-            element={
-              <>
-                <VideoFeed API_BASE_URL={API_BASE_URL} />
-              </>
-            } 
+            element={<VideoFeed />} 
           />
           <Route 
             path="/video/:videoId" 
-            element={<VideoDetail API_BASE_URL={API_BASE_URL} />} 
+            element={<VideoDetail />} 
           />
           <Route 
             path="/favorites" 
-            element={<FavoritesPage API_BASE_URL={API_BASE_URL} />} 
+            element={<FavoritesPage />} 
           />
         </Routes>
           {isUploadModalOpen && (
@@ -51,7 +46,7 @@ function App() {
                           ✕
                         </button>
                       </div>
-                      <VideoUpload API_BASE_URL={API_BASE_URL} />
+                      <VideoUpload />
                     </div>
                   </div>
                 )}

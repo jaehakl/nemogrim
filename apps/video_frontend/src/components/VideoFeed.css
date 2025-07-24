@@ -282,4 +282,53 @@
   contain: layout style paint;
 }
 
+/* 키워드 버튼 스타일 */
+.keyword-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+  justify-content: center;
+}
+
+.keyword-btn {
+  padding: 8px 16px;
+  background: #f8f9fa;
+  border: 2px solid #dee2e6;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #495057;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.keyword-btn:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+  transform: translateY(-1px);
+}
+
+.keyword-btn.selected {
+  background: #007bff;
+  border-color: #007bff;
+  color: white;
+}
+
+.keyword-btn.selected:hover {
+  background: #0056b3;
+  border-color: #0056b3;
+}
+
+/* 필터 정보 스타일 */
+.filter-info {
+  margin: 10px 0;
+  padding: 8px 12px;
+  background: #e3f2fd;
+  border-radius: 4px;
+  color: #1976d2;
+  font-size: 14px;
+  text-align: center;
+}
+
 /* 재생 기록 스타일 */

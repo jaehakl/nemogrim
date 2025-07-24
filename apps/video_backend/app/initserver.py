@@ -5,7 +5,7 @@ from db import Base, engine
 from fastapi.staticfiles import StaticFiles
 import os
 
-VIDEO_DIR = "videos"
+VIDEO_DIR = "../../video_files"
 
 def server():
     @asynccontextmanager

@@ -11,6 +11,8 @@ uvicorn = "^0.34.3"
 fastapi = "^0.115.14"
 python-multipart = "^0.0.20"
 sqlalchemy = "^2.0.41"
+opencv-python = "^4.8.1"
+Pillow = "^10.0.0"
 
 
 [tool.poetry.group.dev.dependencies]

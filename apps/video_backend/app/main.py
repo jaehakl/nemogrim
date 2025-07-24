@@ -1,11 +1,17 @@
 from fastapi import Form
 from initserver import server
 from fastapi import UploadFile, File
-from pydantic import BaseModel
-from service.services import VideoService
-from service.history_service import HistoryService
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+from service.video_service import VideoService
+from service.history_service import HistoryService, HistoryCreateRequest
+import os
 
 app = server()
+
+# 썸네일 정적 파일 제공
+if os.path.exists("thumbnails"):
+    app.mount("/thumbnails", StaticFiles(directory="thumbnails"), name="thumbnails")
 
 
 @app.post("/upload-video/")
@@ -32,15 +38,10 @@ async def get_video(video_id: int):
     return VideoService.get_video_by_id(video_id)
 
 
-@app.put("/video/{video_id}")
-async def update_video(
-    video_id: int,
-    actor: str = Form(default=None),
-    title: str = Form(default=None),
-    keywords: str = Form(default=None)
-):
+@app.post("/video-update/{video_id}")
+async def update_video(video_id: int, data: dict):
     """영상의 메타데이터를 업데이트합니다."""
-    return VideoService.update_video(video_id, actor, title, keywords)
+    return VideoService.update_video(video_id, data)
 
 
 @app.delete("/video/{video_id}")
@@ -48,18 +49,10 @@ async def delete_video(video_id: int):
     """영상을 삭제합니다."""
     return VideoService.delete_video(video_id)
 
-
-# 시청 기록 관련 엔드포인트
-class HistoryCreateRequest(BaseModel):
-    video_id: int
-    current_time: float
-    is_favorite: bool = False
-    keywords: str = ""
-
 @app.post("/history/")
-async def create_history(request: HistoryCreateRequest):
+async def create_history(data: dict):
     """시청 기록을 생성합니다."""
-    return HistoryService.create_history(request.video_id, request.current_time, request.is_favorite, request.keywords)
+    return await HistoryService.create_history(data)
 
 @app.get("/history/{video_id}")
 async def get_video_history(video_id: int):

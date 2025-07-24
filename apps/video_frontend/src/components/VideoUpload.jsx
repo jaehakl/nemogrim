@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { uploadVideo } from '../api/api';
 import './VideoUpload.css';
 
-function VideoUpload({ API_BASE_URL }) {
+function VideoUpload() {
   const [selectedFile, setSelectedFile] = useState(null);
+
   const [actor, setActor] = useState('');
   const [title, setTitle] = useState('');
   const [filename, setFilename] = useState('');
@@ -24,6 +25,8 @@ function VideoUpload({ API_BASE_URL }) {
       setFilename(fileName);
     }
   };
+
+
 
   const handleUpload = async () => {
     if (!selectedFile) {
@@ -50,11 +53,11 @@ function VideoUpload({ API_BASE_URL }) {
     formData.append('title', title.trim());
     formData.append('filename', filename.trim());
     formData.append('keywords', keywords.trim());
-
+    
     try {
       const response = await uploadVideo(formData);
-
-      setMessage(`성공: ${response.data.message}`);
+      setMessage(response.data.message);
+      
       // 폼 초기화
       setSelectedFile(null);
       setActor('');
@@ -62,11 +65,15 @@ function VideoUpload({ API_BASE_URL }) {
       setFilename('');
       setKeywords('');
       
-      // 전역 이벤트 발생 (VideoFeed 새로고침)
+      // 파일 입력 필드 초기화
+      document.getElementById('video-file').value = '';
+      
+      // 업로드 성공 이벤트 발생
       window.dispatchEvent(new Event('videoUploadSuccess'));
+      
     } catch (error) {
-      setMessage(`업로드 실패: ${error.response?.data?.detail || error.message}`);
-      console.error('업로드 실패:', error);
+      console.error('Upload error:', error);
+      setMessage(error.response?.data?.detail || '업로드에 실패했습니다.');
     } finally {
       setUploading(false);
     }
@@ -74,69 +81,82 @@ function VideoUpload({ API_BASE_URL }) {
 
   return (
     <div className="video-upload">
+      <h2>영상 업로드</h2>
       <div className="upload-form">
         <div className="form-group">
-          <label htmlFor="file">비디오 파일:</label>
-          <input 
-            type="file" 
-            id="file"
-            accept="video/*" 
-            onChange={handleFileChange} 
+          <label htmlFor="video-file">영상 파일:</label>
+          <input
+            type="file"
+            id="video-file"
+            accept="video/*"
+            onChange={handleFileChange}
+            disabled={uploading}
           />
         </div>
         
+
+
         <div className="form-group">
-          <label htmlFor="actor">배우 이름:</label>
-          <input 
-            type="text" 
+          <label htmlFor="actor">배우:</label>
+          <input
+            type="text"
             id="actor"
-            value={actor} 
+            value={actor}
             onChange={(e) => setActor(e.target.value)}
             placeholder="배우 이름을 입력하세요"
-            required
+            disabled={uploading}
           />
         </div>
-        
+
         <div className="form-group">
           <label htmlFor="title">제목:</label>
-          <input 
-            type="text" 
+          <input
+            type="text"
             id="title"
-            value={title} 
+            value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="영상 제목을 입력하세요"
-            required
+            disabled={uploading}
           />
         </div>
-        
+
         <div className="form-group">
-          <label htmlFor="filename">저장할 파일명:</label>
-          <input 
-            type="text" 
+          <label htmlFor="filename">파일명:</label>
+          <input
+            type="text"
             id="filename"
-            value={filename} 
+            value={filename}
             onChange={(e) => setFilename(e.target.value)}
-            placeholder="서버에 저장될 파일명을 입력하세요"
-            required
+            placeholder="저장할 파일명을 입력하세요"
+            disabled={uploading}
           />
         </div>
-        
+
         <div className="form-group">
           <label htmlFor="keywords">키워드:</label>
-          <input 
-            type="text" 
+          <textarea
             id="keywords"
-            value={keywords} 
+            value={keywords}
             onChange={(e) => setKeywords(e.target.value)}
-            placeholder="키워드를 입력하세요 (선택사항)"
+            placeholder="키워드를 입력하세요 (쉼표로 구분)"
+            disabled={uploading}
           />
         </div>
-        
-        <button onClick={handleUpload} disabled={!selectedFile || !actor.trim() || !title.trim() || !filename.trim() || uploading}>
+
+        <button 
+          onClick={handleUpload} 
+          disabled={uploading || !selectedFile}
+          className="upload-btn"
+        >
           {uploading ? '업로드 중...' : '업로드'}
         </button>
+
+        {message && (
+          <div className={`message ${message.includes('실패') ? 'error' : 'success'}`}>
+            {message}
+          </div>
+        )}
       </div>
-      {message && <p className="message">{message}</p>}
     </div>
   );
 }
