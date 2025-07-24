@@ -1,0 +1,16 @@
+{
+  "name": "video",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter video-frontend dev",
+    "build": "pnpm --filter video-frontend build",
+    "start": "pnpm --filter video-frontend start"
+  },
+  "devDependencies": {
+    "prettier": "^3.0.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@rsuite/icons": "^1.3.2"
+  }
+}

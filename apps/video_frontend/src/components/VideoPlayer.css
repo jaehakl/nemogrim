@@ -1,0 +1,312 @@
+.video-player-item {
+  background: white;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  will-change: transform;
+}
+
+.video-player-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.video-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.video-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  cursor: pointer;
+  flex: 1;
+  line-height: 1.4;
+  transition: color 0.2s ease;
+}
+
+.video-title:hover {
+  color: #007bff;
+}
+
+.delete-btn {
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+.delete-btn:hover {
+  background: #c82333;
+}
+
+.actor {
+  margin: 5px 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.keywords {
+  margin: 5px 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.favorite-info {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 4px;
+  padding: 8px;
+  margin: 10px 0;
+  font-size: 12px;
+  color: #856404;
+}
+
+.favorite-time {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.favorite-date {
+  display: block;
+  font-size: 11px;
+  color: #856404;
+}
+
+.video-player-item video {
+  width: 100%;
+  height: auto;
+  border-radius: 4px;
+  margin: 10px 0;
+  will-change: transform;
+}
+
+.video-placeholder {
+  width: 100%;
+  height: 240px;
+  background: #f8f9fa;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: #6c757d;
+  margin: 10px 0;
+}
+
+.loading-spinner {
+  width: 30px;
+  height: 30px;
+  border: 3px solid #e9ecef;
+  border-top: 3px solid #007bff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 10px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.play-history {
+  margin-top: 15px;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border-left: 4px solid #007bff;
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.play-history h4 {
+  margin: 0;
+  font-size: 14px;
+  color: #495057;
+  font-weight: 600;
+}
+
+.filter-btn {
+  background: #e9ecef;
+  color: #495057;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-btn:hover {
+  background: #dee2e6;
+}
+
+.filter-btn.active {
+  background: #007bff;
+  color: white;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: #6c757d;
+  padding: 6px 8px;
+  background: white;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+}
+
+.history-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.history-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 3px;
+  transition: background-color 0.2s ease;
+}
+
+.history-info:hover {
+  background-color: #f8f9fa;
+}
+
+.history-time {
+  font-weight: 600;
+  color: #495057;
+}
+
+.history-date {
+  color: #6c757d;
+}
+
+.history-position {
+  background: #e9ecef;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  color: #495057;
+  display: inline-block;
+  margin-top: 2px;
+}
+
+.favorite-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: #6c757d;
+  transition: color 0.2s ease;
+  padding: 4px;
+  margin-left: 8px;
+}
+
+.favorite-btn:hover {
+  color: #ffd700;
+}
+
+.favorite-btn.favorited {
+  color: #ffd700;
+}
+
+.delete-history-btn {
+  background: none;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+  color: #dc3545;
+  transition: color 0.2s ease;
+  padding: 4px;
+  border-radius: 3px;
+}
+
+.delete-history-btn:hover {
+  color: #c82333;
+  background-color: #f8d7da;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .video-player-item {
+    padding: 12px;
+  }
+  
+  .video-title {
+    font-size: 14px;
+  }
+  
+  .play-history {
+    padding: 10px;
+  }
+  
+  .history-item {
+    font-size: 11px;
+    padding: 5px 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .video-player-item {
+    padding: 10px;
+  }
+  
+  .video-header {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .delete-btn {
+    align-self: flex-end;
+  }
+  
+  .play-history h4 {
+    font-size: 13px;
+  }
+  
+  .history-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+  
+  .favorite-btn {
+    align-self: flex-end;
+    margin-left: 0;
+  }
+} 
