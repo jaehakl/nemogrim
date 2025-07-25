@@ -1,6 +1,6 @@
 from initserver import VIDEO_DIR
 from db import *
-import os
+import os, random
 import uuid
 from fastapi import UploadFile, HTTPException
 from sqlalchemy.orm import Session
@@ -174,7 +174,6 @@ class VideoService:
             for video in videos:
                 # 비디오의 히스토리 중 썸네일이 있는 히스토리를 무작위로 선택
                 thumbnail = None
-                import random
                 histories_with_thumbnail = db.query(VideoHistory).filter(
                     VideoHistory.video_id == video.id,
                     VideoHistory.thumbnail.isnot(None)

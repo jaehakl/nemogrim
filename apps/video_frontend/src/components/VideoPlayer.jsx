@@ -17,6 +17,7 @@ function VideoPlayer({
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [isHistoryExpanded, setIsHistoryExpanded] = useState(defaultExpanded);
   const [showThumbnail, setShowThumbnail] = useState(true);
+  const [originalPlaybackRate, setOriginalPlaybackRate] = useState(1); // 원래 재생 속도 저장
   const videoRef = useRef(null);
 
   // 영상 삭제 핸들러
@@ -161,6 +162,22 @@ function VideoPlayer({
     }
   }, []);
 
+  // 마우스 다운 핸들러 - 4배속 재생
+  const handleMouseDown = useCallback(() => {
+    if (videoRef.current && !videoRef.current.paused) {
+      setOriginalPlaybackRate(videoRef.current.playbackRate);
+      videoRef.current.playbackRate = 4;
+    }
+  }, []);
+
+  // 마우스 업 핸들러 - 원래 속도로 복원
+  const handleMouseUp = useCallback(() => {
+    if (videoRef.current) {
+      videoRef.current.playbackRate = originalPlaybackRate;
+      videoRef.current.pause();
+    }
+  }, [originalPlaybackRate]);
+
   // 재생 시작 핸들러
   const handlePlayStart = useCallback(() => {
     if (videoRef.current) {
@@ -202,6 +219,55 @@ function VideoPlayer({
       return newTimes;
     });
   }, [video.id]);
+
+  // 키보드 이벤트 핸들러 - 방향키로 10초씩 탐색, Ctrl+방향키로 1분씩 탐색
+  const handleVideoKeyDown = useCallback((event) => {
+    if (!videoRef.current) return;
+
+    const currentTime = videoRef.current.currentTime;
+    const duration = videoRef.current.duration;
+    const seekAmount = 10; // 10초씩 탐색
+    const minuteSeekAmount = 60; // 1분씩 탐색
+    const defaultSeekAmount = videoRef.current.duration / 100;
+
+    switch (event.key) {
+      case 'ArrowLeft':
+        event.preventDefault();
+        console.log(defaultSeekAmount);
+        if (event.ctrlKey) {
+          // Ctrl + 왼쪽 화살표: 1분 뒤로
+          const newTimeBack = Math.max(0, currentTime - minuteSeekAmount + defaultSeekAmount);
+          videoRef.current.currentTime = newTimeBack;
+        } else {
+          // 일반 왼쪽 화살표: 10초 뒤로
+          const newTimeBack = Math.max(0, currentTime - seekAmount + defaultSeekAmount);
+          videoRef.current.currentTime = newTimeBack;
+        }
+        break;
+      case 'ArrowRight':
+        event.preventDefault();
+        if (event.ctrlKey) {
+          // Ctrl + 오른쪽 화살표: 1분 앞으로
+          const newTimeForward = Math.min(duration, currentTime + minuteSeekAmount-defaultSeekAmount);
+          videoRef.current.currentTime = newTimeForward;
+        } else {
+          // 일반 오른쪽 화살표: 10초 앞으로
+          const newTimeForward = Math.min(duration, currentTime + seekAmount-defaultSeekAmount);
+          videoRef.current.currentTime = newTimeForward;
+        }
+        break;
+      case ' ':
+        event.preventDefault();
+        if (videoRef.current.paused) {
+          videoRef.current.play();
+        } else {
+          videoRef.current.pause();
+        }
+        break;
+      default:
+        break;
+    }
+  }, []);
 
   return (
     <div className="video-player-item">
@@ -263,6 +329,9 @@ function VideoPlayer({
           onPlay={handlePlayStart}
           onTimeUpdate={handleTimeUpdate}
           onPause={handlePause}
+          onKeyDown={handleVideoKeyDown}
+          onMouseDown={handleMouseDown}
+          onMouseUp={handleMouseUp}
           ref={videoRef}
         >
           <source src={'/api/' + video.url} />        

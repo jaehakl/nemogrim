@@ -5,6 +5,7 @@ import VideoFeed from './components/VideoFeed';
 import VideoUpload from './components/VideoUpload';
 import VideoDetail from './components/VideoDetail';
 import FavoritesPage from './components/FavoritesPage';
+import VideoListPage from './components/VideoListPage';
 import './App.css'; // 필요에 따라 CSS 파일 생성
 
 
@@ -40,6 +41,10 @@ function App() {
           <Route 
             path="/favorites" 
             element={<FavoritesPage />} 
+          />
+          <Route 
+            path="/video-list" 
+            element={<VideoListPage />} 
           />
         </Routes>
           {isUploadModalOpen && (

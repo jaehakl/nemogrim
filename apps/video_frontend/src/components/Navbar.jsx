@@ -60,6 +60,13 @@ function Navbar({ onUploadClick, onSyncComplete }) {
             <span className="btn-icon">⭐</span>
             즐겨찾기
           </button>
+          <button 
+            className={`navbar-btn ${location.pathname === '/video-list' ? 'active' : ''}`}
+            onClick={() => handleNavigation('/video-list')}
+          >
+            <span className="btn-icon">🎬</span>
+            비디오 리스트
+          </button>
         </div>
         <div className="navbar-actions">
           <button 
