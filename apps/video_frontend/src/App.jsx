@@ -19,9 +19,14 @@ function App() {
     setIsUploadModalOpen(false);
   };
 
+  const handleSyncComplete = () => {
+    // 동기화 완료 후 페이지 새로고침 또는 비디오 목록 업데이트
+    window.location.reload();
+  };
+
   return (
     <div className="App">
-      <Navbar onUploadClick={handleUploadClick} />
+      <Navbar onUploadClick={handleUploadClick} onSyncComplete={handleSyncComplete} />
       <main className="main-content">
         <Routes>
           <Route 

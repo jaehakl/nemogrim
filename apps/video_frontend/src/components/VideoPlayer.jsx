@@ -71,11 +71,14 @@ function VideoPlayer({
   // 재생 기록 저장
   const savePlayHistory = useCallback(async (currentTime) => {
     try {
+      const videoDuration = videoRef.current ? videoRef.current.duration : null;
+
       const response = await createHistory({
         video_id: video.id,
         current_time: currentTime,
+        video_duration: videoDuration,
         is_favorite: false,
-        keywords: ""
+        keywords: "",
       });
       
       const newHistoryEntry = {
@@ -184,7 +187,7 @@ function VideoPlayer({
       const playDuration = currentTime - startInfo.startTime;
       const videoTimeDiff = Math.abs(videoRef.current.currentTime - startInfo.videoTime);
       
-      if (playDuration >= 15000 && videoTimeDiff < 100 && !recordedVideos.has(video.id)) {
+      if (playDuration >= 15000 && videoTimeDiff < 1000 && !recordedVideos.has(video.id)) {
         savePlayHistory(startInfo.videoTime);
         setRecordedVideos(prev => new Set([...prev, video.id]));
       }
@@ -206,9 +209,9 @@ function VideoPlayer({
         <h3 
           className="video-title"
           onClick={() => navigate(`/video/${video.id}`)}
-          title={`${video.title || video.filename} - 클릭하여 상세보기`}
+          title={`${video.actor || video.title} - 클릭하여 상세보기`}
         >
-          {video.title || video.filename}
+          {video.actor || video.title}
         </h3>
         <button 
           className="delete-video-btn"
@@ -218,32 +221,13 @@ function VideoPlayer({
           ✕
         </button>
       </div>
+      <div className="video-text">
+        {video.title && <p className="keywords">{video.title}</p>}
+        {video.keywords && <p className="keywords">키워드: {video.keywords}</p>}
+      </div>
       
-      {video.actor && <p className="actor">배우: {video.actor}</p>}
-      {video.keywords && <p className="keywords">키워드: {video.keywords}</p>}
-      
-      {/* 썸네일/비디오 토글 버튼 */}
-      {video.thumbnail && (
-        <div className="media-toggle">
-          <button 
-            className={`toggle-btn ${showThumbnail ? 'active' : ''}`}
-            onClick={() => setShowThumbnail(true)}
-            title="썸네일 보기"
-          >
-            썸네일
-          </button>
-          <button 
-            className={`toggle-btn ${!showThumbnail ? 'active' : ''}`}
-            onClick={() => setShowThumbnail(false)}
-            title="비디오 재생"
-          >
-            비디오
-          </button>
-        </div>
-      )}
       
       {/* 비디오 플레이어 또는 썸네일 */}
-      {video.thumbnail}
       {video.thumbnail && showThumbnail ? (
         <div className="thumbnail-container">
           <img 

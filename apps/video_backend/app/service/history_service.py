@@ -18,7 +18,7 @@ class HistoryCreateRequest(BaseModel):
 
 class HistoryService:
     @staticmethod
-    async def create_history(data: dict) -> Dict:
+    def create_history(data: dict) -> Dict:
         video_id = data.get("video_id")
         current_time = data.get("current_time")
         is_favorite = data.get("is_favorite")
@@ -32,23 +32,7 @@ class HistoryService:
             video = db.query(Video).filter(Video.id == video_id).first()
             if not video:
                 raise HTTPException(status_code=404, detail="영상을 찾을 수 없습니다.")
-            # 썸네일 생성
-            thumbnail_filename = None
-            try:
-                # 비디오 파일 경로 구성
-                video_file_path = os.path.join(VIDEO_DIR, video.filename)
-                if os.path.exists(video_file_path):
-                    print("썸네일을 생성합니다.")
-                    thumbnail_filename = await ThumbnailService.create_thumbnail_from_video(
-                        video_file_path, 
-                        float(current_time)
-                    )
-                    print("썸네일을 생성했습니다.", thumbnail_filename)
-            except Exception as e:
-                print(f"썸네일 생성 실패: {str(e)}")
-                # 썸네일 생성 실패해도 시청 기록은 생성
-                thumbnail_filename = None
-            
+                        
             # 시청 기록 생성
             history = VideoHistory(
                 video_id=video_id,
@@ -56,7 +40,7 @@ class HistoryService:
                 current_time=int(current_time),
                 keywords=keywords,
                 is_favorite=is_favorite,
-                thumbnail=thumbnail_filename
+                thumbnail=None  # 썸네일은 별도로 생성
             )
             
             db.add(history)
@@ -77,6 +61,65 @@ class HistoryService:
         except Exception as e:
             db.rollback()
             raise HTTPException(status_code=500, detail=f"시청 기록 생성 중 오류가 발생했습니다: {str(e)}")
+        finally:
+            db.close()
+
+    @staticmethod
+    def create_thumbnail_for_history(history_id: int) -> Dict:
+        """
+        특정 시청 기록에 대한 썸네일을 생성합니다.
+        """
+        db = SessionLocal()
+        try:
+            # 시청 기록 조회
+            history = db.query(VideoHistory).filter(VideoHistory.id == history_id).first()
+            if not history:
+                raise HTTPException(status_code=404, detail="시청 기록을 찾을 수 없습니다.")
+            
+            # 비디오 정보 조회
+            video = db.query(Video).filter(Video.id == history.video_id).first()
+            if not video:
+                raise HTTPException(status_code=404, detail="영상을 찾을 수 없습니다.")
+            
+            # 썸네일 생성
+            thumbnail_filename = None
+            try:
+                # 비디오 파일 경로 구성
+                video_file_path = os.path.join(VIDEO_DIR, video.filename)
+                if os.path.exists(video_file_path):
+                    print("썸네일을 생성합니다.")
+                    thumbnail_filename = ThumbnailService.create_thumbnail_from_video(
+                        video_file_path, 
+                        float(history.current_time),
+                        video_fps=video.fps
+                    )
+                    print("썸네일을 생성했습니다.", thumbnail_filename)
+                    
+                    # 시청 기록에 썸네일 정보 업데이트
+                    if thumbnail_filename:
+                        history.thumbnail = thumbnail_filename
+                        db.commit()
+                        db.refresh(history)
+                else:
+                    raise HTTPException(status_code=404, detail="비디오 파일을 찾을 수 없습니다.")
+            except Exception as e:
+                print(f"썸네일 생성 실패: {str(e)}")
+                raise HTTPException(status_code=500, detail=f"썸네일 생성 중 오류가 발생했습니다: {str(e)}")
+            
+            return {
+                "id": history.id,
+                "video_id": history.video_id,
+                "timestamp": history.timestamp.isoformat(),
+                "current_time": history.current_time,
+                "keywords": history.keywords,
+                "is_favorite": history.is_favorite,
+                "thumbnail": history.thumbnail
+            }
+        except HTTPException:
+            raise
+        except Exception as e:
+            db.rollback()
+            raise HTTPException(status_code=500, detail=f"썸네일 생성 중 오류가 발생했습니다: {str(e)}")
         finally:
             db.close()
 
@@ -199,4 +242,33 @@ class HistoryService:
             db.rollback()
             raise HTTPException(status_code=500, detail=f"시청 기록 삭제 중 오류가 발생했습니다: {str(e)}")
         finally:
-            db.close() 
+            db.close()
+
+    @staticmethod
+    def batch_create_thumbnails(history_ids: List[int]) -> Dict:
+        """
+        여러 시청 기록에 대한 썸네일을 일괄 생성합니다.
+        """
+        results = {
+            "success": [],
+            "failed": [],
+            "total": len(history_ids)
+        }
+        
+        for history_id in history_ids:
+            try:
+                result = HistoryService.create_thumbnail_for_history(history_id)
+                results["success"].append({
+                    "history_id": history_id,
+                    "thumbnail": result["thumbnail"]
+                })
+            except Exception as e:
+                results["failed"].append({
+                    "history_id": history_id,
+                    "error": str(e)
+                })
+        
+        return {
+            "message": f"썸네일 일괄 생성 완료: {len(results['success'])}개 성공, {len(results['failed'])}개 실패",
+            "results": results
+        } 

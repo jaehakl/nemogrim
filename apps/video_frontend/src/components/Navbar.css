@@ -1,15 +1,17 @@
 .navbar {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  padding: 1rem 0;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 1.2rem 0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   position: sticky;
   top: 0;
   z-index: 1000;
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .navbar-container {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 0 2rem;
   display: flex;
@@ -20,90 +22,156 @@
 
 .navbar-brand h1 {
   margin: 0;
-  font-size: 1.8rem;
-  font-weight: 700;
-  background: linear-gradient(45deg, #fff, #f0f0f0);
+  font-size: 2rem;
+  font-weight: 800;
+  background: linear-gradient(45deg, #fff, #f8f9fa);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  letter-spacing: -0.5px;
 }
 
 .navbar-nav {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 1.5rem;
 }
 
-.nav-btn {
-  background: rgba(255, 255, 255, 0.1);
+/* 통일된 버튼 스타일 */
+.navbar-btn {
+  background: rgba(255, 255, 255, 0.08);
   color: white;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  padding: 0.75rem 1.5rem;
-  border-radius: 25px;
-  font-size: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 0.8rem 1.8rem;
+  border-radius: 12px;
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.6rem;
   backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+  min-width: fit-content;
 }
 
-.nav-btn:hover {
+.navbar-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s;
+}
+
+.navbar-btn:hover:not(:disabled)::before {
+  left: 100%;
+}
+
+.navbar-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.navbar-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.navbar-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* 네비게이션 버튼 활성 상태 */
+.navbar-btn.active {
   background: rgba(255, 255, 255, 0.2);
   border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 25px rgba(255, 255, 255, 0.15);
   transform: translateY(-1px);
 }
 
-.nav-btn.active {
-  background: rgba(255, 255, 255, 0.25);
-  border-color: rgba(255, 255, 255, 0.4);
-  box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+/* 동기화 버튼 특별 스타일 */
+.navbar-btn.sync-btn {
+  background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+  border: none;
+  box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3);
 }
 
-.nav-icon {
-  font-size: 1.1rem;
+.navbar-btn.sync-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #3dbdb4 0%, #3a8f7d 100%);
+  box-shadow: 0 8px 25px rgba(78, 205, 196, 0.4);
+}
+
+.navbar-btn.sync-btn.syncing {
+  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3);
+  }
+  50% {
+    box-shadow: 0 8px 25px rgba(243, 156, 18, 0.5);
+  }
+  100% {
+    box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3);
+  }
+}
+
+/* 업로드 버튼 특별 스타일 */
+.navbar-btn.upload-btn {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+  border: none;
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+}
+
+.navbar-btn.upload-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #ff5252 0%, #d63031 100%);
+  box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+}
+
+/* 아이콘 스타일 */
+.navbar-btn .btn-icon {
+  font-size: 1.2rem;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
 }
 
 .navbar-actions {
   display: flex;
   align-items: center;
-  gap: 1rem;
-}
-
-.upload-btn {
-  background: linear-gradient(45deg, #ff6b6b, #ee5a24);
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 25px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
-}
-
-.upload-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
-  background: linear-gradient(45deg, #ff5252, #d63031);
-}
-
-.upload-btn:active {
-  transform: translateY(0);
-}
-
-.upload-icon {
-  font-size: 1.2rem;
+  gap: 1.2rem;
 }
 
 /* 반응형 디자인 */
+@media (max-width: 1024px) {
+  .navbar-container {
+    padding: 0 1.5rem;
+  }
+  
+  .navbar-brand h1 {
+    font-size: 1.8rem;
+  }
+  
+  .navbar-btn {
+    padding: 0.7rem 1.4rem;
+    font-size: 0.9rem;
+  }
+}
+
 @media (max-width: 768px) {
+  .navbar {
+    padding: 1rem 0;
+  }
+  
   .navbar-container {
     padding: 0 1rem;
     flex-wrap: wrap;
@@ -111,46 +179,43 @@
   }
   
   .navbar-brand h1 {
-    font-size: 1.5rem;
+    font-size: 1.6rem;
   }
   
   .navbar-nav {
     order: 3;
     width: 100%;
     justify-content: center;
+    gap: 1rem;
   }
   
-  .nav-btn {
+  .navbar-btn {
     padding: 0.6rem 1.2rem;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    border-radius: 10px;
   }
   
-  .upload-btn {
-    padding: 0.6rem 1.2rem;
-    font-size: 0.9rem;
+  .navbar-actions {
+    gap: 0.8rem;
   }
 }
 
 @media (max-width: 480px) {
   .navbar-brand h1 {
-    font-size: 1.3rem;
+    font-size: 1.4rem;
   }
   
-  .nav-btn {
+  .navbar-btn {
     padding: 0.5rem 1rem;
     font-size: 0.8rem;
+    border-radius: 8px;
   }
   
-  .nav-btn span:last-child {
+  .navbar-btn span:last-child {
     display: none;
   }
   
-  .upload-btn {
-    padding: 0.5rem 1rem;
-    font-size: 0.8rem;
-  }
-  
-  .upload-btn span:last-child {
-    display: none;
+  .navbar-actions {
+    gap: 0.6rem;
   }
 } 

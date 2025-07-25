@@ -2,7 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import relationship, Session, declarative_base
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, Date, Text, ForeignKey, DateTime, Boolean
+from sqlalchemy import Column, Integer, String, Date, Text, ForeignKey, DateTime, Boolean, Float
 from datetime import datetime
 
 DATABASE_URL = "sqlite:///./../../video.db"
@@ -25,6 +25,7 @@ class Video(Base):
     title = Column(Text)
     filename = Column(Text)
     keywords = Column(Text)
+    fps = Column(Float, default=29.97)
     history = relationship("VideoHistory", back_populates="video", cascade="all, delete")
 
 class VideoHistory(Base):

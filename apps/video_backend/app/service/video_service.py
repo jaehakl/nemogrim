@@ -12,6 +12,91 @@ from .history_service import HistoryService
 
 class VideoService:
     @staticmethod
+    def sync_video_files() -> Dict:
+        """
+        VIDEO_DIR 내의 영상 파일들을 스캔하여 데이터베이스에 없는 파일들을 자동으로 등록합니다.
+        """
+        db = SessionLocal()
+        try:
+            # 지원하는 비디오 파일 확장자
+            video_extensions = ('.mp4', '.avi', '.mkv', '.mov', '.wmv', '.flv')
+            
+            # VIDEO_DIR 내의 모든 파일 스캔
+            if not os.path.exists(VIDEO_DIR):
+                raise HTTPException(status_code=404, detail="VIDEO_DIR이 존재하지 않습니다.")
+            
+            video_files = []
+            for filename in os.listdir(VIDEO_DIR):
+                if filename.lower().endswith(video_extensions):
+                    video_files.append(filename)
+            
+            # 데이터베이스에 이미 등록된 파일명들 가져오기
+            existing_videos = db.query(Video.filename).all()
+            existing_filenames = {video.filename for video in existing_videos}
+            
+            # 새로 등록할 파일들 찾기
+            new_files = [filename for filename in video_files if filename not in existing_filenames]
+            
+            registered_videos = []
+            
+            for filename in new_files:
+                # 파일명에서 확장자 제거하여 제목으로 사용
+                title = os.path.splitext(filename)[0]
+                
+                # 파일명을 기반으로 actor와 title 설정
+                # 파일명에 언더스코어나 하이픈이 있으면 actor와 title로 분리
+                if '_' in title:
+                    parts = title.split('_', 1)  # 첫 번째 언더스코어만 기준으로 분리
+                    actor = parts[0].strip()
+                    title = parts[1].strip() if len(parts) > 1 else title
+                elif '-' in title:
+                    parts = title.split('-', 1)  # 첫 번째 하이픈만 기준으로 분리
+                    actor = parts[0].strip()
+                    title = parts[1].strip() if len(parts) > 1 else title
+                else:
+                    # 구분자가 없으면 전체를 title로 사용하고 actor는 "Unknown"으로 설정
+                    actor = "Unknown"
+                
+                # 빈 문자열 처리
+                if not title.strip():
+                    title = filename
+                if not actor.strip():
+                    actor = "Unknown"
+                
+                # 데이터베이스에 새 비디오 레코드 생성
+                video_record = Video(
+                    actor=actor,
+                    title=title,
+                    filename=filename,
+                    keywords=""  # 빈 키워드로 시작
+                )
+                
+                db.add(video_record)
+                registered_videos.append({
+                    "filename": filename,
+                    "actor": actor,
+                    "title": title
+                })
+            
+            db.commit()
+            
+            return {
+                "message": f"총 {len(registered_videos)}개의 새로운 영상 파일이 등록되었습니다.",
+                "registered_videos": registered_videos,
+                "total_video_files": len(video_files),
+                "existing_files": len(existing_filenames),
+                "new_files": len(new_files)
+            }
+            
+        except HTTPException:
+            raise
+        except Exception as e:
+            db.rollback()
+            raise HTTPException(status_code=500, detail=f"영상 파일 동기화 중 오류가 발생했습니다: {str(e)}")
+        finally:
+            db.close()
+
+    @staticmethod
     def upload_video(file: UploadFile, actor: str, title: str, keywords: str, filename: str = "") -> Dict:
         """
         영상 파일과 메타데이터를 업로드하여 데이터베이스에 저장합니다.
@@ -107,12 +192,13 @@ class VideoService:
                     "id": video.id,
                     "actor": video.actor,
                     "title": video.title,
+                    "fps": video.fps,
                     "filename": video.filename,
                     "keywords": video.keywords,
                     "url": f"/videos/{video.filename}",
                     "thumbnail": "videos/" + thumbnail if thumbnail else None
                 })
-            
+            random.shuffle(list_videos)
             return {"videos": list_videos, "keywords": list(keywords)}
         finally:
             db.close()
@@ -132,6 +218,7 @@ class VideoService:
                 "id": video.id,
                 "actor": video.actor,
                 "title": video.title,
+                "fps": video.fps,
                 "filename": video.filename,
                 "keywords": video.keywords,
                 "url": f"/videos/{video.filename}"
@@ -144,6 +231,7 @@ class VideoService:
         actor = data.get("actor")
         title = data.get("title")
         keywords = data.get("keywords")
+        fps = data.get("fps")
         """
         영상의 메타데이터를 업데이트합니다.
         """
@@ -160,7 +248,8 @@ class VideoService:
                 video.title = title
             if keywords is not None:
                 video.keywords = keywords
-            
+            if fps is not None:
+                video.fps = fps
             db.commit()
             db.refresh(video)
             
@@ -170,6 +259,7 @@ class VideoService:
                 "title": video.title,
                 "filename": video.filename,
                 "keywords": video.keywords,
+                "fps": video.fps,
                 "url": f"/videos/{video.filename}",
                 "message": "영상 메타데이터가 성공적으로 업데이트되었습니다."
             }

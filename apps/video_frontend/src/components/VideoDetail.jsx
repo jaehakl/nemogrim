@@ -16,7 +16,8 @@ function VideoDetail() {
     title: '',
     actor: '',
     keywords: '',
-    filename: ''
+    filename: '',
+    fps: ''
   });
 
 
@@ -32,7 +33,8 @@ function VideoDetail() {
           title: response.data.title || '',
           actor: response.data.actor || '',
           keywords: response.data.keywords || '',
-          filename: response.data.filename || ''
+          filename: response.data.filename || '',
+          fps: response.data.fps || ''
         });
       } catch (error) {
         console.error("Error fetching video:", error);
@@ -60,7 +62,8 @@ function VideoDetail() {
       title: video.title || '',
       actor: video.actor || '',
       keywords: video.keywords || '',
-      filename: video.filename || ''
+      filename: video.filename || '',
+      fps: video.fps || ''
     });
   };
 
@@ -83,10 +86,11 @@ function VideoDetail() {
       formDataToSend.append('title', formData.title);
       formDataToSend.append('actor', formData.actor);
       formDataToSend.append('keywords', formData.keywords);
+      formDataToSend.append('fps', formData.fps);
       
 
       
-      const response = await updateVideo(videoId, {"title": formData.title, "actor": formData.actor, "keywords": formData.keywords});
+      const response = await updateVideo(videoId, {"title": formData.title, "actor": formData.actor, "keywords": formData.keywords, "fps": formData.fps});
       setVideo(response.data);
       setIsEditing(false);
 
@@ -212,6 +216,21 @@ function VideoDetail() {
                   />
                 </div>
                 
+                <div className="form-group">
+                  <label htmlFor="fps">FPS:</label>
+                  <input
+                    type="number"
+                    id="fps"
+                    name="fps"
+                    value={formData.fps}
+                    onChange={handleInputChange}
+                    placeholder="FPS를 입력하세요"
+                    min="1"
+                    max="300"
+                    step="0.01"
+                  />
+                </div>
+                
 
                 
                 <div className="form-actions">
@@ -249,6 +268,12 @@ function VideoDetail() {
                   <div className="info-item">
                     <span className="info-label">키워드:</span>
                     <span className="info-value">{video.keywords}</span>
+                  </div>
+                )}
+                {video.fps && (
+                  <div className="info-item">
+                    <span className="info-label">FPS:</span>
+                    <span className="info-value">{video.fps}</span>
                   </div>
                 )}
 

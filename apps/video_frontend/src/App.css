@@ -39,7 +39,6 @@
 }
 
 .main-content {
-  max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
 }
@@ -118,41 +117,3 @@
   background: rgba(255, 255, 255, 0.2);
 }
 
-/* 반응형 디자인 */
-@media (max-width: 768px) {
-  .main-content {
-    padding: 1rem;
-  }
-  
-  .modal-content {
-    width: 95%;
-    margin: 1rem;
-  }
-  
-  .modal-header {
-    padding: 1rem 1.5rem;
-  }
-  
-  .modal-header h2 {
-    font-size: 1.3rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .main-content {
-    padding: 0.5rem;
-  }
-  
-  .modal-content {
-    width: 98%;
-    margin: 0.5rem;
-  }
-  
-  .modal-header {
-    padding: 0.8rem 1rem;
-  }
-  
-  .modal-header h2 {
-    font-size: 1.2rem;
-  }
-}

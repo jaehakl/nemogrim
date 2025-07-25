@@ -1,11 +1,21 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from db import Base, engine
 from fastapi.staticfiles import StaticFiles
 import os
+import logging
+import time
 
 VIDEO_DIR = "../../video_files"
+
+# 로그 설정 - 정적 파일 요청 로그 숨김
+logging.basicConfig(level=logging.INFO)
+# uvicorn.access 로거를 WARNING 레벨로 설정하여 정적 파일 요청 로그 숨김
+access_logger = logging.getLogger("uvicorn.access")
+access_logger.setLevel(logging.WARNING)
+
+logger = logging.getLogger(__name__)
 
 def server():
     @asynccontextmanager
