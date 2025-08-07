@@ -1,10 +1,10 @@
 {
-  "name": "video",
+  "name": "nemogrim",
   "private": true,
   "scripts": {
-    "dev": "pnpm --filter video-frontend dev",
-    "build": "pnpm --filter video-frontend build",
-    "start": "pnpm --filter video-frontend start"
+    "dev": "pnpm --filter nemogrim-video dev",
+    "build": "pnpm --filter nemogrim-video build",
+    "start": "pnpm --filter nemogrim-video start"
   },
   "devDependencies": {
     "prettier": "^3.0.0",

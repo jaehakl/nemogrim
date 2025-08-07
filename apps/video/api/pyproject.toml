@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "nemogrim-video"
+version = "0.0.1"
+description = "Nemogrim Video Backend API"
+authors = ["Jaehak Lee <leejaehak87@gmail.com>"]
+package-mode = false
+
+[tool.poetry.dependencies]
+python = ">=3.11"
+uvicorn = "^0.34.3"
+fastapi = "^0.115.14"
+python-multipart = "^0.0.20"
+sqlalchemy = "^2.0.41"
+opencv-python = "^4.8.1"
+Pillow = "^10.0.0"
+
+
+[tool.poetry.group.dev.dependencies]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

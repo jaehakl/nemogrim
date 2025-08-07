@@ -46,4 +46,4 @@ Thumbs.db
 *.db
 alembic.ini
 **/video_files/
-
+**/figures/
