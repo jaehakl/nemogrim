@@ -1,0 +1,118 @@
+.user-word-skills-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.user-word-skills-page .header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.user-word-skills-page .header h1 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.user-word-skills-page .meta {
+  display: flex;
+  gap: 12px;
+  color: #666;
+}
+
+.user-word-skills-page .card {
+  background: #fff;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.user-word-skills-page .card h2 {
+  margin-top: 0;
+  font-size: 16px;
+  margin-bottom: 12px;
+}
+
+.chart-container {
+  width: 100%;
+  height: 380px;
+}
+
+.legend-note {
+  color: #666;
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+.lemma-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, 1fr);
+  gap: 12px;
+}
+
+.lemma-level {
+  border: 1px solid #eee;
+  border-radius: 6px;
+  padding: 12px;
+  background: #fafafa;
+}
+
+.level-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.level-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  color: #fff;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+.level-count {
+  color: #333;
+  font-weight: 600;
+}
+
+.lemma-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.lemma-chip {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.lemma-chip:hover {
+  background: #f0f7ff;
+  border-color: #5B8FF9;
+}
+
+.loading, .error, .empty {
+  text-align: center;
+  color: #666;
+}
+
+@media (max-width: 768px) {
+  .chart-container {
+    height: 300px;
+  }
+}
+
+

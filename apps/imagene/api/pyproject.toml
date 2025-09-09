@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "onigiri-jpkr"
+version = "0.0.1"
+description = "Onigiri Japanese-Korean App API"
+authors = ["Jaehak Lee <leejaehak87@gmail.com>"]
+package-mode = false
+
+[tool.poetry.dependencies]
+python = ">=3.11"
+sqlalchemy = "^2.0.41"
+uvicorn = "^0.34.3"
+fastapi = "^0.115.14"
+pgvector = "^0.4.1"
+dotenv = "^0.9.9"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

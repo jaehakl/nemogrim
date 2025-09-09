@@ -1,0 +1,283 @@
+.word-input-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.word-input-modal-content {
+  background: #000000;
+  border: 2px solid #ffffff;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 480px;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.word-input-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 16px 20px 12px 20px;
+  border-bottom: 1px solid #333333;
+  background: #111111;
+}
+
+.word-input-modal-title-section {
+  flex: 1;
+}
+
+.word-input-modal-title-section h3 {
+  margin: 0 0 4px 0;
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.author-display {
+  display: block;
+  color: #ff4444;
+  font-size: 12px;
+  font-weight: 400;
+  opacity: 0.9;
+}
+
+.word-input-modal-close-btn {
+  background: #333333;
+  border: 1px solid #666666;
+  font-size: 18px;
+  cursor: pointer;
+  color: #ffffff;
+  padding: 4px 8px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  margin-left: 12px;
+}
+
+.word-input-modal-close-btn:hover {
+  background: #ff4444;
+  border-color: #ff6666;
+}
+
+.word-input-modal-body {
+  padding: 16px 20px;
+  background: #000000;
+}
+
+.word-input-modal-word {
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.word-input-modal-form-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.word-input-modal-form-row .word-input-modal-form-group {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.word-input-modal-form-group label {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: 500;
+  color: #ffffff;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.word-input-modal-form-group input,
+.word-input-modal-form-group select {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #333333;
+  border-radius: 4px;
+  font-size: 14px;
+  background: #111111;
+  color: #ffffff;
+  box-sizing: border-box;
+}
+
+.word-input-modal-form-group input:focus,
+.word-input-modal-form-group select:focus {
+  outline: none;
+  border-color: #ff4444;
+  box-shadow: 0 0 0 2px rgba(255, 68, 68, 0.2);
+  background: #1a1a1a;
+}
+
+.word-input-modal-form-group input::placeholder {
+  color: #666666;
+}
+
+.word-input-modal-form-group select option {
+  background: #111111;
+  color: #ffffff;
+}
+
+.word-input-modal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px 16px 20px;
+  border-top: 1px solid #333333;
+  background: #111111;
+}
+
+.word-input-modal-footer-left {
+  display: flex;
+  gap: 8px;
+}
+
+.word-input-modal-footer-right {
+  display: flex;
+  gap: 8px;
+}
+
+.word-input-modal-cancel-btn,
+.word-input-modal-add-btn,
+.word-input-modal-delete-btn {
+  padding: 8px 16px;
+  border: 1px solid;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all 0.2s ease;
+}
+
+.word-input-modal-cancel-btn {
+  background-color: #333333;
+  color: #ffffff;
+  border-color: #666666;
+}
+
+.word-input-modal-cancel-btn:hover {
+  background-color: #444444;
+  border-color: #888888;
+}
+
+.word-input-modal-add-btn {
+  background-color: #ff4444;
+  color: #ffffff;
+  border-color: #ff6666;
+}
+
+.word-input-modal-add-btn:hover {
+  background-color: #ff6666;
+  border-color: #ff8888;
+}
+
+.word-input-modal-delete-btn {
+  background-color: #660000;
+  color: #ffffff;
+  border-color: #ff4444;
+}
+
+.word-input-modal-delete-btn:hover {
+  background-color: #ff4444;
+  border-color: #ff6666;
+}
+
+/* 파일 태그 관련 스타일 */
+.word-input-modal-file-tag-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  padding: 6px 8px;
+  background-color: #111111;
+  border-radius: 4px;
+  border: 1px solid #333333;
+}
+
+.word-input-modal-file-name {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: #cccccc;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.word-input-modal-file-tag-input {
+  flex: 1;
+  padding: 4px 6px;
+  border: 1px solid #333333;
+  border-radius: 3px;
+  font-size: 11px;
+  background: #1a1a1a;
+  color: #ffffff;
+}
+
+.word-input-modal-file-tag-input:focus {
+  outline: none;
+  border-color: #ff4444;
+  box-shadow: 0 0 0 1px rgba(255, 68, 68, 0.2);
+}
+
+/* 파일 입력 필드 스타일 */
+.word-input-modal-form-group input[type="file"] {
+  padding: 6px 8px;
+  border: 1px dashed #666666;
+  background-color: #111111;
+  cursor: pointer;
+  color: #cccccc;
+}
+
+.word-input-modal-form-group input[type="file"]:hover {
+  border-color: #ff4444;
+  background-color: #1a1a1a;
+}
+
+.word-input-modal-form-group input[type="file"]::-webkit-file-upload-button {
+  background: #333333;
+  color: #ffffff;
+  border: 1px solid #666666;
+  border-radius: 3px;
+  padding: 4px 8px;
+  margin-right: 8px;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.word-input-modal-form-group input[type="file"]::-webkit-file-upload-button:hover {
+  background: #ff4444;
+  border-color: #ff6666;
+}
+
+/* 스크롤바 스타일 */
+.word-input-modal-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.word-input-modal-content::-webkit-scrollbar-track {
+  background: #111111;
+}
+
+.word-input-modal-content::-webkit-scrollbar-thumb {
+  background: #333333;
+  border-radius: 3px;
+}
+
+.word-input-modal-content::-webkit-scrollbar-thumb:hover {
+  background: #ff4444;
+}

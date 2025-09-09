@@ -1,0 +1,338 @@
+.filter-form {
+  background: #f8f9fa;
+  padding: 15px 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border: 1px solid #e9ecef;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: flex-end;
+}
+
+.filter-section {
+  margin-bottom: 0;
+  min-width: 150px;
+  flex: 1;
+}
+
+.filter-section h3 {
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #495057;
+}
+
+.level-checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.level-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  background: white;
+  transition: all 0.2s;
+}
+
+.level-checkbox:hover {
+  background: #f8f9fa;
+  border-color: #007bff;
+}
+
+.level-checkbox input[type="checkbox"] {
+  margin: 0;
+}
+
+.range-inputs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.range-inputs input {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.range-inputs span {
+  font-weight: 500;
+  color: #6c757d;
+}
+
+.filter-section select {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 13px;
+  background: white;
+}
+
+.filter-section input[type="number"] {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+/* Limit 버튼 스타일 */
+.limit-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.limit-btn {
+  background: #f8f9fa;
+  color: #495057;
+  border: 1px solid #dee2e6;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 50px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.limit-btn:hover {
+  background: #e9ecef;
+  border-color: #007bff;
+  color: #007bff;
+}
+
+.limit-btn.active {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.limit-btn.active:hover {
+  background: #0056b3;
+  border-color: #0056b3;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+  flex-shrink: 0;
+}
+
+.filter-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.filter-btn:hover:not(:disabled) {
+  background: #0056b3;
+}
+
+.filter-btn:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.reset-btn {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.reset-btn:hover {
+  background: #545b62;
+}
+
+/* 페이지네이션 스타일 */
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #e9ecef;
+  justify-content: center;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.pagination-btn {
+  background: #f8f9fa;
+  color: #495057;
+  border: 1px solid #dee2e6;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: #e9ecef;
+  border-color: #007bff;
+  color: #007bff;
+}
+
+.pagination-btn:disabled {
+  background: #f8f9fa;
+  color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.pagination-btn.active {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.pagination-btn.active:hover {
+  background: #0056b3;
+  border-color: #0056b3;
+}
+
+.pagination-ellipsis {
+  font-size: 13px;
+  color: #6c757d;
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+}
+
+.pagination-info {
+  font-size: 12px;
+  color: #6c757d;
+  margin-left: 15px;
+  padding: 6px 10px;
+  background: #f8f9fa;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1200px) {
+  .filter-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .filter-section {
+    min-width: auto;
+    flex: none;
+  }
+  
+  .filter-actions {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #e9ecef;
+  }
+}
+
+@media (max-width: 768px) {
+  .filter-form {
+    padding: 12px 15px;
+  }
+  
+  .level-checkboxes {
+    gap: 6px;
+  }
+  
+  .level-checkbox {
+    font-size: 12px;
+    padding: 3px 6px;
+  }
+  
+  .range-inputs {
+    gap: 6px;
+  }
+  
+  .range-inputs input {
+    padding: 5px 8px;
+    font-size: 12px;
+  }
+  
+  .filter-section select,
+  .filter-section input[type="number"] {
+    padding: 5px 8px;
+    font-size: 12px;
+  }
+  
+  .limit-buttons {
+    gap: 6px;
+  }
+  
+  .limit-btn {
+    padding: 4px 8px;
+    font-size: 12px;
+    min-width: 40px;
+    height: 28px;
+  }
+  
+  .filter-btn,
+  .reset-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  
+  .pagination {
+    gap: 4px;
+  }
+  
+  .pagination-btn {
+    padding: 4px 8px;
+    font-size: 12px;
+    min-width: 28px;
+    height: 28px;
+  }
+  
+  .pagination-ellipsis {
+    font-size: 12px;
+    min-width: 28px;
+    height: 28px;
+  }
+  
+  .pagination-info {
+    font-size: 11px;
+    margin-left: 10px;
+    padding: 4px 8px;
+  }
+}

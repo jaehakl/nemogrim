@@ -1,0 +1,28 @@
+.youtube-embed-container {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e0e0e0;
+  background-color: #000;
+}
+
+.youtube-embed-container iframe {
+  display: block;
+}
+
+.youtube-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  color: #6c757d;
+  font-size: 12px;
+  text-align: center;
+  padding: 8px;
+}
+
+.youtube-error span {
+  word-break: break-word;
+}
