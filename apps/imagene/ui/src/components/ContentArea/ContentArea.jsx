@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Panel, Stack, Button, Input, Pagination } from 'rsuite';
+import { Panel, Stack, Button, Input } from 'rsuite';
 import { useImageFilter } from '../../contexts/ImageFilterContext';
 import { API_URL } from '../../api/api';
 import './ContentArea.css';
@@ -15,14 +15,11 @@ export const ContentArea = () => {
     bulkSetGroup,
   } = useImageFilter();
 
-  const [pageByGroup, setPageByGroup] = useState({});
-  const pageSize = 10; // 클라이언트 페이지네이션 크기
+  
 
   const groups = useMemo(() => Object.keys(imagesByGroup || {}), [imagesByGroup]);
 
-  const handlePageChange = (groupName, page) => {
-    setPageByGroup((prev) => ({ ...prev, [groupName]: page }));
-  };
+  
 
   const openSetGroupDialog = async () => {
     const name = prompt('설정할 그룹명을 입력하세요');
@@ -61,9 +58,6 @@ export const ContentArea = () => {
             key={groupName}
             groupName={groupName}
             images={imagesByGroup[groupName] || []}
-            page={pageByGroup[groupName] || 1}
-            onPageChange={(p) => handlePageChange(groupName, p)}
-            pageSize={pageSize}
             toggleSelectImage={toggleSelectImage}
             selectedImageIds={selectedImageIds}
             onDragStart={onDragStart}
@@ -75,10 +69,8 @@ export const ContentArea = () => {
   );
 };
 
-const GroupPanel = ({ groupName, images, page, pageSize, onPageChange, toggleSelectImage, selectedImageIds, onDragStart, onDropToGroup }) => {
+const GroupPanel = ({ groupName, images, toggleSelectImage, selectedImageIds, onDragStart, onDropToGroup }) => {
   const total = images.length;
-  const startIndex = (page - 1) * pageSize;
-  const current = images.slice(startIndex, startIndex + pageSize);
   const isUngrouped = groupName === '_ungrouped_';
 
   return (
@@ -90,7 +82,7 @@ const GroupPanel = ({ groupName, images, page, pageSize, onPageChange, toggleSel
       onDrop={(e) => onDropToGroup(e, groupName)}
     >
       <div className="GroupPanel-grid">
-        {current.map((img) => {
+        {images.map((img) => {
           const checked = selectedImageIds?.has(img.id);
           return (
             <label
@@ -105,22 +97,6 @@ const GroupPanel = ({ groupName, images, page, pageSize, onPageChange, toggleSel
           );
         })}
       </div>
-      {total > pageSize && (
-        <div className="GroupPanel-pagination">
-          <Pagination
-            prev
-            next
-            first
-            last
-            ellipsis
-            boundaryLinks
-            total={total}
-            limit={pageSize}
-            activePage={page}
-            onChangePage={onPageChange}
-          />
-        </div>
-      )}
     </Panel>
   );
 };
