@@ -37,8 +37,8 @@ export const SidebarPanel = () => {
   // 랜덤 이미지 생성 함수
   const generateRandomImages = async (nGen = 1) => {    
     // 무작위 설정값 생성
-    const randomSteps = Math.floor(Math.random() * 40) + 10; // 10-49
-    const randomCfg = Math.round((Math.random() * 10 + 1) * 10) / 10; // 1.0-11.0
+    const randomSteps = Math.floor(Math.random() * 35) + 16; // 16-50
+    const randomCfg = Math.round((Math.random() * 16.5 + 3.5) * 10) / 10; // 3.5-20.0
     const randomHeight = [768, 1024, 1280][Math.floor(Math.random() * 5)];
     const randomWidth = [768, 1024, 1280, 1536][Math.floor(Math.random() * 5)];
 
@@ -47,7 +47,7 @@ export const SidebarPanel = () => {
     for (let i = 0; i < nGen; i++) {
     
       const randomPositivePromptLength = Math.floor(Math.random() * 31) + 1; // 1-30
-      const randomNegativePromptLength = Math.floor(Math.random() * 21) + 1; // 1-20
+      const randomNegativePromptLength = Math.floor(Math.random() * 13) + 8; // 8-20
       // 무작위 키워드 생성
       const randomPositive = getRandomKeywords('positive', randomPositivePromptLength);
       const randomNegative = getRandomKeywords('negative', randomNegativePromptLength);
