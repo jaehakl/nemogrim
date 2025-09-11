@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Panel, Stack, Button, Input, Pagination } from 'rsuite';
+import { Panel, Stack, Button, Input, Pagination, InputNumber, SelectPicker } from 'rsuite';
 import { useImageFilter } from '../../contexts/ImageFilterContext';
 import { API_URL } from '../../api/api';
 import './ContentArea.css';
@@ -16,7 +16,19 @@ export const ContentArea = () => {
   } = useImageFilter();
 
   const [pageByGroup, setPageByGroup] = useState({});
-  const pageSize = 10; // 클라이언트 페이지네이션 크기
+  const [pageSize, setPageSize] = useState(10); // 클라이언트 페이지네이션 크기
+  const [aspectRatio, setAspectRatio] = useState('1 / 1.2');
+
+  const aspectRatioOptions = useMemo(() => ([
+    { label: '1:1', value: '1 / 1' },
+    { label: '2:3', value: '2 / 3' },
+    { label: '3:4', value: '3 / 4' },
+    { label: '4:5', value: '4 / 5' },
+    { label: '1:1.2', value: '1 / 1.2' },
+    { label: '9:16', value: '9 / 16' },
+    { label: '3:2', value: '3 / 2' },
+    { label: '16:9', value: '16 / 9' },
+  ]), []);
 
   const groups = useMemo(() => Object.keys(imagesByGroup || {}), [imagesByGroup]);
 
@@ -50,6 +62,15 @@ export const ContentArea = () => {
         <Stack spacing={8} alignItems="center">
           <Input placeholder="검색어(,로 구분)" value={imageFilterData?.search_value || ''} onChange={(val) => setImageFilterData((prev) => ({ ...prev, search_value: val }))} style={{ width: 300 }} />
           <Button appearance="primary" onClick={() => { /* Auto refresh by effect */ }}>검색</Button>
+          <SelectPicker data={aspectRatioOptions} value={aspectRatio} onChange={(val) => val && setAspectRatio(val)} placeholder="비율" cleanable={false} searchable={false} style={{ width: 110 }} />
+          <span>페이지당</span>
+          <InputNumber min={1} max={100} value={pageSize} onChange={(val) => {
+            const n = Number(val);
+            if (!Number.isFinite(n)) return;
+            const clamped = Math.max(1, Math.min(100, Math.floor(n)));
+            setPageSize(clamped);
+          }} style={{ width: 90 }} />
+          <span>개</span>
           <Button onClick={openSetGroupDialog} disabled={(selectedImageIds?.size || 0) === 0}>선택 그룹 지정</Button>
           <Button appearance="ghost" color="red" onClick={bulkDelete} disabled={(selectedImageIds?.size || 0) === 0}>선택 삭제</Button>
         </Stack>
@@ -64,6 +85,7 @@ export const ContentArea = () => {
             page={pageByGroup[groupName] || 1}
             onPageChange={(p) => handlePageChange(groupName, p)}
             pageSize={pageSize}
+            aspectRatio={aspectRatio}
             toggleSelectImage={toggleSelectImage}
             selectedImageIds={selectedImageIds}
             onDragStart={onDragStart}
@@ -75,9 +97,11 @@ export const ContentArea = () => {
   );
 };
 
-const GroupPanel = ({ groupName, images, page, pageSize, onPageChange, toggleSelectImage, selectedImageIds, onDragStart, onDropToGroup }) => {
+const GroupPanel = ({ groupName, images, page, pageSize, aspectRatio, onPageChange, toggleSelectImage, selectedImageIds, onDragStart, onDropToGroup }) => {
   const total = images.length;
-  const startIndex = (page - 1) * pageSize;
+  const maxPage = Math.max(1, Math.ceil(total / pageSize));
+  const effectivePage = Math.min(page, maxPage);
+  const startIndex = (effectivePage - 1) * pageSize;
   const current = images.slice(startIndex, startIndex + pageSize);
   const isUngrouped = groupName === '_ungrouped_';
 
@@ -100,7 +124,7 @@ const GroupPanel = ({ groupName, images, page, pageSize, onPageChange, toggleSel
               onDragStart={(e) => onDragStart(e, img.id)}
             >
               <input type="checkbox" checked={checked} onChange={() => toggleSelectImage(img.id)} />
-              <img src={API_URL+"/"+img.url} alt={String(img.id)} />
+              <img src={API_URL+"/"+img.url} alt={String(img.id)} style={{ aspectRatio }} />
             </label>
           );
         })}
@@ -116,7 +140,7 @@ const GroupPanel = ({ groupName, images, page, pageSize, onPageChange, toggleSel
             boundaryLinks
             total={total}
             limit={pageSize}
-            activePage={page}
+            activePage={effectivePage}
             onChangePage={onPageChange}
           />
         </div>
