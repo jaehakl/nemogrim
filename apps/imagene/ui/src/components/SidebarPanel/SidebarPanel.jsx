@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useRef } from 'react';
-import { Button, Divider, Stack } from 'rsuite';
+import { Button, Divider, Stack, Modal, Form, InputNumber } from 'rsuite';
 import { useImageFilter } from '../../contexts/ImageFilterContext';
 import { CustomTagPicker } from '../CustomTagPicker/CustomTagPicker';
 import { ImageGenModal } from '../ImageGenModal/ImageGenModal';
@@ -22,6 +22,8 @@ export const SidebarPanel = () => {
   const [isRandomGenerating, setIsRandomGenerating] = useState(false);
   const [generatedCount, setGeneratedCount] = useState(0);
   const autoGenerateRef = useRef(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [nGen, setNGen] = useState(16);
 
   // 무작위 키워드 선택 함수
   const getRandomKeywords = (keyType, count = 40) => {
@@ -98,7 +100,7 @@ export const SidebarPanel = () => {
         while (autoGenerateRef.current) {
           try {
             // 무작위 이미지 생성
-            await generateRandomImages(16);
+            await generateRandomImages(nGen);
             
             // 생성 카운트 증가
             setGeneratedCount(prev => prev + 1);
@@ -164,6 +166,14 @@ export const SidebarPanel = () => {
               키워드 삭제 ({selectedKeywords.length}개)
             </Button>
           )}
+          <Button 
+            appearance="ghost" 
+            size="sm"
+            onClick={() => setShowSettings(true)}
+            style={{ alignSelf: 'flex-end', fontSize: '12px', padding: '4px 8px' }}
+          >
+            ⚙️ 설정
+          </Button>
         </Stack>
       </div>
 
@@ -199,6 +209,40 @@ export const SidebarPanel = () => {
       />
 
       <ImageGenModal open={openGen} onClose={() => setOpenGen(false)} />
+      
+      <Modal open={showSettings} onClose={() => setShowSettings(false)} size="sm">
+        <Modal.Header>
+          <Modal.Title>랜덤 생성 설정</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Form.Group>
+              <Form.ControlLabel>한 번에 생성할 이미지 개수</Form.ControlLabel>
+              <InputNumber
+                value={nGen}
+                onChange={(value) => {
+                  if (value !== null && !isNaN(value)) {
+                    const clamped = Math.max(1, Math.min(64, value));
+                    setNGen(clamped);
+                  }
+                }}
+                min={1}
+                max={300}
+                step={1}
+                style={{ width: '100%' }}
+              />
+              <Form.HelpText>
+                자동 랜덤 생성 시 한 번에 생성할 이미지 개수입니다. (1-64)
+              </Form.HelpText>
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button onClick={() => setShowSettings(false)} appearance="primary">
+            확인
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };
