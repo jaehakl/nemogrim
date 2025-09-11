@@ -110,8 +110,8 @@ def filter_keywords(keyword_filter_data: KeywordFilterData, db: Session) -> List
                 func.cast(Keyword.n_deleted, Float) / func.cast(Keyword.n_created, Float) <= keyword_filter_data.del_rate_max
             )
     
-    # 정렬 (기본적으로 id 순)
-    query = query.order_by(Keyword.id)
+    # 정렬 (value 순)
+    query = query.order_by(Keyword.value)
     
     # 페이징
     if keyword_filter_data.offset:
