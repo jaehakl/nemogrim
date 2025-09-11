@@ -3,6 +3,7 @@ import { Button, Divider, Stack } from 'rsuite';
 import { useImageFilter } from '../../contexts/ImageFilterContext';
 import { CustomTagPicker } from '../CustomTagPicker/CustomTagPicker';
 import { ImageGenModal } from '../ImageGenModal/ImageGenModal';
+import { API_URL } from '../../api/api';
 import './SidebarPanel.css';
 
 export const SidebarPanel = () => {
@@ -180,7 +181,7 @@ export const SidebarPanel = () => {
               <div className="SidebarPanel-groupname">{groupName}</div>
               <div className="SidebarPanel-groupthumbs">
                 {(images || []).slice(0, 5).map((img, index) => (
-                  <img key={`${groupName}-${img.id}-${index}`} src={"http://localhost:8000/"+img.url} alt={groupName} />
+                  <img key={`${groupName}-${img.id}-${index}`} src={API_URL+"/"+img.url} alt={groupName} />
                 ))}
               </div>
             </button>

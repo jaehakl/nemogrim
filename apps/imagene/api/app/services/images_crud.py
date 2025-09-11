@@ -112,7 +112,6 @@ async def create_image_batch(keywords_data_list: List[List[KeywordData]], db: Se
         batch_mode = check_batch_mode_available(list, batch_mode)
 
     if batch_mode:
-        print("Batch mode is available.")
         step = steps_list[0]
         cfg = cfg_list[0]
         height = height_list[0]
@@ -125,10 +124,9 @@ async def create_image_batch(keywords_data_list: List[List[KeywordData]], db: Se
                                         cfg=cfg, 
                                         height=height, 
                                         width=width,
-                                        max_chunk_size=16)
+                                        max_chunk_size=settings.sd_max_chunk_size)
     else:
         images_list = []
-        print("Batch mode is not available.")
         for i in range(len(keywords_data_list)):
             images_list.extend(await asyncio.to_thread(generate_images_batch, 
                                         ckpt_path=settings.sd_model_path, 
@@ -139,13 +137,10 @@ async def create_image_batch(keywords_data_list: List[List[KeywordData]], db: Se
                                         height=height_list[i], 
                                         width=width_list[i]))
 
-    print("images_list", images_list)
     for i, image_file in enumerate(images_list):
         image_id = str(uuid.uuid4().hex)
         url = f"figures/{image_id}.jpg"
-        print("saving image to", url)
         await asyncio.to_thread(image_file.save, url, format="JPEG", quality=85)
-        print("image saved to", url)
 
         image = Image(
             dna=dna_list[i],
@@ -162,7 +157,6 @@ async def create_image_batch(keywords_data_list: List[List[KeywordData]], db: Se
 
     # 키워드 업데이트와 이미지 생성을 한 번에 커밋
     db.commit()
-    print(len(images), "images created")
     return images
 
 

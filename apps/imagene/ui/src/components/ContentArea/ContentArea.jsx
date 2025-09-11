@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Panel, Stack, Button, Input, Pagination } from 'rsuite';
 import { useImageFilter } from '../../contexts/ImageFilterContext';
+import { API_URL } from '../../api/api';
 import './ContentArea.css';
 
 export const ContentArea = () => {
@@ -99,7 +100,7 @@ const GroupPanel = ({ groupName, images, page, pageSize, onPageChange, toggleSel
               onDragStart={(e) => onDragStart(e, img.id)}
             >
               <input type="checkbox" checked={checked} onChange={() => toggleSelectImage(img.id)} />
-              <img src={"http://localhost:8000/"+img.url} alt={String(img.id)} />
+              <img src={API_URL+"/"+img.url} alt={String(img.id)} />
             </label>
           );
         })}
