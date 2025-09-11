@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "onigiri-jpkr"
+name = "imagene"
 version = "0.0.1"
-description = "Onigiri Japanese-Korean App API"
+description = "Imagene API"
 authors = ["Jaehak Lee <leejaehak87@gmail.com>"]
 package-mode = false
 
@@ -12,7 +12,18 @@ uvicorn = "^0.34.3"
 fastapi = "^0.115.14"
 pgvector = "^0.4.1"
 dotenv = "^0.9.9"
+psycopg = "^3.2.10"
+psycopg-binary = "^3.2.10"
+torch = { version = "2.6.0+cu126", source = "pytorch-gpu" }
+diffusers = "^0.35.1"
+asyncpg = "^0.30.0"
+sentence-transformers = "^5.1.0"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[[tool.poetry.source]]
+name = "pytorch-gpu"
+url = "https://download.pytorch.org/whl/cu126"
+priority = "explicit"

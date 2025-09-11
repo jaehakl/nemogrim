@@ -2,14 +2,15 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App.jsx'
 import { BrowserRouter } from 'react-router-dom'
-import { UserProvider } from './contexts/UserContext'
+import { ImageFilterProvider } from './contexts/ImageFilterContext.jsx'
+import 'rsuite/dist/rsuite-no-reset.min.css'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
-      <UserProvider>
+      <ImageFilterProvider>
         <App />
-      </UserProvider>
+      </ImageFilterProvider>
     </BrowserRouter>
   </StrictMode>,
 )

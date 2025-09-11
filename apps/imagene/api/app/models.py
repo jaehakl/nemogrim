@@ -15,7 +15,7 @@ class KeywordData(BaseModel):
 class KeywordFilterData(BaseModel):
     key: Optional[str] = None
     value: Optional[str] = None
-    seaarch_value: Optional[str] = None
+    search_value: Optional[str] = None
     direction_min: Optional[float] = None
     direction_max: Optional[float] = None
     del_rate_min: Optional[float] = None
@@ -29,7 +29,7 @@ class KeywordFilterData(BaseModel):
 
 
 class ImageFilterData(BaseModel):
-    group_ids: Optional[List[int]] = None
+    group_names: Optional[List[str]] = None
     search_value: Optional[str] = None
     limit: Optional[int] = None
     offset: Optional[int] = None
@@ -39,11 +39,9 @@ class GenImageData(BaseModel):
     group_id: int
     n_gen: int = 1
     dna: Optional[str] = None
-    model_params: Optional[str] = None
 
 #output
 class ImageData(BaseModel):
     id: int
     url: str
     dna: Optional[str] = None
-    model_params: Optional[str] = None

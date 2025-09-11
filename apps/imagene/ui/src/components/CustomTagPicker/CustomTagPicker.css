@@ -1,0 +1,130 @@
+.custom-tag-picker {
+  width: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+.custom-tag-picker-search {
+  width: 90%;
+  margin-bottom: 12px;
+}
+
+.custom-tag-picker-search-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.custom-tag-picker-search-input:focus {
+  border-color: #40a9ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+.custom-tag-picker-controls {
+  margin-bottom: 12px;
+  display: flex;
+  gap: 8px;
+}
+
+.custom-tag-picker-random-btn {
+  padding: 6px 12px;
+  background-color: #f0f0f0;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: #333;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.custom-tag-picker-random-btn:hover {
+  background-color: #e6f7ff;
+  border-color: #40a9ff;
+  color: #1890ff;
+}
+
+.custom-tag-picker-random-btn:active {
+  background-color: #bae7ff;
+  transform: translateY(1px);
+}
+
+.custom-tag-picker-content {
+  /* 스크롤 제거 */
+}
+
+.custom-tag-picker-group {
+  margin-bottom: 8px;
+}
+
+.custom-tag-picker-group:last-child {
+  margin-bottom: 0;
+}
+
+.custom-tag-picker-group-header {
+  padding: 4px 0;
+  font-size: 10px;
+  font-weight: 900;
+  color: #333;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid #d9d9d9;
+}
+
+.custom-tag-picker-group-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+.custom-tag-picker-option {
+  padding: 3px 6px;
+  border: 1px solid #d9d9d9;
+  border-radius: 3px;
+  background-color: #fff;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  color: #222;
+  line-height: 1.2;
+  white-space: nowrap;
+  font-weight: 800;
+}
+
+.custom-tag-picker-option:hover {
+  border-color: #40a9ff;
+  background-color: #f5f5f5;
+}
+
+.custom-tag-picker-option.selected {
+  background-color: #e6f7ff;
+  border-color: #40a9ff;
+  color: #1890ff;
+}
+
+.custom-tag-picker-option.selected:hover {
+  background-color: #bae7ff;
+}
+
+.custom-tag-picker-option-value {
+  font-size: 10px;
+  color: inherit;
+  line-height: 1.2;
+  font-weight: 500;
+}
+
+.custom-tag-picker-option.selected .custom-tag-picker-option-value {
+  color: #1890ff;
+  font-weight: 800;
+}
+
+/* 스크롤바 스타일링 제거됨 */

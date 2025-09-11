@@ -4,12 +4,28 @@ from typing import List, Dict, Any
 from sqlalchemy.orm import Session
 from fastapi import Depends, Form
 from initserver import server
-#from models import WordData, ExampleData, TextData, ExampleFilterData, WordFilterData, UserData
+from models import KeywordData, KeywordFilterData, ImageData, ImageFilterData, GenImageData
 from utils.get_db import get_db
+from services.keywords_crud import (
+    create_keywords_batch,
+    sort_keywords_by_key,
+    filter_keywords,
+    update_keyword,
+    delete_keywords_batch
+)
+from services.images_crud import (
+    create_image_batch,
+    filter_images,
+    get_image_detail,
+    delete_images_batch
+)
+from services.group_crud import (
+    set_image_group_batch,
+    get_group_preview_batch,
+    delete_group_batch
+)
 
 app = server()
-
-
 
 
 @app.post("/keywords/create-batch")
@@ -38,16 +54,16 @@ async def api_delete_keywords_batch(request: Request, keyword_ids: List[int], db
     return exec_service(db, delete_keywords_batch, keyword_ids)
 
 
-@app.post("/images/create-image")
-async def api_create_image(request: Request, create_image_data: List[KeywordData], db: Session = Depends(get_db)
+@app.post("/images/create-batch")
+async def api_create_images_batch(request: Request, create_image_data: List[List[KeywordData]], db: Session = Depends(get_db)
     )->List[ImageData]:
-    return exec_service(db, create_image, create_image_data)
+    return await exec_service_async(db, create_image_batch, create_image_data)
 
 @app.post("/images/filter")
 async def api_filter_images(request: Request, search_images_data: ImageFilterData, db: Session = Depends(get_db)
-    )->List[ImageData]:
-    return exec_service(db, filter_images, search_images_data)
-    #serach 데이터가 없으면 전체에서 무작위로 추출
+    )->Dict[str, List[ImageData]]:
+    result = exec_service(db, filter_images, search_images_data)
+    return result
 
 @app.get("/images/get-detail/{image_id}")
 async def api_get_image_detail(request: Request, image_id: int, db: Session = Depends(get_db)
@@ -59,39 +75,32 @@ async def api_delete_images_batch(request: Request, image_ids: List[int], db: Se
     )->str:
     return exec_service(db, delete_images_batch, image_ids)
 
-
-
-@app.get("/images/create-group-auto")
-async def api_create_group_auto(request: Request, db: Session = Depends(get_db)
-    )->str:
-    return exec_service(db, create_group_auto)
-
 @app.post("/images/set-group-batch")
-async def api_set_image_group_batch(request: Request, group_id: int, image_ids: List[int], db: Session = Depends(get_db)
+async def api_set_image_group_batch(request: Request, group_image_data: Dict[str, Any], db: Session = Depends(get_db)
     )->str:
-    return exec_service(db, set_image_group_batch, group_id, image_ids)
+    print(group_image_data)
+    return exec_service(db, set_image_group_batch, group_image_data["group_name"], group_image_data["image_ids"])
 
 @app.get("/images/get-group-preview-batch")
 async def api_get_group_preview_batch(request: Request, db: Session = Depends(get_db)
     )->Dict[str, List[ImageData]]:
     return exec_service(db, get_group_preview_batch)
 
-@app.post("/images/set-group-name")
-async def api_set_group_name(request: Request, group_id: int, group_name: str, db: Session = Depends(get_db)
-    )->str:
-    return exec_service(db, set_group_name, group_id, group_name)
-
 @app.post("/images/delete-group-batch")
-async def api_delete_group_batch(request: Request, group_ids: List[int], db: Session = Depends(get_db)
+async def api_delete_group_batch(request: Request, group_names: List[str], db: Session = Depends(get_db)
     )->str:
-    return exec_service(db, delete_group_batch, group_ids)
+    return exec_service(db, delete_group_batch, group_names)
 
 
-@app.post("/images/gen-offsprings")
-async def api_images_gen_offsprings(request: Request, gen_image_data: GenImageData, db: Session = Depends(get_db)
-    )->List[ImageData]:
-    return exec_service(db, images_gen_offsprings, gen_image_data)
-
+#@app.get("/images/create-group-auto")
+#async def api_create_group_auto(request: Request, db: Session = Depends(get_db)
+#    )->str:
+#    return exec_service(db, create_group_auto)
+#
+#@app.post("/images/gen-offsprings")
+#async def api_images_gen_offsprings(request: Request, gen_image_data: GenImageData, db: Session = Depends(get_db)
+#    )->List[ImageData]:
+#    return exec_service(db, images_gen_offsprings, gen_image_data)
 
 
 def exec_service(db: Session, func, *args, **kwargs):    
@@ -104,3 +113,12 @@ def exec_service(db: Session, func, *args, **kwargs):
     finally:
         db.close()
 
+async def exec_service_async(db: Session, func, *args, **kwargs):    
+    try:
+        return await func(*args, **kwargs, db=db)
+    except Exception as e:
+        print("Error: ", e)
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        db.close()

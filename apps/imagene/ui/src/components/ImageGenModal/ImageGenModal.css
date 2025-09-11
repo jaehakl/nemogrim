@@ -1,0 +1,210 @@
+/* ImageGenModal 컴포넌트 스타일 */
+
+.image-gen-modal {
+  min-width: 800px;
+}
+
+.image-gen-modal-body {
+  padding: 24px;
+}
+
+/* 생성된 이미지 표시 영역 */
+.image-gen-modal-generated-image-container {
+  text-align: center;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
+}
+
+.image-gen-modal-generated-image-title {
+  margin: 0 0 16px 0;
+  color: #495057;
+}
+
+.image-gen-modal-generated-image {
+  max-width: 100%;
+  max-height: 500px;
+  border: 2px solid #dee2e6;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* 로딩 상태 표시 */
+.image-gen-modal-loading-container {
+  text-align: center;
+  padding: 60px 20px;
+  background-color: #f8f9fa;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
+}
+
+.image-gen-modal-loading-title {
+  font-size: 20px;
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+
+.image-gen-modal-loading-subtitle {
+  font-size: 16px;
+  color: #6c757d;
+}
+
+/* 자동 생성 상태 표시 */
+.image-gen-modal-auto-generating-container {
+  text-align: center;
+  padding: 40px 20px;
+  background-color: #e3f2fd;
+  border-radius: 12px;
+  border: 2px solid #2196f3;
+}
+
+.image-gen-modal-auto-generating-title {
+  font-size: 20px;
+  margin-bottom: 12px;
+  font-weight: 500;
+  color: #1976d2;
+}
+
+.image-gen-modal-auto-generating-subtitle {
+  font-size: 16px;
+  color: #1976d2;
+  margin-bottom: 20px;
+}
+
+.image-gen-modal-stop-button {
+  min-width: 120px;
+}
+
+/* 폼 그리드 레이아웃 */
+.image-gen-modal-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+/* 섹션별 영역 */
+.image-gen-modal-prompt-section,
+.image-gen-modal-settings-section {
+  /* 추가 스타일이 필요한 경우 여기에 작성 */
+}
+
+/* 섹션 헤더 */
+.image-gen-modal-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.image-gen-modal-section-title {
+  margin: 0;
+  color: #495057;
+  font-size: 16px;
+}
+
+/* 폼 그룹 */
+.image-gen-modal-form-group {
+  margin-bottom: 20px;
+}
+
+.image-gen-modal-form-group:last-child {
+  margin-bottom: 0;
+}
+
+.image-gen-modal-form-group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.image-gen-modal-form-label {
+  font-size: 14px;
+  font-weight: 500;
+  margin: 0;
+}
+
+/* 키워드 텍스트 영역 */
+.image-gen-modal-keyword-textarea {
+  font-size: 14px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+/* 설정 그리드 */
+.image-gen-modal-settings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.image-gen-modal-settings-grid:last-child {
+  margin-bottom: 0;
+}
+
+/* 버튼 스타일 */
+.image-gen-modal-random-button,
+.image-gen-modal-auto-start-button,
+.image-gen-modal-random-settings-button {
+  font-size: 12px;
+}
+
+.image-gen-modal-random-small-button {
+  font-size: 11px;
+  padding: 4px 8px;
+}
+
+/* 모달 푸터 */
+.image-gen-modal-footer {
+  padding: 20px 24px;
+}
+
+.image-gen-modal-cancel-button,
+.image-gen-modal-submit-button {
+  min-width: 100px;
+}
+
+.image-gen-modal-submit-button {
+  min-width: 120px;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1024px) {
+  .image-gen-modal {
+    min-width: 90vw;
+  }
+  
+  .image-gen-modal-form-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .image-gen-modal-settings-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .image-gen-modal-body {
+    padding: 16px;
+  }
+  
+  .image-gen-modal-footer {
+    padding: 16px;
+  }
+  
+  .image-gen-modal-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .image-gen-modal-form-group-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}

@@ -5,3 +5,4 @@ packages:
   - 'apps/*'
   - 'apps/video/*'
   - 'apps/cura/*'
+  - 'apps/imagene/*'
