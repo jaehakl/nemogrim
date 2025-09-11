@@ -40,7 +40,7 @@ export const SidebarPanel = () => {
     const randomSteps = Math.floor(Math.random() * 40) + 10; // 10-49
     const randomCfg = Math.round((Math.random() * 10 + 1) * 10) / 10; // 1.0-11.0
     const randomHeight = [768, 1024, 1280][Math.floor(Math.random() * 5)];
-    const randomWidth = [512, 768, 1024, 1280, 1536][Math.floor(Math.random() * 5)];
+    const randomWidth = [768, 1024, 1280, 1536][Math.floor(Math.random() * 5)];
 
     const dnaList = [];
 
