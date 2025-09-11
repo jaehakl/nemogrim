@@ -38,7 +38,7 @@ export const SidebarPanel = () => {
   const generateRandomImages = async (nGen = 1) => {    
     // 무작위 설정값 생성
     const randomSteps = Math.floor(Math.random() * 35) + 16; // 16-50
-    const randomCfg = Math.round((Math.random() * 16.5 + 3.5) * 10) / 10; // 3.5-20.0
+    const randomCfg = Math.round((Math.random() * 10 + 3.5) * 10) / 10; // 3.5-13.5
     const randomHeight = [768, 1024, 1280][Math.floor(Math.random() * 5)];
     const randomWidth = [768, 1024, 1280, 1536][Math.floor(Math.random() * 5)];
 
@@ -127,7 +127,7 @@ export const SidebarPanel = () => {
     const seenValues = new Set();
     
     Object.entries(keywordsByKey || {}).forEach(([key, arr]) => {
-      arr.sort((a, b) => (b.n_created || 0) - (a.n_created || 0));
+      //arr.sort((a, b) => (b.n_created || 0) - (a.n_created || 0));
       arr.forEach((kw) => {
         let value = `${key}:${kw.value}`;
         if (!seenValues.has(value)) {
