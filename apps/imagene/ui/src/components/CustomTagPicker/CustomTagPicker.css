@@ -26,7 +26,101 @@
 .custom-tag-picker-controls {
   margin-bottom: 12px;
   display: flex;
+  flex-direction: column;
   gap: 8px;
+}
+
+.custom-tag-picker-threshold-control {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  background-color: #fafafa;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+}
+
+.custom-tag-picker-threshold-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #333;
+  text-align: center;
+  margin: 0;
+}
+
+.custom-tag-picker-slider-container {
+  position: relative;
+  width: 100%;
+}
+
+.custom-tag-picker-slider {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: #e8e8e8;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.custom-tag-picker-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #1890ff;
+  cursor: pointer;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s;
+}
+
+.custom-tag-picker-slider::-webkit-slider-thumb:hover {
+  background: #40a9ff;
+  transform: scale(1.1);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+}
+
+.custom-tag-picker-slider::-webkit-slider-thumb:active {
+  background: #096dd9;
+  transform: scale(1.05);
+}
+
+.custom-tag-picker-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #1890ff;
+  cursor: pointer;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s;
+}
+
+.custom-tag-picker-slider::-moz-range-thumb:hover {
+  background: #40a9ff;
+  transform: scale(1.1);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+}
+
+.custom-tag-picker-slider::-moz-range-track {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: #e8e8e8;
+  border: none;
+}
+
+.custom-tag-picker-slider-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-size: 9px;
+  color: #666;
+  font-weight: 500;
 }
 
 .custom-tag-picker-random-btn {

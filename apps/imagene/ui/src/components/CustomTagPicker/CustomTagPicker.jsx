@@ -9,6 +9,7 @@ export const CustomTagPicker = ({
   searchable = true 
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [threshold, setThreshold] = useState(0.5);
 
   // 키별로 그룹화된 데이터 생성
   const groupedData = React.useMemo(() => {
@@ -55,10 +56,10 @@ export const CustomTagPicker = ({
     if (delRate === undefined || delRate === null) return '#fff';
     
     // del_rate를 0.8-1 범위로 정규화 (0이 가장 밝고, 1이 가장 어둡게)
-    const normalizedRate = Math.min(Math.max(delRate, 0.92), 1);
+    const normalizedRate = Math.min(Math.max(delRate, threshold), 1);
     
     // 밝은 회색에서 어두운 회색으로 그라데이션
-    const lightness = 100 - ((normalizedRate - 0.92) * 1250); // 0%에서 100%까지
+    const lightness = 100 - ((normalizedRate - threshold) * 100/(1-threshold)); // 0%에서 100%까지
     return `hsl(0, 0%, ${lightness}%)`;
   };
 
@@ -66,10 +67,10 @@ export const CustomTagPicker = ({
   const getTextColor = (delRate) => {
     if (delRate === undefined || delRate === null) return '#222';
     
-    const normalizedRate = Math.min(Math.max(delRate, 0.92), 1);
+    const normalizedRate = Math.min(Math.max(delRate, threshold), 1);
     
     // 어두운 배경일 때는 밝은 텍스트, 밝은 배경일 때는 어두운 텍스트
-    return normalizedRate > 0.92 ? '#fff' : '#222';
+    return normalizedRate > threshold ? '#fff' : '#222';
   };
 
   // (1 - del_rate) 확률로 무작위 토글
@@ -117,6 +118,26 @@ export const CustomTagPicker = ({
       )}
       
       <div className="custom-tag-picker-controls">
+        <div className="custom-tag-picker-threshold-control">
+          <label className="custom-tag-picker-threshold-label">
+            임계값: {threshold.toFixed(2)}
+          </label>
+          <div className="custom-tag-picker-slider-container">
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              value={threshold}
+              onChange={(e) => setThreshold(parseFloat(e.target.value))}
+              className="custom-tag-picker-slider"
+            />
+            <div className="custom-tag-picker-slider-labels">
+              <span>0.0</span>
+              <span>1.0</span>
+            </div>
+          </div>
+        </div>
         <button
           className="custom-tag-picker-random-btn"
           onClick={randomToggleByProbability}
