@@ -35,8 +35,8 @@ def create_keywords_batch(keywords_data: List[KeywordData], db: Session) -> List
 
 def sort_keywords_by_key(db: Session) -> Dict[str, List[KeywordData]]:
     """키워드들을 키별로 정렬하여 반환"""
-    keywords = db.query(Keyword).all()
-    
+    keywords = db.query(Keyword).order_by(Keyword.value).all()
+
     result = {}
     for keyword in keywords:
         key = keyword.key
@@ -53,6 +53,7 @@ def sort_keywords_by_key(db: Session) -> Dict[str, List[KeywordData]]:
             del_rate=keyword.n_deleted / keyword.n_created if keyword.n_created > 0 else 0
         )
         result[key].append(keyword_data)
+
     
     return result
 
