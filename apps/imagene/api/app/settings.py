@@ -8,7 +8,7 @@ class Settings(BaseModel):
     db_url: str = os.getenv("IMAGENE_DB_URL", "") if os.getenv("IMAGENE_DB_URL", "") else "sqlite:///./../../db.sqlite3"
     app_base_url: str = os.getenv("APP_BASE_URL", "http://localhost:5173")
     sd_model_path: str = os.getenv("STABLE_DIFFUSION_MODEL_PATH", "models/stable-diffusion-v1-5")
-    sd_max_chunk_size: int = os.getenv("STABLE_DIFFUSION_MAX_CHUNK_SIZE", 4)
+    sd_max_chunk_size: int = int(os.getenv("STABLE_DIFFUSION_MAX_CHUNK_SIZE", 4))
 settings = Settings()
 
 print("db_url: ", settings.db_url)
