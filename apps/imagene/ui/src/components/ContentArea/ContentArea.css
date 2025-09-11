@@ -7,7 +7,7 @@
 .GroupPanel-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
 .GroupPanel-item { position: relative; display: block; border: 1px solid var(--color-border); border-radius: 10px; overflow: hidden; background: #0c0f14; transition: transform .08s ease; }
 .GroupPanel-item:hover { transform: translateY(-2px); }
-.GroupPanel-item img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; object-position: top left; display: block; }
+.GroupPanel-item img { width: 100%; aspect-ratio: 1 / 1.2; object-fit: cover; object-position: top; display: block; }
 .GroupPanel-item input[type="checkbox"] { position: absolute; top: 8px; left: 8px; }
 .GroupPanel-item.selected { outline: 2px solid var(--color-primary); }
 .GroupPanel-pagination { margin-top: 12px; display: flex; justify-content: center; }
