@@ -39,7 +39,7 @@ export const SidebarPanel = () => {
     // 무작위 설정값 생성
     const randomSteps = Math.floor(Math.random() * 31) + 20; // 20-50
     const randomCfg = Math.round((Math.random() * 5 + 5) * 10) / 10; // 5.0-10.0
-    const randomHeight = [512, 768, 1024, 1280][Math.floor(Math.random() * 5)];
+    const randomHeight = [768, 1024, 1280][Math.floor(Math.random() * 5)];
     const randomWidth = [512, 768, 1024, 1280, 1536][Math.floor(Math.random() * 5)];
 
     const dnaList = [];
