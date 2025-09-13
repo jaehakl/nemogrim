@@ -15,7 +15,7 @@ export const ContentArea = () => {
     bulkSetGroup,
     bulkUnsetGroup,
   } = useImageFilter();
-  const [pageSize, setPageSize] = useState(10); // 클라이언트 페이지네이션 크기
+  const [pageSize, setPageSize] = useState(32); // 클라이언트 페이지네이션 크기
   const [currentPage, setCurrentPage] = useState(1); // 현재 페이지
   const [aspectRatio, setAspectRatio] = useState('1 / 1.2');
   const [hoveredImage, setHoveredImage] = useState(null);
