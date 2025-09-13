@@ -25,7 +25,7 @@
 .content-area-main { 
   display: flex; 
   gap: 20px; 
-  height: calc(100vh - 180px); /* 툴바 높이를 제외한 전체 높이 */
+  height: calc(100vh - 270px); /* 툴바 높이를 제외한 전체 높이 */
 }
 
 .content-area-left {
@@ -93,7 +93,7 @@
   background: var(--color-surface-secondary); 
   transition: var(--transition);
   cursor: pointer;
-  width: 200px;
+  width: 188px;
   flex-shrink: 0;
 }
 
@@ -185,5 +185,16 @@
   border: 2px dashed var(--color-border);
   border-radius: var(--radius-sm);
   margin: 20px;
+}
+
+.content-area-pagination {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  padding: 16px 20px;
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border);
 }
 

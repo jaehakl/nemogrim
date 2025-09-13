@@ -16,6 +16,7 @@ export const ContentArea = () => {
     bulkUnsetGroup,
   } = useImageFilter();
   const [pageSize, setPageSize] = useState(10); // 클라이언트 페이지네이션 크기
+  const [currentPage, setCurrentPage] = useState(1); // 현재 페이지
   const [aspectRatio, setAspectRatio] = useState('1 / 1.2');
   const [hoveredImage, setHoveredImage] = useState(null);
 
@@ -29,6 +30,26 @@ export const ContentArea = () => {
     { label: '3:2', value: '3 / 2' },
     { label: '16:9', value: '16 / 9' },
   ]), []);
+
+  // 페이지네이션된 이미지 데이터 계산
+  const paginatedImages = useMemo(() => {
+    if (!images || images.length === 0) return [];
+    
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return images.slice(startIndex, endIndex);
+  }, [images, currentPage, pageSize]);
+
+  // 전체 페이지 수 계산
+  const totalPages = useMemo(() => {
+    if (!images || images.length === 0) return 1;
+    return Math.ceil(images.length / pageSize);
+  }, [images, pageSize]);
+
+  // 페이지 크기 변경 시 현재 페이지 리셋
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [pageSize]);
 
   return (
     <div className="content-area">
@@ -51,7 +72,7 @@ export const ContentArea = () => {
       </div>
       <div className="content-area-main">
         <div className="content-area-left">
-          {images && images.map((img) => {
+          {paginatedImages && paginatedImages.map((img) => {
             const checked = selectedImageIds?.has(img.id);
             return (
               <label
@@ -87,6 +108,23 @@ export const ContentArea = () => {
           </div>
         </div>
       </div>
+      {totalPages > 1 && (
+        <div className="content-area-pagination">
+          <Pagination
+            prev
+            next
+            first
+            last
+            ellipsis
+            boundaryLinks
+            maxButtons={5}
+            size="sm"
+            pages={totalPages}
+            activePage={currentPage}
+            onSelect={(page) => setCurrentPage(page)}
+          />
+        </div>
+      )}
     </div>
   );
 };
