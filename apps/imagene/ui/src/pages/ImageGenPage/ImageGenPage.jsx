@@ -480,7 +480,7 @@ export const ImageGenPage = () => {
                         min={0} 
                         max={50} 
                         value={positive_prompt_length_range[0]} 
-                        onChange={(v) => setPositivePromptLengthRange([v, positive_prompt_length_range[1]])}
+                        onChange={(v) => setPositivePromptLengthRange([Number(v), positive_prompt_length_range[1]])}
                         disabled={isGenerating}
                         style={{ width: '45%' }}
                         placeholder="최소값"
@@ -490,7 +490,7 @@ export const ImageGenPage = () => {
                         min={0} 
                         max={50} 
                         value={positive_prompt_length_range[1]} 
-                        onChange={(v) => setPositivePromptLengthRange([positive_prompt_length_range[0], v])}
+                        onChange={(v) => setPositivePromptLengthRange([positive_prompt_length_range[0], Number(v)])}
                         disabled={isGenerating}
                         style={{ width: '45%' }}
                         placeholder="최대값"
@@ -507,7 +507,7 @@ export const ImageGenPage = () => {
                         min={0} 
                         max={50} 
                         value={negative_prompt_length_range[0]} 
-                        onChange={(v) => setNegativePromptLengthRange([v, negative_prompt_length_range[1]])}
+                        onChange={(v) => setNegativePromptLengthRange([Number(v), negative_prompt_length_range[1]])}
                         disabled={isGenerating}
                         style={{ width: '45%' }}
                         placeholder="최소값"
@@ -517,7 +517,7 @@ export const ImageGenPage = () => {
                         min={0} 
                         max={50} 
                         value={negative_prompt_length_range[1]} 
-                        onChange={(v) => setNegativePromptLengthRange([negative_prompt_length_range[0], v])}
+                        onChange={(v) => setNegativePromptLengthRange([negative_prompt_length_range[0], Number(v)])}
                         disabled={isGenerating}
                         style={{ width: '45%' }}
                         placeholder="최대값"
