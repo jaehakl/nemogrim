@@ -93,6 +93,30 @@ export const ContentArea = () => {
           <div className="content-area-preview-header">
             <h4>원본 이미지</h4>
           </div>
+          {hoveredImage && (
+            <div className="content-area-preview-metadata">
+              <div className="metadata-compact">
+                <div className="metadata-row">
+                  <span className="metadata-item">Steps: {hoveredImage.steps}</span>
+                  <span className="metadata-item">CFG: {hoveredImage.cfg}</span>
+                  <span className="metadata-item">{hoveredImage.width}×{hoveredImage.height}</span>
+                </div>
+                {hoveredImage.keywords && hoveredImage.keywords.length > 0 && (
+                  <div className="metadata-keywords-compact">
+                    {hoveredImage.keywords.map((keyword, index) => (
+                      <span 
+                        key={index} 
+                        className={`metadata-keyword ${keyword.direction > 0 ? 'positive' : 'negative'}`}
+                      >
+                        {keyword.key}: {keyword.value}
+                        {keyword.weight !== 1.0 && ` (${keyword.weight})`}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
           <div className="content-area-preview-image">
             {hoveredImage ? (
               <img 
@@ -106,6 +130,7 @@ export const ContentArea = () => {
               </div>
             )}
           </div>
+
         </div>
       </div>
       {totalPages > 1 && (
