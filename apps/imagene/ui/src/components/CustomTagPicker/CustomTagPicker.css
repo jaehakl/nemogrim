@@ -11,16 +11,18 @@
 .custom-tag-picker-search-input {
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid #d9d9d9;
-  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   font-size: 14px;
   outline: none;
-  transition: border-color 0.2s;
+  transition: var(--transition);
+  background: var(--color-surface);
+  color: var(--color-text);
 }
 
 .custom-tag-picker-search-input:focus {
-  border-color: #40a9ff;
-  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
 }
 
 .custom-tag-picker-controls {
@@ -33,19 +35,22 @@
 .custom-tag-picker-threshold-control {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 8px;
-  background-color: #fafafa;
-  border: 1px solid #e8e8e8;
-  border-radius: 6px;
+  gap: 8px;
+  padding: 12px;
+  background: var(--color-surface-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
 }
 
 .custom-tag-picker-threshold-label {
   font-size: 11px;
   font-weight: 600;
-  color: #333;
+  color: var(--color-text-secondary);
   text-align: center;
   margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .custom-tag-picker-slider-container {
@@ -57,96 +62,99 @@
   width: 100%;
   height: 6px;
   border-radius: 3px;
-  background: #e8e8e8;
+  background: var(--color-border);
   outline: none;
   -webkit-appearance: none;
   appearance: none;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: var(--transition);
 }
 
 .custom-tag-picker-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
-  background: #1890ff;
+  background: var(--color-primary);
   cursor: pointer;
-  border: 2px solid #fff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  transition: all 0.2s;
+  border: 2px solid var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
 }
 
 .custom-tag-picker-slider::-webkit-slider-thumb:hover {
-  background: #40a9ff;
+  background: var(--color-primary-dark);
   transform: scale(1.1);
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow);
 }
 
 .custom-tag-picker-slider::-webkit-slider-thumb:active {
-  background: #096dd9;
+  background: var(--color-primary-dark);
   transform: scale(1.05);
 }
 
 .custom-tag-picker-slider::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
-  background: #1890ff;
+  background: var(--color-primary);
   cursor: pointer;
-  border: 2px solid #fff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  transition: all 0.2s;
+  border: 2px solid var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
 }
 
 .custom-tag-picker-slider::-moz-range-thumb:hover {
-  background: #40a9ff;
+  background: var(--color-primary-dark);
   transform: scale(1.1);
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow);
 }
 
 .custom-tag-picker-slider::-moz-range-track {
   width: 100%;
   height: 6px;
   border-radius: 3px;
-  background: #e8e8e8;
+  background: var(--color-border);
   border: none;
 }
 
 .custom-tag-picker-slider-labels {
   display: flex;
   justify-content: space-between;
-  margin-top: 4px;
+  margin-top: 6px;
   font-size: 9px;
-  color: #666;
+  color: var(--color-text-dim);
   font-weight: 500;
 }
 
 .custom-tag-picker-random-btn {
-  padding: 6px 12px;
-  background-color: #f0f0f0;
-  border: 1px solid #d9d9d9;
-  border-radius: 4px;
+  padding: 8px 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: 12px;
   font-weight: 600;
-  color: #333;
-  transition: all 0.2s;
+  color: var(--color-text-secondary);
+  transition: var(--transition);
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+  box-shadow: var(--shadow-sm);
 }
 
 .custom-tag-picker-random-btn:hover {
-  background-color: #e6f7ff;
-  border-color: #40a9ff;
-  color: #1890ff;
+  background: var(--color-primary-light);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
 }
 
 .custom-tag-picker-random-btn:active {
-  background-color: #bae7ff;
-  transform: translateY(1px);
+  background: var(--color-primary-light);
+  transform: translateY(0);
 }
 
 .custom-tag-picker-content {
@@ -162,14 +170,14 @@
 }
 
 .custom-tag-picker-group-header {
-  padding: 4px 0;
+  padding: 6px 0;
   font-size: 10px;
   font-weight: 900;
-  color: #333;
+  color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.4px;
-  margin-bottom: 6px;
-  border-bottom: 1px solid #d9d9d9;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .custom-tag-picker-group-items {
@@ -179,34 +187,41 @@
 }
 
 .custom-tag-picker-option {
-  padding: 3px 6px;
-  border: 1px solid #d9d9d9;
-  border-radius: 3px;
-  background-color: #fff;
+  padding: 4px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: var(--transition);
   display: inline-flex;
   align-items: center;
   font-size: 10px;
-  color: #222;
+  color: var(--color-text-secondary);
   line-height: 1.2;
   white-space: nowrap;
-  font-weight: 800;
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
 }
 
 .custom-tag-picker-option:hover {
-  border-color: #40a9ff;
-  background-color: #f5f5f5;
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
 }
 
 .custom-tag-picker-option.selected {
-  background-color: #e6f7ff;
-  border-color: #40a9ff;
-  color: #1890ff;
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-text-primary);
+  font-weight: 700;
+  box-shadow: var(--shadow);
 }
 
 .custom-tag-picker-option.selected:hover {
-  background-color: #bae7ff;
+  background: var(--color-primary-dark);
+  transform: translateY(-1px);
 }
 
 .custom-tag-picker-option-value {
@@ -217,8 +232,8 @@
 }
 
 .custom-tag-picker-option.selected .custom-tag-picker-option-value {
-  color: #1890ff;
-  font-weight: 800;
+  color: var(--color-text-primary);
+  font-weight: 700;
 }
 
 /* 스크롤바 스타일링 제거됨 */

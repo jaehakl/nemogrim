@@ -1,37 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { useImageFilter } from '../../contexts/ImageFilterContext';
 import './CustomTagPicker.css';
 
 export const CustomTagPicker = ({ 
-  data = [], 
-  value = [], 
-  onChange, 
   placeholder = "키워드 선택",
   searchable = true 
 }) => {
+  const {
+    keywordsByKey,
+    selectedKeywords,
+    setSelectedKeywords,
+    bulkDeleteKeywords,
+  } = useImageFilter();
+
   const [searchTerm, setSearchTerm] = useState('');
   const [threshold, setThreshold] = useState(0.5);
 
-  // 키별로 그룹화된 데이터 생성
-  const groupedData = React.useMemo(() => {
-    const groups = {};
-    data.forEach(item => {
-      const key = item.value.split(':')[0];
-      const label = item.label;
-      const item_value = item.value;
-      if (!groups[key]) {
-        groups[key] = [];
-      }
-      groups[key].push({ ...item, key, label, item_value});
-    });
-    return groups;
-  }, [data]);
+
+
 
   // 검색 필터링
   const filteredGroups = React.useMemo(() => {
-    if (!searchTerm) return groupedData;
+    if (!searchTerm) return keywordsByKey;
     
     const filtered = {};
-    Object.entries(groupedData).forEach(([key, items]) => {
+    Object.entries(keywordsByKey).forEach(([key, items]) => {
       const filteredItems = items.filter(item => 
         item.item_value.toLowerCase().includes(searchTerm.toLowerCase())
       );
@@ -40,67 +33,73 @@ export const CustomTagPicker = ({
       }
     });
     return filtered;
-  }, [groupedData, searchTerm]);
+  }, [keywordsByKey, searchTerm]);
 
   // 선택된 값 토글
-  const toggleValue = (itemValue) => {
-    const current = Array.isArray(value) ? value : [];
-    const newValues = current.includes(itemValue)
-      ? current.filter(v => v !== itemValue)
-      : [...current, itemValue];
-    onChange?.(newValues);
+  const toggleValue = (item) => {
+    const current = Object.keys(selectedKeywords).length > 0 ? selectedKeywords : {};    
+    const image_keyword_data = {
+      key: item.key,
+      value: item.value,
+      direction: item.direction,
+    }    
+    if (current[item.id]) {
+      const { [item.id]: removed, ...newValues } = current;
+      setSelectedKeywords(newValues);
+    } else {
+      // 존재하지 않으면 추가
+      const newValues = { ...current, [item.id]: image_keyword_data };
+      setSelectedKeywords(newValues);
+    }
   };
 
   // del_rate에 따른 배경색 계산
-  const getBackgroundColor = (delRate) => {
-    if (delRate === undefined || delRate === null) return '#fff';
+  const getBackgroundColor = (choiceRate) => {
+    if (choiceRate === undefined || choiceRate === null) return '#fff';
     
-    // del_rate를 0.8-1 범위로 정규화 (0이 가장 밝고, 1이 가장 어둡게)
-    const normalizedRate = Math.min(Math.max(delRate, threshold), 1);
-    
-    // 밝은 회색에서 어두운 회색으로 그라데이션
-    const lightness = 100 - ((normalizedRate - threshold) * 100/(1-threshold)); // 0%에서 100%까지
+    // choice_rate를 0~100 범위로 정규화 (0이 가장 어둡고, 100이 가장 밝게)
+    const lightness = Math.max(Math.min(choiceRate, threshold), 0)*100/threshold;    
     return `hsl(0, 0%, ${lightness}%)`;
   };
 
   // del_rate에 따른 텍스트 색상 계산
-  const getTextColor = (delRate) => {
-    if (delRate === undefined || delRate === null) return '#222';
+  const getTextColor = (choiceRate) => {
+    if (choiceRate === undefined || choiceRate === null) return '#222';
     
-    const normalizedRate = Math.min(Math.max(delRate, threshold), 1);
+    const lightness = Math.max(Math.min(choiceRate, threshold), 0)*100/threshold;    
     
     // 어두운 배경일 때는 밝은 텍스트, 밝은 배경일 때는 어두운 텍스트
-    return normalizedRate > threshold ? '#fff' : '#222';
+    return lightness > 50 ? '#000' : '#fff';
   };
 
   // (1 - del_rate) 확률로 무작위 토글
   const randomToggleByProbability = () => {
-    const current = Array.isArray(value) ? value : [];
-    const newValues = [...current];
+    const current = (selectedKeywords) ? selectedKeywords : {};
+    const newValues = { ...current };
     
     // 모든 아이템에 대해 확률적으로 토글
     Object.values(filteredGroups).forEach(items => {
-      items.forEach(item => {
-        if (item.del_rate !== undefined && item.del_rate !== null) {
-          const probability = 1 - item.del_rate; // (1 - del_rate)를 확률로 사용
+      Object.values(items).forEach(item => {
+        if (item.choice_rate !== undefined && item.choice_rate !== null) {
+          console.log(item.choice_rate);
+          const probability = item.choice_rate;
           const randomValue = Math.random();
-          
+
           if (randomValue < probability) {
             // 확률에 따라 토글
-            if (newValues.includes(item.item_value)) {
+            if (newValues[item.id]) {
               // 이미 선택된 경우 제거
-              const index = newValues.indexOf(item.item_value);
-              newValues.splice(index, 1);
+              delete newValues[item.id];
             } else {
               // 선택되지 않은 경우 추가
-              newValues.push(item.item_value);
+              newValues[item.id] = item;
             }
           }
         }
       });
     });
-    
-    onChange?.(newValues);
+    console.log(newValues);
+    setSelectedKeywords(newValues);
   };
 
   return (
@@ -137,14 +136,30 @@ export const CustomTagPicker = ({
               <span>1.0</span>
             </div>
           </div>
+        </div>        
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button
+            className="custom-tag-picker-random-btn"
+            onClick={randomToggleByProbability}
+            title="del_rate 확률로 무작위 토글"
+          >
+            🎲 무작위 선택
+          </button>          
+          <button
+            className="custom-tag-picker-random-btn"
+            onClick={() => setSelectedKeywords({})}
+            title="모든 선택 해제"
+          >
+            🗑️ 초기화
+          </button>
+          <button
+            className="custom-tag-picker-random-btn"
+            onClick={bulkDeleteKeywords}
+            title="모든 선택 삭제"
+          >
+            🗑️ 삭제
+          </button>
         </div>
-        <button
-          className="custom-tag-picker-random-btn"
-          onClick={randomToggleByProbability}
-          title="del_rate 확률로 무작위 토글"
-        >
-          🎲 무작위 선택
-        </button>
       </div>
       
       <div className="custom-tag-picker-content">
@@ -152,10 +167,10 @@ export const CustomTagPicker = ({
           <div key={key} className="custom-tag-picker-group">
             <div className="custom-tag-picker-group-header">{key}</div>
             <div className="custom-tag-picker-group-items">
-              {items.map((item, index) => {
-                const isSelected = Array.isArray(value) && value.includes(item.item_value);
-                const backgroundColor = isSelected ? '#e6f7ff' : getBackgroundColor(item.del_rate);
-                const textColor = isSelected ? '#1890ff' : getTextColor(item.del_rate);
+              {Object.entries(items).map(([key, item], index) => {
+                const isSelected = selectedKeywords && selectedKeywords[item.id];
+                const backgroundColor = isSelected ? '#e6f7ff' : getBackgroundColor(item.choice_rate);
+                const textColor = isSelected ? '#1890ff' : getTextColor(item.choice_rate);
                 
                 return (
                   <button
@@ -168,7 +183,7 @@ export const CustomTagPicker = ({
                       color: textColor,
                       borderColor: isSelected ? '#40a9ff' : '#d9d9d9'
                     }}
-                    onClick={() => toggleValue(item.item_value)}
+                    onClick={() => toggleValue(item)}
                   >
                     <span className="custom-tag-picker-option-value" style={{ color: textColor }}>
                       {item.label}

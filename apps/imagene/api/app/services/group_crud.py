@@ -1,99 +1,136 @@
 from typing import List, Dict, Any
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, func, desc, asc
-from models import ImageData
-from db import Image, ImageGroup
+from models import ImageData, GroupPreviewData, KeywordData
+from db import Image, ImageGroup, Group, Keyword, ImageKeyword
 
 
-def set_image_group_batch(group_name: str, image_ids: List[int], db: Session) -> str:
+def set_image_group_batch(group_image_data:Dict[str, Any], db: Session) -> str:
     """
     여러 이미지를 특정 그룹에 설정합니다.
     """
-    if not image_ids:
-        return "이미지 ID가 제공되지 않았습니다."
-    
-    # 이미지 존재 여부 확인 (id만 가져오기)
-    existing_ids = db.query(Image.id).filter(Image.id.in_(image_ids)).all()
-    existing_ids = [img.id for img in existing_ids]
-    
-    if not existing_ids:
-        return "존재하지 않는 이미지입니다."
-    
-    # 기존 그룹 관계 삭제 (같은 이미지의 다른 그룹들)
-    db.query(ImageGroup).filter(ImageGroup.image_id.in_(existing_ids)).delete()
-    
-    # 새로운 그룹 관계 생성
-    group_relations = []
-    for image_id in existing_ids:
-        group_relation = ImageGroup(
-            name=group_name,
-            image_id=image_id
+
+    if "group_id" in group_image_data and group_image_data["group_id"] is not None:
+        group_id = group_image_data["group_id"]
+        group = db.query(Group).filter(Group.id == group_id).first()
+        group_name = group.name
+    elif "group_name" in group_image_data and group_image_data["group_name"] is not None:
+        # 새로운 그룹 생성
+        group = Group(
+            name=group_image_data["group_name"]
         )
-        group_relations.append(group_relation)
-    
-    db.add_all(group_relations)
-    db.commit()
-    
-    return f"{len(existing_ids)}개의 이미지가 '{group_name}' 그룹에 설정되었습니다."
+        db.add(group)
+        db.flush()
+        group_id = group.id
+        group_name = group.name
+    else:
+        raise ValueError("group_id 또는 group_name이 필요합니다.")        
+
+    image_ids = group_image_data["image_ids"]
+    for image_id in image_ids:
+        group_relation = ImageGroup(
+            group_id=group_id,
+            image_id=image_id,
+        )
+        db.add(group_relation)
+
+    db.commit()    
+    return f"{len(image_ids)}개의 이미지가 '{group_name}' 그룹에 설정되었습니다."
 
 
-def get_group_preview_batch(db: Session) -> Dict[str, List[ImageData]]:
+def delete_group_batch(group_ids: List[int], db: Session) -> str:
+    deleted_count = db.query(Group).filter(Group.id.in_(group_ids)).delete(synchronize_session=False)
+    db.commit()    
+    return f"{deleted_count}개의 그룹이 삭제되었습니다."
+
+
+def delete_image_group_batch(group_image_data:Dict[str, Any], db: Session) -> str:
+    image_ids = group_image_data["image_ids"]
+    group_ids = group_image_data["group_ids"]
+    deleted_count = db.query(ImageGroup).filter(ImageGroup.image_id.in_(image_ids), ImageGroup.group_id.in_(group_ids)).delete(synchronize_session=False)
+    db.commit()    
+    return f"{deleted_count}개의 이미지가 '{group_ids}' 그룹에서 삭제되었습니다."
+
+
+def get_group_preview_batch(db: Session) -> List[GroupPreviewData]:
     """
-    모든 그룹의 미리보기 이미지들을 가져옵니다.
-    각 그룹당 최대 5개의 이미지를 반환합니다.
+    모든 그룹의 미리보기 이미지들과 각 이미지들의 키워드들을 가져옵니다.
     """
-    # 그룹별로 이미지들을 가져오기
-    group_images_query = db.query(
-        ImageGroup.name.label('group_name'),
-        Image.id,
-        Image.url,
-        Image.dna
-    ).join(Image).order_by(
-        ImageGroup.name,
-        Image.created_at.desc()
-    )
+    # 한 번의 쿼리로 모든 키워드-그룹 관계를 가져옵니다
+    # ImageKeyword -> Image -> ImageGroup 조인으로 모든 관계를 한번에 조회
+    keyword_group_relations = db.query(
+        ImageKeyword.keyword_id,
+        ImageKeyword.direction,
+        ImageGroup.group_id,
+        Keyword.key,
+        Keyword.value,
+        Keyword.n_created,
+        Keyword.n_deleted,
+        Keyword.choice_rate
+    ).join(Image, ImageKeyword.image_id == Image.id)\
+     .join(ImageGroup, ImageGroup.image_id == Image.id)\
+     .join(Keyword, ImageKeyword.keyword_id == Keyword.id)\
+     .all()
     
-    group_images_dict = {}
+    # group_keywords 딕셔너리 초기화
+    group_keywords = {}
     
-    for row in group_images_query.all():
-        group_name = row[0]  # row[0] = group_name
+    # 조회된 모든 관계를 처리
+    for relation in keyword_group_relations:
+        keyword_id = relation.keyword_id
+        group_id = relation.group_id
         
-        if group_name not in group_images_dict:
-            group_images_dict[group_name] = []
+        # group_keywords에 해당 group_id가 없으면 딕셔너리로 초기화
+        if group_id not in group_keywords:
+            group_keywords[group_id] = {}
         
-        # 각 그룹당 최대 5개까지만
-        if len(group_images_dict[group_name]) < 5:
-            group_images_dict[group_name].append(ImageData(
-                id=row[1],  # row[1] = id
-                url=row[2],  # row[2] = url
-                dna=row[3]   # row[3] = dna
-            ))
+        # 해당 그룹에 키워드가 없으면 추가
+        if keyword_id not in group_keywords[group_id]:
+            keyword_data = KeywordData(
+                id=keyword_id,
+                key=relation.key,
+                value=relation.value,
+                direction=relation.direction,
+                n_created=relation.n_created,
+                n_deleted=relation.n_deleted,
+                choice_rate=relation.choice_rate
+            )
+            group_keywords[group_id][keyword_id] = keyword_data
+
+    # 모든 그룹 정보를 가져와서 GroupPreviewData 생성
+    groups = db.query(Group).all()
+    result = []
     
-    return group_images_dict
+    for group in groups:
+        group_id = group.id
+        
+        # 해당 그룹의 키워드들 (이미 중복 제거됨)
+        keywords_for_group = group_keywords.get(group_id, {})
+        
+        # 해당 그룹의 이미지 개수
+        n_images = db.query(ImageGroup).filter(ImageGroup.group_id == group_id).count()
+        
+        # 썸네일 이미지 URL들 (최대 3개)
+        thumbnail_images = db.query(Image).join(ImageGroup).filter(
+            ImageGroup.group_id == group_id
+        ).limit(3).all()
+        
+        thumbnail_urls = [img.url for img in thumbnail_images]
+        
+        # GroupPreviewData 생성
+        group_preview = GroupPreviewData(
+            id=group.id,
+            name=group.name,
+            n_images=n_images,
+            keywords=keywords_for_group,
+            thumbnail_images_urls=thumbnail_urls
+        )        
+        result.append(group_preview)
+    return result
 
 
-def delete_group_batch(group_names: List[str], db: Session) -> str:
-    """
-    여러 그룹을 일괄 삭제합니다.
-    """
-    if not group_names:
-        return "삭제할 그룹이 지정되지 않았습니다."
-    
-    # 그룹 존재 여부 확인
-    existing_groups = db.query(ImageGroup.name).filter(
-        ImageGroup.name.in_(group_names)
-    ).distinct().all()
-    
-    existing_group_names = [group.name for group in existing_groups]
-    
-    if not existing_group_names:
-        return "삭제할 그룹이 없습니다."
-    
-    # 그룹 삭제
-    deleted_count = db.query(ImageGroup).filter(
-        ImageGroup.name.in_(existing_group_names)
-    ).delete(synchronize_session=False)
-    
+def edit_group_name(group_id: int, group_name: str, db: Session) -> str:
+    group = db.query(Group).filter(Group.id == group_id).first()
+    group.name = group_name
     db.commit()
-    
-    return f"{len(existing_group_names)}개의 그룹이 삭제되었습니다. (총 {deleted_count}개의 그룹 관계 삭제)"
+    return f"{group_id}번 그룹의 이름이 '{group_name}'으로 변경되었습니다."

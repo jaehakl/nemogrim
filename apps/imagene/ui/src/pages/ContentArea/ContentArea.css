@@ -1,0 +1,189 @@
+.content-area { 
+  padding: 0px; 
+  background: var(--color-bg);
+  min-height: calc(100vh - 60px);
+}
+
+.content-area-toolbar { 
+  margin-bottom: 12px; 
+  display: flex; 
+  align-items: center; 
+  gap: 12px;
+  padding: 16px 20px;
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border);
+}
+
+.content-area-groups { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 20px; 
+}
+
+.content-area-main { 
+  display: flex; 
+  gap: 20px; 
+  height: calc(100vh - 180px); /* 툴바 높이를 제외한 전체 높이 */
+}
+
+.content-area-left {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 8px; /* 스크롤바 공간 확보 */
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-content: flex-start;
+  min-height: 0; /* flex 아이템이 축소될 수 있도록 */
+}
+
+/* 스크롤바 스타일링 */
+.content-area-left::-webkit-scrollbar {
+  width: 8px;
+}
+
+.content-area-left::-webkit-scrollbar-track {
+  background: var(--color-bg);
+  border-radius: 4px;
+}
+
+.content-area-left::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
+
+.content-area-left::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary);
+}
+
+.content-area-right {
+  width: 500px;
+  flex-shrink: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.content-area-group-panel { 
+  background: var(--color-surface); 
+  border: 1px solid var(--color-border); 
+  border-radius: var(--radius); 
+  box-shadow: var(--shadow);
+  padding: 20px;
+}
+
+.content-area-group-panel.ungrouped { 
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary-light);
+}
+
+
+.content-area-group-panel-item { 
+  position: relative; 
+  display: block; 
+  border: 1px solid var(--color-border); 
+  border-radius: var(--radius); 
+  overflow: hidden; 
+  background: var(--color-surface-secondary); 
+  transition: var(--transition);
+  cursor: pointer;
+  width: 200px;
+  flex-shrink: 0;
+}
+
+.content-area-group-panel-item:hover { 
+  transform: translateY(-4px);
+  box-shadow: var(--shadow);
+  border-color: var(--color-primary);
+}
+
+.content-area-group-panel-item img { 
+  width: 100%; 
+  aspect-ratio: 1 / 1.2; 
+  object-fit: cover; 
+  object-position: top; 
+  display: block;
+  transition: var(--transition);
+}
+
+.content-area-group-panel-item:hover img {
+  transform: scale(1.05);
+}
+
+.content-area-group-panel-item input[type="checkbox"] { 
+  position: absolute; 
+  top: 12px; 
+  left: 12px; 
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+  z-index: 2;
+}
+
+.content-area-group-panel-item.selected { 
+  outline: 2px solid var(--color-primary);
+  box-shadow: 0 0 0 4px var(--color-primary-light);
+}
+
+.content-area-group-panel-pagination { 
+  margin-top: 20px; 
+  display: flex; 
+  justify-content: center; 
+}
+
+
+.content-area-preview-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.content-area-preview-header h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.content-area-preview-image {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: var(--color-bg);
+  position: relative;
+}
+
+.content-area-preview-image img {
+  border-radius: var(--radius-sm);
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  box-shadow: var(--shadow-sm);
+}
+
+.content-area-preview-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  text-align: center;
+  background: var(--color-bg);
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-sm);
+  margin: 20px;
+}
+

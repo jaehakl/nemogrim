@@ -1,0 +1,94 @@
+import React, { useMemo, useState, useEffect } from 'react';
+import { Panel, Stack, Button, Input, Pagination, InputNumber, SelectPicker } from 'rsuite';
+import { useImageFilter } from '../../contexts/ImageFilterContext';
+import { API_URL } from '../../api/api';
+import './ContentArea.css';
+
+export const ContentArea = () => {
+  const {
+    images,
+    imageFilterData,
+    setImageFilterData,
+    selectedImageIds,
+    toggleSelectImage,
+    bulkDelete,
+    bulkSetGroup,
+    bulkUnsetGroup,
+  } = useImageFilter();
+  const [pageSize, setPageSize] = useState(10); // 클라이언트 페이지네이션 크기
+  const [aspectRatio, setAspectRatio] = useState('1 / 1.2');
+  const [hoveredImage, setHoveredImage] = useState(null);
+
+  const aspectRatioOptions = useMemo(() => ([
+    { label: '1:1', value: '1 / 1' },
+    { label: '2:3', value: '2 / 3' },
+    { label: '3:4', value: '3 / 4' },
+    { label: '4:5', value: '4 / 5' },
+    { label: '1:1.2', value: '1 / 1.2' },
+    { label: '9:16', value: '9 / 16' },
+    { label: '3:2', value: '3 / 2' },
+    { label: '16:9', value: '16 / 9' },
+  ]), []);
+
+  return (
+    <div className="content-area">
+      <div className="content-area-toolbar">
+        <Stack spacing={8} alignItems="center">
+          <Input placeholder="검색어(,로 구분)" value={imageFilterData?.search_value || ''} onChange={(val) => setImageFilterData((prev) => ({ ...prev, search_value: val }))} style={{ width: 300 }} />
+          <Button appearance="primary" onClick={() => { /* Auto refresh by effect */ }}>검색</Button>
+          <SelectPicker data={aspectRatioOptions} value={aspectRatio} onChange={(val) => val && setAspectRatio(val)} placeholder="비율" cleanable={false} searchable={false} style={{ width: 110 }} />
+          <span>페이지당</span>
+          <InputNumber min={1} max={100} value={pageSize} onChange={(val) => {
+            const n = Number(val);
+            if (!Number.isFinite(n)) return;
+            const clamped = Math.max(1, Math.min(100, Math.floor(n)));
+            setPageSize(clamped);
+          }} style={{ width: 90 }} />
+          <span>개</span>
+          <Button appearance="ghost" color="red" onClick={bulkDelete} disabled={(selectedImageIds?.size || 0) === 0}>선택 삭제</Button>
+          <Button appearance="ghost" color="blue" onClick={bulkUnsetGroup} disabled={(selectedImageIds?.size || 0) === 0}>선택 그룹 해제</Button>
+        </Stack>
+      </div>
+      <div className="content-area-main">
+        <div className="content-area-left">
+          {images && images.map((img) => {
+            const checked = selectedImageIds?.has(img.id);
+            return (
+              <label
+                key={img.id}
+                className={`content-area-group-panel-item ${checked ? 'selected' : ''}`}
+                draggable
+                onDragStart={(e) => {if (!selectedImageIds.has(img.id)){toggleSelectImage(img.id);}}}
+                onMouseEnter={() => setHoveredImage(img)}
+                onMouseLeave={() => setHoveredImage(null)}
+              >
+                <input type="checkbox" checked={checked} onChange={() => toggleSelectImage(img.id)} />
+                <img src={API_URL+"/"+img.url} alt={String(img.id)} style={{ aspectRatio }} />
+              </label>
+            );
+          })}      
+        </div>
+        <div className="content-area-right">
+          <div className="content-area-preview-header">
+            <h4>원본 이미지</h4>
+          </div>
+          <div className="content-area-preview-image">
+            {hoveredImage ? (
+              <img 
+                src={API_URL+"/"+hoveredImage.url} 
+                alt={String(hoveredImage.id)} 
+                style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+              />
+            ) : (
+              <div className="content-area-preview-placeholder">
+                이미지에 마우스를 올려보세요
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+

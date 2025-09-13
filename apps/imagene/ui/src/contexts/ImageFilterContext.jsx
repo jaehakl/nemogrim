@@ -2,14 +2,14 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import {
   filterImages,
   getGroupPreviewBatch,
-  sortKeywordsByKey,
   deleteImagesBatch,
   setImageGroupBatch,
+  unsetImageGroupBatch,
   deleteKeywordsBatch,
 } from '../api/api';
 
 const defaultFilter = {
-  group_names: [],
+  group_ids: [],
   search_value: '',
   limit: 1000,
   offset: 0,
@@ -19,11 +19,12 @@ const ImageFilterContext = createContext(null);
 
 export const ImageFilterProvider = ({ children }) => {
   const [imageFilterData, setImageFilterData] = useState(defaultFilter);
-  const [imagesByGroup, setImagesByGroup] = useState({});
-  const [groupPreview, setGroupPreview] = useState({});
+  const [images, setImages] = useState([]);
+  const [groupPreview, setGroupPreview] = useState([]);
   const [keywordsByKey, setKeywordsByKey] = useState({});
+  const [groupKeywords, setGroupKeywords] = useState({});
   const [selectedImageIds, setSelectedImageIds] = useState(new Set());
-  const [selectedKeywords, setSelectedKeywords] = useState([]);
+  const [selectedKeywords, setSelectedKeywords] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -32,8 +33,8 @@ export const ImageFilterProvider = ({ children }) => {
     setError(null);
     try {
       const payload = overrideFilter || imageFilterData;      
-      const { data } = await filterImages(payload);
-      setImagesByGroup(data || {});
+      const { data } = await filterImages(payload);      
+      setImages(data || []);
       setSelectedImageIds(new Set());
     } catch (e) {
       setError(e?.message || '이미지 로딩 오류');
@@ -45,26 +46,33 @@ export const ImageFilterProvider = ({ children }) => {
   const refreshGroupPreview = useCallback(async () => {
     try {
       const { data } = await getGroupPreviewBatch();
-      setGroupPreview(data || {});
+      const keywordsDict = {};
+      const groupKeywords = {};
+      data.forEach(group => {
+        groupKeywords[group.id] = {};
+        Object.values(group.keywords).forEach(keyword => {
+          groupKeywords[group.id][keyword.id] = keyword;
+          if (!keywordsDict[keyword.key]) {
+            keywordsDict[keyword.key] = {};
+          }
+          if (!keywordsDict[keyword.key][keyword.id]) {
+            keywordsDict[keyword.key][keyword.id] = keyword;
+          }
+        });
+      });
+      
+      setGroupKeywords(groupKeywords);
+      setGroupPreview(data || []);
     } catch (e) {
       // 실패해도 치명적이지 않음
     }
   }, []);
 
-  const refreshKeywords = useCallback(async () => {
-    try {
-      const { data } = await sortKeywordsByKey();
-      setKeywordsByKey(data || {});
-    } catch (e) {
-      // 실패해도 치명적이지 않음
-    }
-  }, []);
 
   useEffect(() => {
     refreshImages();
     // 초기 사이드바 데이터
     refreshGroupPreview();
-    refreshKeywords();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -72,21 +80,32 @@ export const ImageFilterProvider = ({ children }) => {
     refreshImages();
   }, [imageFilterData, refreshImages]);
 
-  const toggleGroupName = useCallback((groupName) => {
+  useEffect(() => {
+    const keywordKeys = {};
+    const group_ids = imageFilterData.group_ids.length > 0 ? imageFilterData.group_ids : Object.keys(groupKeywords);
+    group_ids.forEach(group_id => {
+      Object.entries(groupKeywords[group_id] || {}).forEach(([key, kw]) => {
+          if (!keywordKeys[kw.key]) {
+            keywordKeys[kw.key] = {};
+          }
+          keywordKeys[kw.key][kw.id] = { ...kw, label: kw.value, item_value: `${kw.key}:${kw.value}`};
+        });
+    });
+    setKeywordsByKey(keywordKeys);
+  }, [imageFilterData, groupKeywords]);
+
+  useEffect(() => {
+    setImageFilterData((prev) => ({ ...prev, keywords: Object.values(selectedKeywords) }));
+  }, [selectedKeywords]);
+
+  const toggleGroupId = useCallback((groupId) => {
     setImageFilterData((prev) => {
-      const set = new Set(prev.group_names || []);
-      if (set.has(groupName)) set.delete(groupName); else set.add(groupName);      
-      return { ...prev, group_names: Array.from(set), offset: 0 };
+      const set = new Set(prev.group_ids || []);
+      if (set.has(groupId)) set.delete(groupId); else set.add(groupId);      
+      return { ...prev, group_ids: Array.from(set), offset: 0 };
     });
   }, []);
 
-  const setSearchFromKeywords = useCallback((selectedValues) => {
-    const cleaned = selectedValues
-      .map(v => String(v || '').trim())
-      .filter(Boolean);
-    setSelectedKeywords(cleaned);
-    setImageFilterData((prev) => ({ ...prev, search_value: cleaned.join(','), offset: 0 }));
-  }, []);
 
   const clearSelection = useCallback(() => setSelectedImageIds(new Set()), []);
 
@@ -110,10 +129,10 @@ export const ImageFilterProvider = ({ children }) => {
     }
   }, [selectedImageIds, refreshImages, refreshGroupPreview, clearSelection]);
 
-  const bulkSetGroup = useCallback(async (groupName) => {
-    if (!groupName || selectedImageIds.size === 0) return;
+  const bulkSetGroup = useCallback(async ({groupId = null, groupName = null}) => {
+    if (!groupId && !groupName || selectedImageIds.size === 0) return;
     try {
-      await setImageGroupBatch({ group_name: groupName, image_ids: Array.from(selectedImageIds) });
+      await setImageGroupBatch({ group_id: groupId, group_name: groupName, image_ids: Array.from(selectedImageIds) });
       clearSelection();
       await refreshImages();
       await refreshGroupPreview();
@@ -122,92 +141,43 @@ export const ImageFilterProvider = ({ children }) => {
     }
   }, [selectedImageIds, refreshImages, refreshGroupPreview, clearSelection]);
 
+  const bulkUnsetGroup = useCallback(async () => {
+    const groupIds = imageFilterData.group_ids;
+    if (!groupIds || selectedImageIds.size === 0) return;
+    try {
+      await unsetImageGroupBatch({ group_ids: groupIds, image_ids: Array.from(selectedImageIds) });
+      clearSelection();
+      await refreshImages();
+      await refreshGroupPreview();
+    } catch (e) {
+      setError(e?.message || '그룹 해제 실패');
+    }
+  }, [selectedImageIds, refreshImages, refreshGroupPreview, clearSelection]);
+
   const bulkDeleteKeywords = useCallback(async () => {
-    if (selectedKeywords.length === 0) return;
+    if (Object.keys(selectedKeywords || {}).length === 0) return;
     try {
       // 선택된 키워드들의 ID를 찾아서 삭제
-      const keywordIds = [];
-      Object.entries(keywordsByKey || {}).forEach(([key, keywords]) => {
-        keywords.forEach(kw => {
-          if (selectedKeywords.includes(kw.key+":"+kw.value)) {
-            keywordIds.push(kw.id);
-          }
-        });
-      });
-      
+      const keywordIds = Object.keys(selectedKeywords || {}).map(id => parseInt(id));            
       if (keywordIds.length > 0) {
         await deleteKeywordsBatch(keywordIds);
-        setSelectedKeywords([]);
+        setSelectedKeywords({});
         setImageFilterData((prev) => ({ ...prev, search_value: '', offset: 0 }));
-        await refreshKeywords();
         await refreshImages();
       }
     } catch (e) {
       setError(e?.message || '키워드 삭제 실패');
     }
-  }, [selectedKeywords, keywordsByKey, refreshKeywords, refreshImages]);
+  }, [selectedKeywords, refreshImages]);
 
-  // 선택된 이미지들의 DNA 교집합을 찾는 함수
-  const findDnaIntersection = useCallback((imageIds) => {
-    if (!imageIds || imageIds.size === 0) {
-      setSelectedKeywords([]);
-      return;
-    }
-
-    // 선택된 이미지들의 DNA 데이터 수집
-    const selectedImagesDna = [];
-    Object.values(imagesByGroup || {}).forEach(groupImages => {
-      groupImages.forEach(image => {
-        if (imageIds.has(image.id) && image.dna) {
-          try {
-            const dnaData = JSON.parse(image.dna);
-            selectedImagesDna.push(dnaData);
-          } catch (e) {
-            console.warn('DNA 파싱 실패:', image.id, e);
-          }
-        }
-      });
-    });
-
-    if (selectedImagesDna.length === 0) {
-      setSelectedKeywords([]);
-      return;
-    }
-
-    // 첫 번째 이미지의 DNA를 기준으로 교집합 찾기
-    const firstImageDna = selectedImagesDna[0];
-    const commonKeywords = [];
-
-    firstImageDna.forEach(firstKeyword => {
-      // 모든 선택된 이미지에 이 키워드가 있는지 확인
-      const isCommon = selectedImagesDna.every(imageDna => 
-        imageDna.some(keyword => 
-          keyword.key === firstKeyword.key && 
-          keyword.value === firstKeyword.value
-        )
-      );
-
-      if (isCommon) {
-        commonKeywords.push(firstKeyword.key+":"+firstKeyword.value);
-      }
-    });
-
-    setSelectedKeywords(commonKeywords);
-  }, [imagesByGroup]);
-
-  useEffect(() => {
-    // 선택된 이미지가 있을 때만 DNA 교집합 갱신 (없으면 사용자 선택 유지)
-    if (selectedImageIds && selectedImageIds.size > 0) {
-      findDnaIntersection(selectedImageIds);
-    }
-  }, [selectedImageIds, imagesByGroup, findDnaIntersection]);
 
   const value = useMemo(() => ({
     imageFilterData,
     setImageFilterData,
-    imagesByGroup,
+    images,
     groupPreview,
     keywordsByKey,
+    groupKeywords,
     selectedImageIds,
     selectedKeywords,
     loading,
@@ -215,35 +185,34 @@ export const ImageFilterProvider = ({ children }) => {
     // actions
     refreshImages,
     refreshGroupPreview,
-    refreshKeywords,
-    toggleGroupName,
-    setSearchFromKeywords,
+    toggleGroupId,
+    setSelectedKeywords,
     toggleSelectImage,
     clearSelection,
     bulkDelete,
     bulkSetGroup,
+    bulkUnsetGroup,
     bulkDeleteKeywords,
-    findDnaIntersection,
   }), [
     imageFilterData,
-    imagesByGroup,
+    images,
     groupPreview,
     keywordsByKey,
+    groupKeywords,
     selectedImageIds,
     selectedKeywords,
     loading,
     error,
     refreshImages,
     refreshGroupPreview,
-    refreshKeywords,
-    toggleGroupName,
-    setSearchFromKeywords,
+    toggleGroupId,
+    setSelectedKeywords,
     toggleSelectImage,
     clearSelection,
     bulkDelete,
     bulkSetGroup,
+    bulkUnsetGroup,
     bulkDeleteKeywords,
-    findDnaIntersection,
   ]);
 
   return (
