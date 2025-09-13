@@ -80,7 +80,7 @@ export const ImageGenPage = () => {
 
   const selectRandomSettings = ({nGen = 1}) => {
     const randomSteps = Math.floor(Math.random() * (steps_range[1] - steps_range[0] + 1)) + steps_range[0];
-    const randomCfg = Math.round((Math.random() * (cfg_range[1] - cfg_range[0] + 1)) + cfg_range[0] * 10) / 10;
+    const randomCfg = Math.round(((Math.random() * (cfg_range[1] - cfg_range[0] + 1)) + cfg_range[0]) * 10) / 10;
     const randomResolution = resolution_options[Math.floor(Math.random() * resolution_options.length)];
     const randomWidth = randomResolution[0];
     const randomHeight = randomResolution[1];
