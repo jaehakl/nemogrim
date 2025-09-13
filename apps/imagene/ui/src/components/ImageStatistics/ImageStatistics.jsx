@@ -158,6 +158,37 @@ export const ImageStatistics = () => {
     }));
   }, [statistics.steps, statistics.cfg]);
 
+  // 해상도 vs CFG 산점도 데이터 (해상도는 라벨 "W x H"로 표시, 정렬은 MP 기준)
+  const resolutionVsCfgData = useMemo(() => {
+    const data = statistics.resolution.map(([width, height], index) => {
+      const mp = Math.round(((width || 0) * (height || 0)) / 10000) / 100; // MP 단위(소수점 2)
+      return {
+        mp,
+        cfg: statistics.cfg[index],
+        width,
+        height,
+        resolutionLabel: `${width} x ${height}`
+      };
+    });
+    return data.sort((a, b) => a.mp - b.mp);
+  }, [statistics.resolution, statistics.cfg]);
+
+  // Positive Prompt Length vs CFG 산점도 데이터
+  const positiveLengthVsCfgData = useMemo(() => {
+    return statistics.positive_prompt_length.map((length, index) => ({
+      length,
+      cfg: statistics.cfg[index]
+    }));
+  }, [statistics.positive_prompt_length, statistics.cfg]);
+
+  // Negative Prompt Length vs CFG 산점도 데이터
+  const negativeLengthVsCfgData = useMemo(() => {
+    return statistics.negative_prompt_length.map((length, index) => ({
+      length,
+      cfg: statistics.cfg[index]
+    }));
+  }, [statistics.negative_prompt_length, statistics.cfg]);
+
   // Positive Prompt 키워드 빈도 데이터
   const positiveKeywordData = useMemo(() => {
     const keywordCount = {};
@@ -282,10 +313,19 @@ export const ImageStatistics = () => {
             </Col>
             <Col xs={24} sm={24} lg={8}>
               <h4>Steps vs CFG 상관관계</h4>
-              <ResponsiveContainer width="100%" height={200}>
-                <ScatterChart data={stepsVsCfgData}>
+              <ResponsiveContainer width="100%" height={220}>
+                <ScatterChart data={stepsVsCfgData} margin={{ top: 10, right: 16, bottom: 28, left: 10 }}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="steps" name="Steps" />
+                  <XAxis
+                    dataKey="steps"
+                    name="Steps"
+                    type="number"
+                    domain={['dataMin', 'dataMax']}
+                    allowDecimals={false}
+                    tickCount={6}
+                    tick={{ fontSize: 11 }}
+                    tickMargin={8}
+                  />
                   <YAxis dataKey="cfg" name="CFG" />
                   <Tooltip cursor={{ strokeDasharray: '3 3' }} />
                   <Scatter dataKey="cfg" fill="#8884d8" />
@@ -319,6 +359,80 @@ export const ImageStatistics = () => {
             <Tooltip />
           </PieChart>
         </ResponsiveContainer>
+      </Panel>
+
+      <Divider />
+
+      {/* 해상도/프롬프트 길이 vs CFG 상관관계 */}
+      <Panel header="해상도/프롬프트 길이 vs CFG 상관관계" className="chart-panel">
+        <Grid fluid>
+          <Row gutter={16}>
+            <Col xs={24} sm={12} lg={8}>
+              <h4>해상도(W x H) vs CFG</h4>
+              <ResponsiveContainer width="100%" height={240}>
+                <ScatterChart data={resolutionVsCfgData} margin={{ top: 10, right: 16, bottom: 44, left: 10 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="resolutionLabel"
+                    name="해상도"
+                    type="category"
+                    interval={0}
+                    allowDuplicatedCategory={false}
+                    tick={{ fontSize: 11 }}
+                    tickMargin={12}
+                    angle={-30}
+                    textAnchor="end"
+                  />
+                  <YAxis dataKey="cfg" name="CFG" />
+                  <Tooltip cursor={{ strokeDasharray: '3 3' }} labelFormatter={(label) => `${label}`} />
+                  <Scatter dataKey="cfg" fill="#7cb5ec" />
+                </ScatterChart>
+              </ResponsiveContainer>
+            </Col>
+            <Col xs={24} sm={12} lg={8}>
+              <h4>Positive Prompt 길이 vs CFG</h4>
+              <ResponsiveContainer width="100%" height={220}>
+                <ScatterChart data={positiveLengthVsCfgData} margin={{ top: 10, right: 16, bottom: 28, left: 10 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="length"
+                    name="길이"
+                    type="number"
+                    domain={['dataMin', 'dataMax']}
+                    allowDecimals={false}
+                    tickCount={6}
+                    tick={{ fontSize: 11 }}
+                    tickMargin={8}
+                  />
+                  <YAxis dataKey="cfg" name="CFG" />
+                  <Tooltip cursor={{ strokeDasharray: '3 3' }} />
+                  <Scatter dataKey="cfg" fill="#90ed7d" />
+                </ScatterChart>
+              </ResponsiveContainer>
+            </Col>
+            <Col xs={24} sm={24} lg={8}>
+              <h4>Negative Prompt 길이 vs CFG</h4>
+              <ResponsiveContainer width="100%" height={220}>
+                <ScatterChart data={negativeLengthVsCfgData} margin={{ top: 10, right: 16, bottom: 28, left: 10 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="length"
+                    name="길이"
+                    type="number"
+                    domain={['dataMin', 'dataMax']}
+                    allowDecimals={false}
+                    tickCount={6}
+                    tick={{ fontSize: 11 }}
+                    tickMargin={8}
+                  />
+                  <YAxis dataKey="cfg" name="CFG" />
+                  <Tooltip cursor={{ strokeDasharray: '3 3' }} />
+                  <Scatter dataKey="cfg" fill="#f45b5b" />
+                </ScatterChart>
+              </ResponsiveContainer>
+            </Col>
+          </Row>
+        </Grid>
       </Panel>
 
       <Divider />
