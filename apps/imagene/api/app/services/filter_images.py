@@ -13,6 +13,7 @@ from settings import settings
 
 
 def filter_images(search_images_data: ImageFilterData, db: Session) -> List[ImageData]:
+    print("start filter_images")
     # 기본 쿼리 (엔티티 쿼리 사용)
     query = db.query(Image)
 
@@ -105,13 +106,14 @@ def filter_images(search_images_data: ImageFilterData, db: Session) -> List[Imag
     
     if search_images_data.offset is not None:
         query = query.offset(search_images_data.offset)
+    print("start query")
 
     images: List[Image] = query.options(
         load_only(
             Image.id,
             Image.title,
-            Image.positive_prompt,
-            Image.negative_prompt,
+            #Image.positive_prompt,
+            #Image.negative_prompt,
             Image.model,
             Image.steps,
             Image.cfg,
@@ -131,13 +133,13 @@ def filter_images(search_images_data: ImageFilterData, db: Session) -> List[Imag
             Keyword.value,
         ),
     ).all()
-
-    return [
+    print("end query")
+    result = [
         ImageData(
             id=image.id,
             title=image.title,
-            positive_prompt=image.positive_prompt,
-            negative_prompt=image.negative_prompt,
+            #positive_prompt=image.positive_prompt,
+            #negative_prompt=image.negative_prompt,
             model=image.model,
             steps=image.steps,
             cfg=image.cfg,
@@ -158,3 +160,5 @@ def filter_images(search_images_data: ImageFilterData, db: Session) -> List[Imag
         )
         for image in images
     ]
+    print("end filter_images")
+    return result

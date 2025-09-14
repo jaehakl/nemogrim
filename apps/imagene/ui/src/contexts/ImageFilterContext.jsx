@@ -29,7 +29,7 @@ export const ImageFilterProvider = ({ children }) => {
   const [error, setError] = useState(null);
 
   const refreshImages = useCallback(async (overrideFilter) => {
-    setLoading(true);
+    setLoading(true);    
     setError(null);
     try {
       const payload = overrideFilter || imageFilterData;      
@@ -70,15 +70,16 @@ export const ImageFilterProvider = ({ children }) => {
 
 
   useEffect(() => {
-    refreshImages();
+    //refreshImages();
     // 초기 사이드바 데이터
     refreshGroupPreview();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     // 필터 변경 시 목록 새로고침
+    if (loading) return;
     refreshImages();
-  }, [imageFilterData, refreshImages]);
+  }, [imageFilterData]);
 
   useEffect(() => {
     const keywordKeys = {};

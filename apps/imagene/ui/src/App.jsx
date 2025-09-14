@@ -14,28 +14,26 @@ import './App.css';
 
 function App() {  
   return (
-    <ImageFilterProvider>
-      <div className="app-container">
-        <Navbar />
-        <Container className="app-home">
-          <Sidebar width={320} className="app-home-sidebar">
-          <Groups />
-            <Divider>Keywords</Divider>
-            <CustomTagPicker
-              placeholder="키워드 선택"
-              searchable
-            />
-          </Sidebar>
-          <Content className="app-home-content">
-            <Routes>
-              <Route path="/" element={<ContentArea />} />
-              <Route path="/image-gen" element={<ImageGenPage />} />
-              <Route path="/statistics" element={<ImageStatistics />} />
-            </Routes>
-          </Content>
-        </Container>
-      </div>
-    </ImageFilterProvider>
+    <div className="app-container">
+      <Navbar />
+      <Container className="app-home">
+        <Sidebar width={320} className="app-home-sidebar">
+        <Groups />
+          <Divider>Keywords</Divider>
+          <CustomTagPicker
+            placeholder="키워드 선택"
+            searchable
+          />
+        </Sidebar>
+        <Content className="app-home-content">
+          <Routes>
+            <Route path="/" element={<ContentArea />} />
+            <Route path="/image-gen" element={<ImageGenPage />} />
+            <Route path="/statistics" element={<ImageStatistics />} />
+          </Routes>
+        </Content>
+      </Container>
+    </div>
   );
 }
 
