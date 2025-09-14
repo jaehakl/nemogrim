@@ -32,7 +32,7 @@ def delete_images_batch(image_ids: List[str], db: Session) -> str:
 
     for ik in image_keywords:
         ik.keyword.n_deleted += 1
-        ik.keyword.choice_rate = ik.keyword.n_deleted / ik.keyword.n_created
+        ik.keyword.choice_rate = 1.0 - (ik.keyword.n_deleted / ik.keyword.n_created)
 
     deleted_count = db.query(Image).filter(Image.id.in_(existing_ids)).delete(synchronize_session=False)
     for image_url in list(existing_urls.values()):

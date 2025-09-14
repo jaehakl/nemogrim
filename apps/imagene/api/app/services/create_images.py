@@ -44,7 +44,7 @@ async def create_image_batch(create_image_data_list: List[CreateImageData], db: 
             else:
                 kw = keyword_map[(ikd.key, ikd.value)]
                 kw.n_created += 1
-                kw.choice_rate = kw.n_deleted / kw.n_created
+                kw.choice_rate = 1.0 - (kw.n_deleted / kw.n_created)
                 db.flush()
     db.commit()
 

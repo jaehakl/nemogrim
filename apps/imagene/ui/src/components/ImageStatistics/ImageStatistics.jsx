@@ -202,7 +202,7 @@ export const ImageStatistics = () => {
     return Object.entries(keywordCount)
       .map(([keyword, count]) => ({ keyword, count }))
       .sort((a, b) => b.count - a.count)
-      .slice(0, 20); // 상위 20개만 표시
+      .slice(0, 100); // 상위 100개만 표시
   }, [statistics.positive_prompt_keywords]);
 
   // Negative Prompt 키워드 빈도 데이터
@@ -218,7 +218,7 @@ export const ImageStatistics = () => {
     return Object.entries(keywordCount)
       .map(([keyword, count]) => ({ keyword, count }))
       .sort((a, b) => b.count - a.count)
-      .slice(0, 20); // 상위 20개만 표시
+      .slice(0, 100); // 상위 100개만 표시
   }, [statistics.negative_prompt_keywords]);
 
   if (loading) {
@@ -476,7 +476,7 @@ export const ImageStatistics = () => {
         <Grid fluid>
           <Row gutter={16}>
             <Col xs={24} sm={12} lg={12}>
-              <h4>Positive Prompt 키워드 (상위 20개)</h4>
+              <h4>Positive Prompt 키워드 (상위 100개)</h4>
               <div className="keyword-list">
                 {positiveKeywordData.length > 0 ? (
                   positiveKeywordData.map((item, index) => (
@@ -491,7 +491,7 @@ export const ImageStatistics = () => {
               </div>
             </Col>
             <Col xs={24} sm={12} lg={12}>
-              <h4>Negative Prompt 키워드 (상위 20개)</h4>
+              <h4>Negative Prompt 키워드 (상위 100개)</h4>
               <div className="keyword-list">
                 {negativeKeywordData.length > 0 ? (
                   negativeKeywordData.map((item, index) => (
