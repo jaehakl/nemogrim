@@ -55,8 +55,8 @@ class KeywordData(BaseModel):
 class ImageData(BaseModel):
     id: str
     title: Optional[str] = None
-    positive_prompt: Optional[str] = None
-    negative_prompt: Optional[str] = None
+    positive_prompt: str
+    negative_prompt: str
     model: str
     steps: int
     cfg: float

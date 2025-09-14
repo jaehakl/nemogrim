@@ -112,8 +112,8 @@ def filter_images(search_images_data: ImageFilterData, db: Session) -> List[Imag
         load_only(
             Image.id,
             Image.title,
-            #Image.positive_prompt,
-            #Image.negative_prompt,
+            Image.positive_prompt,
+            Image.negative_prompt,
             Image.model,
             Image.steps,
             Image.cfg,
@@ -138,8 +138,8 @@ def filter_images(search_images_data: ImageFilterData, db: Session) -> List[Imag
         ImageData(
             id=image.id,
             title=image.title,
-            #positive_prompt=image.positive_prompt,
-            #negative_prompt=image.negative_prompt,
+            positive_prompt=image.positive_prompt,
+            negative_prompt=image.negative_prompt,
             model=image.model,
             steps=image.steps,
             cfg=image.cfg,
