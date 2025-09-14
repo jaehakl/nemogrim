@@ -18,6 +18,7 @@ export const ImageGenPage = () => {
   const [negative_prompt_length_range, setNegativePromptLengthRange] = useState([11, 30]);
   
   // 생성 설정 상태
+  const [mutation, setMutation] = useState(10);
   const [nGen, setNGen] = useState(2);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImages, setGeneratedImages] = useState([]);
@@ -41,7 +42,7 @@ export const ImageGenPage = () => {
   }, [isAutoRepeat]);
 
   // 무작위 키워드 선택 함수
-  const getRandomKeywords = (keyType, count = 40, mutation = 10) => {
+  const getRandomKeywords = (keyType, count = 40) => {
     let keywords = [];
     if (keywordsByKey) {
       Object.entries(keywordsByKey).forEach(([keywordKey, keyKeywords]) => {
@@ -70,12 +71,12 @@ export const ImageGenPage = () => {
         });
       });
     });    
-    for (let i = 0; i < mutation; i++) {
-      const randomPromptKeywords = prompt_keywords_list[Math.floor(Math.random() * prompt_keywords_list.length)];
-      keywords.push(randomPromptKeywords);
+    keywords = [...keywords].sort(() => 0.5 - Math.random()).slice(0, count);
+    for (let i = 0; i < Math.min(mutation, keywords.length); i++) {
+      keywords[i] = prompt_keywords_list[Math.floor(Math.random() * prompt_keywords_list.length)];
     }
-    const shuffled = [...keywords].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, count);
+    keywords = [...keywords].sort(() => 0.5 - Math.random());
+    return keywords;
   };
 
   const selectRandomSettings = ({nGen = 1}) => {
@@ -93,8 +94,8 @@ export const ImageGenPage = () => {
       const randomSeed = Math.floor(Math.random() * (seed_range[1] - seed_range[0] + 1)) + seed_range[0];
 
       // 무작위 키워드 생성
-      const randomPositive = getRandomKeywords('positive', randomPositivePromptLength, 10);
-      const randomNegative = getRandomKeywords('negative', randomNegativePromptLength, 10);
+      const randomPositive = getRandomKeywords('positive', randomPositivePromptLength);
+      const randomNegative = getRandomKeywords('negative', randomNegativePromptLength);
 
       // DNA 배열 생성
       const keywords = [];
@@ -328,14 +329,26 @@ export const ImageGenPage = () => {
                   </Form.ControlLabel>
                   <InputNumber 
                     min={1} 
-                    max={10} 
+                    max={50}
                     value={nGen} 
                     onChange={setNGen}
                     style={{ width: '100%' }}
                     disabled={isGenerating}
                   />
                 </Form.Group>
-
+                <Form.Group>
+                  <Form.ControlLabel className="image-gen-page-form-label">
+                    변이 개수
+                  </Form.ControlLabel>
+                  <InputNumber 
+                    min={0} 
+                    max={50} 
+                    value={mutation} 
+                    onChange={setMutation}
+                    style={{ width: '100%' }}
+                    disabled={isGenerating}
+                  />
+                </Form.Group>
                 <Divider />
 
                 {/* Seed 범위 설정 */}
