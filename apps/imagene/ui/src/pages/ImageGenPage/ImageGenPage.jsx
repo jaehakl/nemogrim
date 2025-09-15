@@ -233,6 +233,20 @@ export const ImageGenPage = () => {
     }
   };
 
+  const setPositiveKeywordsFromCurrentGroup = () => {
+    let newPositiveKeywords = [];
+    const seen = new Set();
+    images.forEach(image => {
+      image.keywords.forEach(keyword => {
+        if (keyword.direction > 0 && !seen.has(keyword.value)) {
+          newPositiveKeywords.push(`{${keyword.key}:${keyword.value}}`);
+          seen.add(keyword.value);
+        }
+      });
+    });
+    setPositiveKeywords(newPositiveKeywords.join(','));
+  };
+
   return (
     <div className="image-gen-page">
       <div className="image-gen-page-header">
@@ -615,6 +629,15 @@ export const ImageGenPage = () => {
                       <Form.ControlLabel className="image-gen-page-form-label">
                         Positive 키워드
                       </Form.ControlLabel>
+                      <Button
+                        size="xs"
+                        appearance="ghost"
+                        onClick={() => setPositiveKeywordsFromCurrentGroup()}
+                        disabled={isGenerating}
+                        className="image-gen-page-prompt-generator-button"
+                      >
+                        그룹 키워드
+                      </Button>
                       <Button
                         size="xs"
                         appearance="ghost"

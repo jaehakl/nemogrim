@@ -3,11 +3,13 @@ import prompt_keywords from '../../service/prompt_keywords.json';
 export const genOffsprings = (pool, mutation, nGen) => {
   const prompt_keywords_list = [];
   Object.entries(prompt_keywords).forEach(([prompt_key_type, prompt_key_values]) => {
+    if (prompt_key_type !== 'negative') {
     prompt_key_values.forEach((prompt_key_value) => {
       prompt_key_value.split(',').forEach((prompt_key_value_item) => {
-        prompt_keywords_list.push({key: prompt_key_type, value: prompt_key_value_item.trim(), direction: 1});
+          prompt_keywords_list.push({key: prompt_key_type, value: prompt_key_value_item.trim(), direction: 1});
+        });
       });
-    });
+    }
   }); 
 
   const offsprings = [];
