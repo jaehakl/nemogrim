@@ -17,6 +17,7 @@ from services.group_crud import (
     get_group_preview_batch,
     edit_group_name,
 )
+from utils.stable_diffusion import get_gpu_memory_info, get_available_cuda_devices
 
 app = server()
 
@@ -65,6 +66,28 @@ async def api_edit_group_name(request: Request, data: Dict[str, Any], db: Sessio
 async def api_get_group_preview_batch(request: Request, db: Session = Depends(get_db)
     )->List[GroupPreviewData]:
     return exec_service(db, get_group_preview_batch)
+
+@app.get("/system/gpu-status")
+async def api_get_gpu_status(request: Request) -> Dict[str, Any]:
+    """GPU 상태 정보를 반환합니다."""
+    try:
+        available_devices = get_available_cuda_devices()
+        gpu_info = get_gpu_memory_info()
+        
+        return {
+            "cuda_available": len(available_devices) > 0,
+            "available_devices": available_devices,
+            "device_count": len(available_devices),
+            "gpu_info": gpu_info
+        }
+    except Exception as e:
+        return {
+            "cuda_available": False,
+            "available_devices": [],
+            "device_count": 0,
+            "gpu_info": [],
+            "error": str(e)
+        }
 
 
 

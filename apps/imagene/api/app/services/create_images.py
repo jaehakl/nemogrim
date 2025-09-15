@@ -6,7 +6,7 @@ from models import CreateImageData, ImageData, ImageFilterData, KeywordData, Ima
 from db import Image, ImageGroup, Keyword, ImageKeyword
 import random
 from utils.embedding import get_text_embedding
-from utils.stable_diffusion import generate_images_batch_async
+from utils.stable_diffusion import generate_images_batch_async, generate_images_multi_gpu_async
 import json, uuid
 import os, shutil
 from settings import settings
@@ -98,7 +98,8 @@ async def create_image_batch(create_image_data_list: List[CreateImageData], db: 
     images_list_total = []
     seed_list_total = []
     if batch_mode:
-        images_list, generators_chunk = await generate_images_batch_async(
+        # 멀티 GPU 지원으로 이미지 생성
+        images_list, generators_chunk = await generate_images_multi_gpu_async(
                                         ckpt_path=model_list[0], 
                                         positive_prompt_list=positive_prompt_list, 
                                         negative_prompt_list=negative_prompt_list,
@@ -112,7 +113,8 @@ async def create_image_batch(create_image_data_list: List[CreateImageData], db: 
         seed_list_total.extend(generators_chunk)
     else:
         for i in range(len(create_image_data_list)):
-            images_list, generators_chunk = await generate_images_batch_async( 
+            # 개별 이미지의 경우에도 멀티 GPU 지원
+            images_list, generators_chunk = await generate_images_multi_gpu_async( 
                                         ckpt_path=model_list[i], 
                                         positive_prompt_list=[positive_prompt_list[i]], 
                                         negative_prompt_list=[negative_prompt_list[i]], 
