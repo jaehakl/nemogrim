@@ -135,7 +135,9 @@ export const ImageGenPage = () => {
     let defaultPositiveKeywords = getPositiveKeywords();
     let positiveKeywordsList = [];
     if (defaultPositiveKeywords.length > 0 && defaultPositiveKeywords[0].value !== null) {
-      positiveKeywordsList.push(defaultPositiveKeywords);
+      for (let i = 0; i < nGen; i++) {
+        positiveKeywordsList.push(defaultPositiveKeywords);
+      }
     } else {
       positiveKeywordsList = genOffsprings(pool, mutation, nGen);
     }
