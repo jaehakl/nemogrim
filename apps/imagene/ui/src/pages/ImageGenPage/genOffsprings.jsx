@@ -18,12 +18,11 @@ export const genOffsprings = (pool, mutation, nGen) => {
     for (let j = 0; j < mutation; j++) {
       other_keywords.push(prompt_keywords_list[Math.floor(Math.random() * prompt_keywords_list.length)]);
     }
-    const length = (parent_a.length + parent_b.length)/2+Math.floor((-0.5+Math.random()) * mutation);
     let offspring = [];
     offspring.push(...parent_a);
     offspring.push(...parent_b);
     offspring.push(...other_keywords);
-    offspring = [...offspring].sort(() => 0.5 - Math.random()).slice(0, length);
+    offspring = [...offspring].sort(() => 0.5 - Math.random());
     // offspring 중복 제거
     offspring = [...new Set(offspring)];  
     offsprings.push(offspring);
