@@ -23,8 +23,15 @@ export const genOffsprings = (pool, mutation, nGen) => {
     offspring.push(...parent_b);
     offspring.push(...other_keywords);
     offspring = [...offspring].sort(() => 0.5 - Math.random());
-    // offspring 중복 제거
-    offspring = [...new Set(offspring)];  
+    // offspring 중복 제거 (value 기준)
+    const seen = new Set();
+    offspring = offspring.filter(item => {
+      if (seen.has(item.value)) {
+        return false;
+      }
+      seen.add(item.value);
+      return true;
+    });
     offsprings.push(offspring);
   }
   return offsprings;
