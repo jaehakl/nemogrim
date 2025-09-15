@@ -160,12 +160,12 @@ async def create_image_batch(create_image_data_list: List[CreateImageData], db: 
                 )
                 db.add(image_keyword)
 
-        if create_image_data.groups:
-            for image_group in create_image_data.groups:
+        if create_image_data.group_ids:
+            for group_id in create_image_data.group_ids:
                 image_group = ImageGroup(
                     image_id=image_id,
-                    group_id=image_group.id,
-                    position=image_group.position
+                    group_id=group_id,
+                    position=0.0
                 )
                 db.add(image_group)
         db.flush()

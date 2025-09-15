@@ -7,6 +7,7 @@
   border-color: var(--color-primary); 
   background: var(--color-primary-light, rgba(0, 123, 255, 0)); 
   box-shadow: 0 2px 4px rgba(0, 123, 255, 0.1); 
+  opacity: 0.7; 
 }
 
 .Groups-button--not-selected:hover { 
@@ -14,19 +15,18 @@
   background: var(--color-primary-light, rgba(0, 123, 255, 0.05)); 
   transform: translateY(-2px); 
   box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2); 
+  opacity: 1; 
 }
 
 /* 이미지가 없는 그룹 버튼 스타일 */
 .Groups-button--selected { 
   border-color: var(--color-primary); 
-  background: var(--color-primary-light, rgba(0, 123, 255, 0.1)); 
-  opacity: 0.7; 
+  background: var(--color-primary-dark, rgba(0, 123, 255, 0)); 
 }
 
 .Groups-button--selected:hover { 
   border-color: var(--color-primary-dark, #0056b3); 
-  background: var(--color-primary-light, rgba(0, 123, 255, 0.15)); 
-  opacity: 1; 
+  background: var(--color-primary-dark, rgba(0, 123, 255, 0.05)); 
 }
 .Groups-name { font-weight: 700; margin-bottom: 6px; color: var(--color-text); }
 .Groups-thumbnails { display: flex; gap: 4px; }

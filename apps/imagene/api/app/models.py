@@ -18,7 +18,7 @@ class ImageGroupData(BaseModel):
 #input
 class CreateImageData(BaseModel):
     keywords: List[ImageKeywordData]
-    groups: Optional[List[ImageGroupData]] = None
+    group_ids: Optional[List[int]] = None
     model: str
     steps: Optional[int] = 30
     cfg: Optional[float] = 9.0

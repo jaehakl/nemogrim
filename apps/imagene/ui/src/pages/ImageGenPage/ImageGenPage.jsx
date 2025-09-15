@@ -32,6 +32,7 @@ export const ImageGenPage = () => {
   
   const {
     keywordsByKey,
+    imageFilterData,
     refreshImages
   } = useImageFilter();
   
@@ -142,6 +143,7 @@ export const ImageGenPage = () => {
 
       const createImageData = {
         keywords: keywords,
+        group_ids: imageFilterData.group_ids,
         model: model,
         seed: randomSeed,
         steps: randomSteps,
@@ -162,7 +164,7 @@ export const ImageGenPage = () => {
     try {
       const createImageDataList = selectRandomSettings({nGen});
       setCurrentRandomSettings(createImageDataList); // 랜덤 설정값 저장
-      
+      console.log('createImageDataList', createImageDataList);
       const result = await createImagesBatch(createImageDataList);
       
       if (result) {
