@@ -5,6 +5,7 @@ import './ImageGenPage.css';
 import { createImagesBatch } from '../../api/api';
 import prompt_keywords from '../../service/prompt_keywords.json';
 import { genOffsprings } from './genOffsprings';
+import { PromptGenerator } from '../../components/PromptGenerator';
 export const env = import.meta.env;
 
 export const ImageGenPage = () => {
@@ -31,6 +32,9 @@ export const ImageGenPage = () => {
   const [repeatCount, setRepeatCount] = useState(0);
   const [totalRepeatCount, setTotalRepeatCount] = useState(0);
   
+  // 프롬프트 생성기 상태
+  const [showPromptGenerator, setShowPromptGenerator] = useState(false);
+  
   const {
     images,
     keywordsByKey,
@@ -44,6 +48,11 @@ export const ImageGenPage = () => {
       submit();
     }
   }, [isAutoRepeat]);
+
+  // 프롬프트 생성기에서 프롬프트 변경 핸들러
+  const handlePromptChange = (formattedKeywords) => {    
+    setPositiveKeywords(formattedKeywords);
+  };
 
   // 무작위 키워드 선택 함수
   const getRandomKeywords = (keyType, count = 40) => {
@@ -602,9 +611,20 @@ export const ImageGenPage = () => {
                   <h6 className="image-gen-page-subsection-title">기본 키워드 설정</h6>
                   
                   <Form.Group>
-                    <Form.ControlLabel className="image-gen-page-form-label">
-                      Positive 키워드
-                    </Form.ControlLabel>
+                    <div className="image-gen-page-form-label-container">
+                      <Form.ControlLabel className="image-gen-page-form-label">
+                        Positive 키워드
+                      </Form.ControlLabel>
+                      <Button
+                        size="xs"
+                        appearance="ghost"
+                        onClick={() => setShowPromptGenerator(true)}
+                        disabled={isGenerating}
+                        className="image-gen-page-prompt-generator-button"
+                      >
+                        🎨 프롬프트 생성기
+                      </Button>
+                    </div>
                     <Input 
                       as="textarea" 
                       rows={3}
@@ -637,6 +657,13 @@ export const ImageGenPage = () => {
         </Stack>
       </div>
       
+      {/* 프롬프트 생성기 모달 */}
+      <PromptGenerator 
+        show={showPromptGenerator}
+        onClose={() => setShowPromptGenerator(false)}
+        onPromptChange={handlePromptChange}
+        disabled={isGenerating}
+      />
     </div>
   );
 };

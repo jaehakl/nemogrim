@@ -1,0 +1,337 @@
+.prompt-generator-container {
+  margin-bottom: 24px;
+}
+
+.prompt-generator-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.prompt-generator-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.prompt-generator-shuffle-all-button {
+  font-size: 12px;
+  padding: 6px 12px;
+}
+
+.prompt-generator-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.prompt-generator-categories {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.prompt-generator-category {
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  padding: 16px;
+  background-color: #fafafa;
+}
+
+.prompt-generator-category-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.prompt-generator-category-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.prompt-generator-shuffle-button {
+  font-size: 10px;
+  padding: 4px 8px;
+  min-width: auto;
+}
+
+.prompt-generator-category-content {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.prompt-generator-key-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 200px;
+  flex: 1;
+}
+
+.prompt-generator-key-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.prompt-generator-key-buttons {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.prompt-generator-key-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #666;
+  margin-bottom: 2px;
+}
+
+.prompt-generator-key-clear-button {
+  font-size: 10px;
+  padding: 2px 6px;
+  min-width: auto;
+  height: 20px;
+  line-height: 1;
+  color: #dc3545;
+}
+
+.prompt-generator-key-clear-button:hover {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.prompt-generator-key-clear-button:disabled {
+  color: #6c757d;
+  background-color: transparent;
+}
+
+.prompt-generator-key-shuffle-button {
+  font-size: 10px;
+  padding: 2px 6px;
+  min-width: auto;
+  height: 20px;
+  line-height: 1;
+}
+
+.prompt-generator-select {
+  width: 100%;
+}
+
+.prompt-generator-select .rs-picker-toggle {
+  font-size: 12px;
+  padding: 6px 8px;
+  min-height: 32px;
+}
+
+.prompt-generator-select .rs-picker-toggle-placeholder {
+  font-size: 11px;
+  color: #999;
+}
+
+.prompt-generator-custom-input-group {
+  margin-top: 6px;
+}
+
+.prompt-generator-custom-input {
+  font-size: 11px;
+  padding: 4px 8px;
+  min-height: 28px;
+}
+
+.prompt-generator-custom-input::placeholder {
+  font-size: 10px;
+  color: #999;
+}
+
+.prompt-generator-add-button {
+  font-size: 12px;
+  padding: 4px 8px;
+  min-width: 32px;
+  height: 28px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+}
+
+.prompt-generator-add-button:hover:not(:disabled) {
+  background-color: #218838;
+  transform: scale(1.05);
+  transition: all 0.2s ease;
+}
+
+.prompt-generator-add-button:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.prompt-generator-result {
+  margin-top: 16px;
+}
+
+.prompt-generator-result-title {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.prompt-generator-prompt-display {
+  width: 100%;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.4;
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+  padding: 12px;
+  resize: vertical;
+  min-height: 80px;
+}
+
+.prompt-generator-prompt-display:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .prompt-generator-category-content {
+    flex-direction: column;
+  }
+  
+  .prompt-generator-key-group {
+    min-width: 100%;
+  }
+  
+  .prompt-generator-header {
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  
+  .prompt-generator-shuffle-all-button {
+    align-self: flex-end;
+  }
+  
+  .prompt-generator-key-buttons {
+    gap: 2px;
+  }
+  
+  .prompt-generator-key-clear-button,
+  .prompt-generator-key-shuffle-button {
+    font-size: 9px;
+    padding: 1px 4px;
+    height: 18px;
+  }
+}
+
+/* 카테고리별 색상 구분 */
+.prompt-generator-category:nth-child(1) {
+  border-left: 4px solid #007bff;
+}
+
+.prompt-generator-category:nth-child(2) {
+  border-left: 4px solid #28a745;
+}
+
+.prompt-generator-category:nth-child(3) {
+  border-left: 4px solid #ffc107;
+}
+
+.prompt-generator-category:nth-child(4) {
+  border-left: 4px solid #dc3545;
+}
+
+.prompt-generator-category:nth-child(5) {
+  border-left: 4px solid #6f42c1;
+}
+
+/* 버튼 호버 효과 */
+.prompt-generator-shuffle-button:hover,
+.prompt-generator-key-shuffle-button:hover {
+  background-color: #e9ecef;
+  transform: scale(1.05);
+  transition: all 0.2s ease;
+}
+
+.prompt-generator-key-clear-button:hover:not(:disabled) {
+  background-color: #f8d7da;
+  color: #721c24;
+  transform: scale(1.05);
+  transition: all 0.2s ease;
+}
+
+.prompt-generator-shuffle-all-button:hover {
+  background-color: #0056b3;
+  transform: translateY(-1px);
+  transition: all 0.2s ease;
+}
+
+/* 선택된 옵션 강조 */
+.prompt-generator-select .rs-picker-toggle.rs-picker-toggle-active {
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+/* 로딩 상태 */
+.prompt-generator-container .rs-picker-loading {
+  opacity: 0.6;
+}
+
+/* 비활성화 상태 */
+.prompt-generator-container .rs-picker-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 모달 스타일 */
+.prompt-generator-modal .rs-modal-content {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.prompt-generator-modal .rs-modal-body {
+  padding: 20px;
+}
+
+.prompt-generator-modal .prompt-generator-content {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.prompt-generator-modal .prompt-generator-categories {
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+/* ImageGenPage에서 사용하는 스타일 */
+.image-gen-page-form-label-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.image-gen-page-prompt-generator-button {
+  font-size: 11px;
+  padding: 4px 8px;
+  min-width: auto;
+}
+
+.image-gen-page-prompt-generator-button:hover {
+  background-color: #e9ecef;
+  transform: scale(1.05);
+  transition: all 0.2s ease;
+}
