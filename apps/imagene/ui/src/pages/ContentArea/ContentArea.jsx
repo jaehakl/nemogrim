@@ -103,7 +103,8 @@ export const ContentArea = () => {
                 </div>
                 {hoveredImage.keywords && hoveredImage.keywords.length > 0 && (
                   <div className="metadata-keywords-compact">
-                    {hoveredImage.keywords.map((keyword, index) => (
+                    {hoveredImage.keywords.map((keyword, index) => (<>
+                      {(keyword.key !== 'negative') && (
                       <span 
                         key={index} 
                         className={`metadata-keyword ${keyword.direction > 0 ? 'positive' : 'negative'}`}
@@ -111,6 +112,8 @@ export const ContentArea = () => {
                         {keyword.key}: {keyword.value}
                         {keyword.weight !== 1.0 && ` (${keyword.weight})`}
                       </span>
+                      )}
+                      </>
                     ))}
                   </div>
                 )}
