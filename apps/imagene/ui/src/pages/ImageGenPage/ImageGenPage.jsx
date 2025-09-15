@@ -95,7 +95,7 @@ export const ImageGenPage = () => {
     const keywords = [];
     for (const keyword of positive_keywords.split(',')) {
       if (keyword.trim() !== '') {
-        const [key, value] = keyword.slice(1, -1).split(':');
+        const [key, value] = keyword.trim().slice(1, -1).split(':');
         if (key && value) {
           keywords.push({
           key: key,
