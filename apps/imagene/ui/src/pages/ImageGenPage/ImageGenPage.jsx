@@ -4,6 +4,7 @@ import { useImageFilter } from '../../contexts/ImageFilterContext';
 import './ImageGenPage.css';
 import { createImagesBatch } from '../../api/api';
 import prompt_keywords from '../../service/prompt_keywords.json';
+import { genOffsprings } from './genOffsprings';
 export const env = import.meta.env;
 
 export const ImageGenPage = () => {
@@ -31,6 +32,7 @@ export const ImageGenPage = () => {
   const [totalRepeatCount, setTotalRepeatCount] = useState(0);
   
   const {
+    images,
     keywordsByKey,
     imageFilterData,
     refreshImages
@@ -120,15 +122,29 @@ export const ImageGenPage = () => {
 
     const createImageDataList = [];
 
+    const pool = []
+    images.forEach(image => {
+      const dna = [];
+      image.keywords.forEach(keyword => {
+        dna.push(keyword);
+      });
+      pool.push(dna);
+    });
+
+    // 무작위 키워드 생성
+    let defaultPositiveKeywords = getPositiveKeywords();
+    let positiveKeywordsList = [];
+    if (defaultPositiveKeywords.length > 0 && defaultPositiveKeywords[0].value !== null) {
+      positiveKeywordsList.push(defaultPositiveKeywords);
+    } else {
+      positiveKeywordsList = genOffsprings(pool, mutation, nGen);
+    }
+
     for (let i = 0; i < nGen; i++) {
       const randomPositivePromptLength = Math.floor(Math.random() * (positive_prompt_length_range[1] - positive_prompt_length_range[0] + 1)) + positive_prompt_length_range[0];
+      let positiveKeywords = positiveKeywordsList[i].slice(0, randomPositivePromptLength);
       const randomNegativePromptLength = Math.floor(Math.random() * (negative_prompt_length_range[1] - negative_prompt_length_range[0] + 1)) + negative_prompt_length_range[0];
       
-      // 무작위 키워드 생성
-      let positiveKeywords = getPositiveKeywords();
-      if (positiveKeywords.length === 0 || positiveKeywords[0].value === null) {
-        positiveKeywords = getRandomKeywords('positive', randomPositivePromptLength);
-      }
       let negativeKeywords = getNegativeKeywords();
       if (negativeKeywords.length === 0 || negativeKeywords[0].value === null) {
         negativeKeywords = getRandomKeywords('negative', randomNegativePromptLength);
@@ -164,7 +180,6 @@ export const ImageGenPage = () => {
     try {
       const createImageDataList = selectRandomSettings({nGen});
       setCurrentRandomSettings(createImageDataList); // 랜덤 설정값 저장
-      console.log('createImageDataList', createImageDataList);
       const result = await createImagesBatch(createImageDataList);
       
       if (result) {
@@ -184,12 +199,10 @@ export const ImageGenPage = () => {
       console.error('이미지 생성 중 오류 발생:', error);
         alert('이미지 생성 중 오류가 발생했습니다.');
     } finally {
-        console.log('finally', isAutoRepeat);
         setIsGenerating(false);
         
         // 자동 반복이 활성화되어 있으면 다음 생성 시작
         if (isAutoRepeat) {
-          console.log('isAutoRepeat', isAutoRepeat);
           setTimeout(() => {
             submit();
           }, 1000); // 1초 후 다음 생성 시작
