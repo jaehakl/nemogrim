@@ -19,12 +19,13 @@ class ImageGroupData(BaseModel):
 class CreateImageData(BaseModel):
     keywords: List[ImageKeywordData]
     groups: Optional[List[ImageGroupData]] = None
-    model: Optional[str] = settings.sd_model_path
+    model: str
     steps: Optional[int] = 30
     cfg: Optional[float] = 9.0
     height: Optional[int] = 1024
     width: Optional[int] = 1024
     seed: Optional[int] = None
+    max_chunk_size: Optional[int] = 4
 
 
 class ImageFilterData(BaseModel):

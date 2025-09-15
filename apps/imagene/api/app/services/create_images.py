@@ -58,6 +58,7 @@ async def create_image_batch(create_image_data_list: List[CreateImageData], db: 
     cfg_list = []
     height_list = []
     width_list = []
+    max_chunk_size = 4
     for i,cid in enumerate(create_image_data_list):
         positive_prompt = ""
         negative_prompt = ""
@@ -74,14 +75,13 @@ async def create_image_batch(create_image_data_list: List[CreateImageData], db: 
         positive_prompt_list.append(positive_prompt.rstrip(","))
         negative_prompt_list.append(negative_prompt.rstrip(","))
         embedding_list.append(await asyncio.to_thread(get_text_embedding, positive_prompt))
-
         seed_list.append(cid.seed)
-
         model_list.append(cid.model)
         step_list.append(cid.steps)
         cfg_list.append(cid.cfg)
         height_list.append(cid.height)
         width_list.append(cid.width)
+        max_chunk_size = cid.max_chunk_size
         if i > 0:
             if cid.model != model_list[i-1]:
                 batch_mode = False
@@ -93,6 +93,7 @@ async def create_image_batch(create_image_data_list: List[CreateImageData], db: 
                 batch_mode = False
             if cid.width != width_list[i-1]:
                 batch_mode = False               
+                
 
     images_list_total = []
     seed_list_total = []
@@ -106,7 +107,7 @@ async def create_image_batch(create_image_data_list: List[CreateImageData], db: 
                                         cfg=cfg_list[0], 
                                         height=height_list[0], 
                                         width=width_list[0],
-                                        max_chunk_size=settings.sd_max_chunk_size)
+                                        max_chunk_size=max_chunk_size)
         images_list_total.extend(images_list)
         seed_list_total.extend(generators_chunk)
     else:
@@ -120,7 +121,7 @@ async def create_image_batch(create_image_data_list: List[CreateImageData], db: 
                                         cfg=cfg_list[i], 
                                         height=height_list[i], 
                                         width=width_list[i],
-                                        max_chunk_size=settings.sd_max_chunk_size)
+                                        max_chunk_size=max_chunk_size)
             images_list_total.extend(images_list)
             seed_list_total.extend(generators_chunk)
 

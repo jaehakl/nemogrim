@@ -4,22 +4,23 @@ import { useImageFilter } from '../../contexts/ImageFilterContext';
 import './ImageGenPage.css';
 import { createImagesBatch } from '../../api/api';
 import prompt_keywords from '../../service/prompt_keywords.json';
+export const env = import.meta.env;
 
 export const ImageGenPage = () => {
   // 파라미터 범위 설정 상태
-  const [seed_range, setSeedRange] = useState([0, 1000000]);
-  const [steps_range, setStepsRange] = useState([16, 50]);
-  const [cfg_range, setCfgRange] = useState([5.5, 13.5]);
-  const [resolution_options, setResolutionOptions] = useState([             [768, 1024], [768, 1280],
-                                                               [1024, 768], [1024, 1024],[1024, 1280],
-                                                               [1280, 768], [1280, 1024], [1280, 1280],[1280, 1536],
-                                                                                          [1536, 1280]]);
-  const [positive_prompt_length_range, setPositivePromptLengthRange] = useState([0, 0]);
-  const [negative_prompt_length_range, setNegativePromptLengthRange] = useState([11, 30]);
+  const [model, setModel] = useState(env.VITE_SD_MODEL_PATH);
+  const [seed_range, setSeedRange] = useState(env.VITE_SD_SEED_RANGE.split('~').map(Number) || [0, 1000000]);
+  const [steps_range, setStepsRange] = useState(env.VITE_SD_STEPS_RANGE.split('~').map(Number) || [1, 50]);
+  const [cfg_range, setCfgRange] = useState(env.VITE_SD_CFG_RANGE.split('~').map(Number) || [1, 20]);
+  const [resolution_options, setResolutionOptions] = useState(env.VITE_SD_RESOLUTION_OPTIONS.split(',').map((item) => item.split('x').map(Number)) || [[768, 1280], [1024, 1024], [1280, 768]]);  
+  const [positive_prompt_length_range, setPositivePromptLengthRange] = useState(env.VITE_SD_POSITIVE_PROMPT_LENGTH_RANGE.split('~').map(Number) || [0, 0]);
+  const [negative_prompt_length_range, setNegativePromptLengthRange] = useState(env.VITE_SD_NEGATIVE_PROMPT_LENGTH_RANGE.split('~').map(Number) || [0, 0]);
   
   // 생성 설정 상태
-  const [mutation, setMutation] = useState(10);
-  const [nGen, setNGen] = useState(2);
+  const [positive_keywords, setPositiveKeywords] = useState(env.VITE_SD_POSITIVE_KEYWORDS || '');
+  const [negative_keywords, setNegativeKeywords] = useState(env.VITE_SD_NEGATIVE_KEYWORDS || '');
+  const [mutation, setMutation] = useState(env.VITE_SD_MUTATION || 10);
+  const [nGen, setNGen] = useState(env.VITE_SD_NGEN || 2);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImages, setGeneratedImages] = useState([]);
   const [currentRandomSettings, setCurrentRandomSettings] = useState([]);
@@ -78,6 +79,36 @@ export const ImageGenPage = () => {
     keywords = [...keywords].sort(() => 0.5 - Math.random());
     return keywords;
   };
+  const getPositiveKeywords = () => {
+    const keywords = [];
+    for (const keyword of positive_keywords.split(',')) {
+      if (keyword.trim() !== '') {
+        const [key, value] = keyword.slice(1, -1).split(':');
+        if (key && value) {
+          keywords.push({
+          key: key,
+            value: value,
+            direction: 1
+          });
+        }
+      }
+    }
+    return keywords;
+  };
+
+  const getNegativeKeywords = () => {
+    const keywords = [];
+    for (const keyword of negative_keywords.split(',')) {
+      if (keyword.trim() !== '') {
+          keywords.push({
+            key: 'negative',
+            value: keyword.trim(),
+            direction: -1
+          });
+      }
+    }
+    return keywords;
+  };
 
   const selectRandomSettings = ({nGen = 1}) => {
     const randomSteps = Math.floor(Math.random() * (steps_range[1] - steps_range[0] + 1)) + steps_range[0];
@@ -91,19 +122,27 @@ export const ImageGenPage = () => {
     for (let i = 0; i < nGen; i++) {
       const randomPositivePromptLength = Math.floor(Math.random() * (positive_prompt_length_range[1] - positive_prompt_length_range[0] + 1)) + positive_prompt_length_range[0];
       const randomNegativePromptLength = Math.floor(Math.random() * (negative_prompt_length_range[1] - negative_prompt_length_range[0] + 1)) + negative_prompt_length_range[0];
-      const randomSeed = Math.floor(Math.random() * (seed_range[1] - seed_range[0] + 1)) + seed_range[0];
-
+      
       // 무작위 키워드 생성
-      const randomPositive = getRandomKeywords('positive', randomPositivePromptLength);
-      const randomNegative = getRandomKeywords('negative', randomNegativePromptLength);
+      let positiveKeywords = getPositiveKeywords();
+      if (positiveKeywords.length === 0 || positiveKeywords[0].value === null) {
+        positiveKeywords = getRandomKeywords('positive', randomPositivePromptLength);
+      }
+      let negativeKeywords = getNegativeKeywords();
+      if (negativeKeywords.length === 0 || negativeKeywords[0].value === null) {
+        negativeKeywords = getRandomKeywords('negative', randomNegativePromptLength);
+      }
 
       // DNA 배열 생성
       const keywords = [];
-      keywords.push(...randomPositive);
-      keywords.push(...randomNegative);      
+      keywords.push(...positiveKeywords);
+      keywords.push(...negativeKeywords);      
+
+      const randomSeed = Math.floor(Math.random() * (seed_range[1] - seed_range[0] + 1)) + seed_range[0];
 
       const createImageData = {
         keywords: keywords,
+        model: model,
         seed: randomSeed,
         steps: randomSteps,
         cfg: randomCfg,
@@ -536,6 +575,43 @@ export const ImageGenPage = () => {
                         placeholder="최대값"
                       />
                     </div>
+                  </Form.Group>
+                </div>
+
+                <Divider />
+
+                {/* 키워드 입력 영역 */}
+                <div className="image-gen-page-keywords-section">
+                  <h6 className="image-gen-page-subsection-title">기본 키워드 설정</h6>
+                  
+                  <Form.Group>
+                    <Form.ControlLabel className="image-gen-page-form-label">
+                      Positive 키워드
+                    </Form.ControlLabel>
+                    <Input 
+                      as="textarea" 
+                      rows={3}
+                      value={positive_keywords} 
+                      onChange={(v) => setPositiveKeywords(v)}
+                      disabled={isGenerating}
+                      style={{ width: '100%' }}
+                      placeholder="예: {appearance: beautiful}, {detail: detailed}, {quality: high}, {style: masterpiece}"
+                    />
+                  </Form.Group>
+
+                  <Form.Group>
+                    <Form.ControlLabel className="image-gen-page-form-label">
+                      Negative 키워드
+                    </Form.ControlLabel>
+                    <Input 
+                      as="textarea" 
+                      rows={3}
+                      value={negative_keywords} 
+                      onChange={(v) => setNegativeKeywords(v)}
+                      disabled={isGenerating}
+                      style={{ width: '100%' }}
+                      placeholder="예: blurry, low quality, distorted, ugly"
+                    />
                   </Form.Group>
                 </div>
               </Form>
