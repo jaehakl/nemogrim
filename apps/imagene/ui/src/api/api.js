@@ -7,7 +7,6 @@ axios.defaults.withCredentials = true;
 //export const filterKeywords = (keywordFilterData) => axios.post(`${API_URL}/keywords/filter`, keywordFilterData);
 export const deleteKeywordsBatch = (keywordIds) => axios.post(`${API_URL}/keywords/delete-batch`, keywordIds);
 
-
 export const createImagesBatch = (imagesData) => axios.post(`${API_URL}/images/create-batch`, imagesData);
 export const filterImages = (imageFilterData) => axios.post(`${API_URL}/images/filter`, imageFilterData);
 
