@@ -1,8 +1,68 @@
 from typing import List, Dict, Any
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, func, desc, asc
-from models import ImageData, GroupPreviewData, KeywordData
+from models import ImageData, GroupPreviewData, KeywordData, GroupData, SubGroupData
 from db import Image, ImageGroup, Group, Keyword, ImageKeyword
+
+
+
+def get_group(group_id: int, group_name: str, db: Session) -> GroupData:
+    images_list = []
+    sub_groups_list = []
+
+    if group_name == '/':
+        subquery = db.query(ImageGroup.image_id)
+        images = db.query(Image).filter(~Image.id.in_(subquery)).all()
+        sub_groups = []
+        sub_groups.extend(db.query(Group).filter(Group.name.like(group_name + '%')).all())
+    else:
+        ig_list = db.query(ImageGroup).where(ImageGroup.group_id==group_id).all()
+        images = [ig_list.image for ig_list in ig_list]
+        sub_groups = db.query(Group).filter(Group.name.like(group_name + '%')).all()
+
+    images_list = [ImageData(id=image.id, 
+                            title=image.title, 
+                            positive_prompt=image.positive_prompt, 
+                            negative_prompt=image.negative_prompt, 
+                            model=image.model, 
+                            steps=image.steps, 
+                            cfg=ig.image.cfg, 
+                            height=image.height, 
+                            width=image.width, 
+                            seed=image.seed, 
+                            url=image.url, 
+                            keywords=[]) for image in images]
+
+    for sub_group in sub_groups:
+        n_images = db.query(ImageGroup).filter(ImageGroup.group_id == sub_group.id).count()
+        thumbnail_images = db.query(Image).join(ImageGroup).filter(
+            ImageGroup.group_id == sub_group.id
+        ).limit(3).all()        
+        thumbnail_urls = [img.url for img in thumbnail_images]
+        sub_groups_list.append(SubGroupData(id=sub_group.id, name=sub_group.name, n_images=n_images, thumbnail_images_urls=thumbnail_urls))
+
+    return GroupData(
+        id=group_id,
+        name=group_name,
+        sub_groups=sub_groups_list,
+        images=images_list,
+        n_images=len(images_list)
+    )
+
+def create_group(group_name: str, db: Session) -> int:
+    group = Group(
+        name=group_name
+    )
+    db.add(group)
+    db.commit()
+    return group.id
+
+
+def edit_group_name(group_id: int, group_name: str, db: Session) -> str:
+    group = db.query(Group).filter(Group.id == group_id).first()
+    group.name = group_name
+    db.commit()
+    return f"{group_id}번 그룹의 이름이 '{group_name}'으로 변경되었습니다."
 
 
 def set_image_group_batch(group_image_data:Dict[str, Any], db: Session) -> str:
@@ -129,8 +189,3 @@ def get_group_preview_batch(db: Session) -> List[GroupPreviewData]:
     return result
 
 
-def edit_group_name(group_id: int, group_name: str, db: Session) -> str:
-    group = db.query(Group).filter(Group.id == group_id).first()
-    group.name = group_name
-    db.commit()
-    return f"{group_id}번 그룹의 이름이 '{group_name}'으로 변경되었습니다."

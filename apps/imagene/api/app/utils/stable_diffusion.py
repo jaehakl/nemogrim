@@ -2,10 +2,11 @@ import random, gc, torch
 from io import BytesIO
 import asyncio
 from typing import Optional, List, Any, Tuple, Dict
-from diffusers import StableDiffusionXLPipeline
+from diffusers import StableDiffusionXLPipeline, StableDiffusionXLImg2ImgPipeline
 import multiprocessing as mp
 from concurrent.futures import ThreadPoolExecutor
 import os
+from PIL import Image
 
 _generation_lock = asyncio.Semaphore(1)
 
@@ -274,3 +275,206 @@ def generate_images_batch(
         i += chunk_size
     
     return images, seed_chunk
+
+
+async def generate_images_from_image_multi_gpu_async(
+    ckpt_path: str,
+    positive_prompt_list: List[str],
+    negative_prompt_list: List[str],
+    seed_list: List[int],
+    image_list: List[Any],
+    strength: float,
+    step: int,
+    cfg: float,
+    height: int,
+    width: int,
+    max_chunk_size: int = 4,
+) -> Tuple[List[Any], List[int]]:
+    """여러 CUDA 디바이스를 사용하여 이미지를 병렬 생성합니다."""
+    available_devices = get_available_cuda_devices()
+    
+       # 여러 디바이스로 분산 처리
+    num_devices = len(available_devices)
+    total_items = len(positive_prompt_list)
+    optimal_chunk_size = get_optimal_chunk_size(total_items, num_devices)
+    
+    # 작업을 디바이스별로 분할
+    tasks = []
+    for i, device_id in enumerate(available_devices):
+        start_idx = i * (total_items // num_devices)
+        if i == num_devices - 1:
+            # 마지막 디바이스는 남은 모든 작업 처리
+            end_idx = total_items
+        else:
+            end_idx = (i + 1) * (total_items // num_devices)
+        
+        if start_idx >= end_idx:
+            continue
+            
+        device_prompts = positive_prompt_list[start_idx:end_idx]
+        device_negative_prompts = negative_prompt_list[start_idx:end_idx]
+        device_seeds = seed_list[start_idx:end_idx]
+        device_images = image_list[start_idx:end_idx]
+        
+        task = asyncio.to_thread(
+            generate_images_from_image_on_device,
+            ckpt_path, device_prompts, device_negative_prompts,
+            device_seeds, device_images, strength, step, cfg, height, width, device_id, optimal_chunk_size
+        )
+        tasks.append(task)
+    
+    # 모든 디바이스에서 병렬 실행
+    results = await asyncio.gather(*tasks)
+    
+    # 결과 합치기
+    all_images = []
+    all_seeds = []
+    for images, seeds in results:
+        all_images.extend(images)
+        all_seeds.extend(seeds)    
+    return all_images, all_seeds
+
+
+def generate_images_from_image_on_device(
+    ckpt_path: str,
+    positive_prompt_list: List[str],
+    negative_prompt_list: List[str],
+    seed_list: List[int],
+    image_list: List[Any],
+    strength: float,
+    step: int,
+    cfg: float,
+    height: int,
+    width: int,
+    device_id: int,
+    max_chunk_size: int = 4,
+) -> Tuple[List[Any], List[int]]:
+    """특정 CUDA 디바이스에서 이미지를 생성합니다."""
+    # 디바이스 설정
+    torch.cuda.set_device(device_id)
+    
+    # 파이프라인 로드 (디바이스별로 캐시)
+    cache_key = f"pipe_{device_id}"
+    if not hasattr(generate_images_from_image_on_device, cache_key):
+        pipe = StableDiffusionXLImg2ImgPipeline.from_single_file(
+            ckpt_path,
+            torch_dtype=torch.float16,
+            use_safetensors=True,
+        )
+        pipe.to(f"cuda:{device_id}")
+        pipe.enable_attention_slicing()
+        pipe.enable_vae_slicing()
+        setattr(generate_images_from_image_on_device, cache_key, pipe)
+    
+    pipe = getattr(generate_images_from_image_on_device, cache_key)
+    
+    images: List[Any] = []
+    all_seeds: List[int] = []
+    i = 0
+    
+    while i < len(positive_prompt_list):
+        chunk_size = min(max_chunk_size, len(positive_prompt_list) - i)
+        positive_prompt_chunk = positive_prompt_list[i:i+chunk_size]
+        negative_prompt_chunk = negative_prompt_list[i:i+chunk_size]
+        seed_chunk = seed_list[i:i+chunk_size]
+        generators_chunk = [torch.Generator(device=f"cuda:{device_id}").manual_seed(seed_int) for seed_int in seed_chunk]
+        image_chunk = image_list[i:i+chunk_size]
+        
+        # 메모리 정리
+        torch.cuda.empty_cache()
+        gc.collect()
+        
+        # 이미지 생성
+        generated_images = pipe(
+            prompt=positive_prompt_chunk,
+            negative_prompt=negative_prompt_chunk,
+            num_inference_steps=step,
+            guidance_scale=cfg,
+            height=height,
+            width=width,
+            image=image_chunk,
+            strength=strength,
+            generator=generators_chunk,
+        ).images
+        
+        images.extend(generated_images)
+        all_seeds.extend(seed_chunk)
+        i += chunk_size
+    
+    return images, all_seeds
+
+
+
+def generate_images_from_image_batch(
+    ckpt_path: str,
+    positive_prompt_list: List[str],
+    negative_prompt_list: List[str],
+    seed_list: List[int],
+    image_list: List[Any],
+    strength: float,
+    step : int,
+    cfg : float,
+    height : int,
+    width : int,
+    max_chunk_size: int = 4,
+):
+    torch.cuda.set_device(0)
+    torch.cuda.empty_cache()
+
+    cache_key = f"pipe_from_image"
+    if not hasattr(generate_images_from_image_batch, cache_key):
+        pipe = StableDiffusionXLImg2ImgPipeline.from_single_file(
+            ckpt_path,
+            torch_dtype=torch.float16,
+            use_safetensors=True,
+        )
+        pipe.to("cuda")
+        pipe.enable_attention_slicing()
+        pipe.enable_vae_slicing()
+        setattr(generate_images_from_image_batch, cache_key, pipe)
+    
+    pipe = getattr(generate_images_from_image_batch, cache_key)
+    
+    images: List[Any] = []
+    i = 0
+
+    while i < len(positive_prompt_list):
+        chunk_size = min(max_chunk_size, len(positive_prompt_list) - i)
+        positive_prompt_chunk = positive_prompt_list[i:i+chunk_size]
+        negative_prompt_chunk = negative_prompt_list[i:i+chunk_size]
+        seed_chunk = [random.randint(0, 1_000_000) if seed_list[i+j] is None else seed_list[i+j] for j in range(chunk_size)]
+        image_chunk = [image_list[i+j] for j in range(chunk_size)]
+        generators_chunk = [torch.Generator(device="cuda").manual_seed(seed_int) for seed_int in seed_chunk]
+        torch.cuda.empty_cache()
+        gc.collect()
+        images.extend(pipe(
+            prompt=positive_prompt_chunk,
+            negative_prompt=negative_prompt_chunk,
+            num_inference_steps=step,
+            guidance_scale=cfg,
+            height=height,
+            width=width,
+            image=image_chunk,
+            strength=strength,
+            generator=generators_chunk,
+        ).images)
+        i += chunk_size
+    
+    return images, seed_chunk
+
+if __name__ == "__main__":
+    images = generate_images_from_image_batch(
+        ckpt_path="E:\media\ComfyUI\models\checkpoints\waiNSFWIllustrious_v150.safetensors",
+        positive_prompt_list=["a dog"]*4,
+        negative_prompt_list=["blurry, low quality, bad anatomy, disfigured, deformed, bad hands, missing fingers, extra fingers, worst quality, jpeg artifacts, signature, watermark, text, bad eyes, grotesque, sketchy, logo, rough, incomplete, disgusting, distorted, deformed face, poorly drawn, bad quality"]*4,
+        seed_list=[random.randint(0, 1_000_000) for _ in range(4)],
+        image_list=[Image.open("image.jpg")]*4,
+        strength=0.85,
+        step=30,
+        cfg=10.0,
+        height=768,
+        width=1280,
+        max_chunk_size=4,
+    )[0]
+    for i, image in enumerate(images):
+        image.save(f"image_from_image_{i}.jpg")

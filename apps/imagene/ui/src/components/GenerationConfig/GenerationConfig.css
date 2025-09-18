@@ -1,0 +1,492 @@
+.generation-config {
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin: 20px 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.config-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #007bff;
+}
+
+.generation-config h3 {
+  margin: 0;
+  color: #333;
+  font-size: 1.5rem;
+}
+
+.config-section {
+  margin-bottom: 20px;
+  padding: 15px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+.config-section label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #495057;
+}
+
+.config-section.compact {
+  display: flex;
+  gap: 15px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.config-section.compact label {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0;
+  flex: 0 0 auto;
+  min-width: 100px;
+  max-width: 120px;
+}
+
+/* 토글 버튼 스타일 */
+.toggle-group {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.toggle-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.toggle-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #495057;
+  margin: 0;
+  text-align: center;
+}
+
+.toggle-btn {
+  position: relative;
+  width: 50px;
+  height: 24px;
+  background: #e9ecef;
+  border: 2px solid #ced4da;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  outline: none;
+  padding: 0;
+}
+
+.toggle-btn:hover {
+  background: #dee2e6;
+  border-color: #adb5bd;
+}
+
+.toggle-btn.active {
+  background: #007bff;
+  border-color: #007bff;
+}
+
+.toggle-slider {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-btn.active .toggle-slider {
+  transform: translateX(26px);
+}
+
+/* 변화 강도 컨트롤 */
+.strength-control {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 120px;
+}
+
+.strength-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #495057;
+  margin: 0;
+  text-align: center;
+}
+
+.strength-control input {
+  width: 80px;
+  padding: 6px 8px;
+  font-size: 13px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.strength-control input.disabled {
+  background: #f8f9fa;
+  color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.strength-control input:not(.disabled):focus {
+  outline: 0;
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.config-section.compact input[type="number"] {
+  width: 80px;
+  margin-top: 4px;
+  padding: 6px 8px;
+  font-size: 13px;
+}
+
+.config-section input[type="text"],
+.config-section input[type="number"],
+.config-section textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.config-section input[type="text"]:focus,
+.config-section input[type="number"]:focus,
+.config-section textarea:focus {
+  outline: 0;
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.config-section textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.seed-range {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.seed-range input {
+  flex: 1;
+}
+
+.seed-range span {
+  font-weight: 600;
+  color: #6c757d;
+}
+
+.resolution-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.resolution-btn {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #495057;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  min-width: 80px;
+  text-align: center;
+}
+
+.resolution-btn:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.resolution-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.add-resolution-btn {
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  min-width: 100px;
+  text-align: center;
+}
+
+.add-resolution-btn:hover {
+  background: #218838;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.add-resolution-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.negative-keywords-preview {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+  margin-top: 8px;
+}
+
+.keywords-preview-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  margin-right: 12px;
+}
+
+.keywords-text {
+  font-size: 14px;
+  color: #495057;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.keywords-count {
+  font-size: 12px;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.edit-keywords-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.15s ease-in-out;
+  flex-shrink: 0;
+}
+
+.edit-keywords-btn:hover {
+  background: #0056b3;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.edit-keywords-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.remove-btn {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.remove-btn:hover:not(:disabled) {
+  background: #c82333;
+}
+
+.remove-btn:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.add-btn {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.15s ease-in-out;
+  align-self: flex-start;
+}
+
+.add-btn:hover {
+  background: #218838;
+}
+
+.button-group {
+  display: flex;
+  gap: 6px;
+}
+
+.save-config-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.15s ease-in-out;
+}
+
+.save-config-btn:hover {
+  background: #0056b3;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+}
+
+.save-config-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 123, 255, 0.3);
+}
+
+.reset-config-btn {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.15s ease-in-out;
+}
+
+.reset-config-btn:hover {
+  background: #5a6268;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(108, 117, 125, 0.3);
+}
+
+.reset-config-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(108, 117, 125, 0.3);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .generation-config {
+    padding: 15px;
+    margin: 10px 0;
+  }
+  
+  .resolution-buttons {
+    gap: 6px;
+  }
+  
+  .resolution-btn {
+    min-width: 70px;
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  
+  .add-resolution-btn {
+    min-width: 90px;
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  
+  .negative-keywords-preview {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  
+  .keywords-preview-content {
+    margin-right: 0;
+  }
+  
+  .edit-keywords-btn {
+    align-self: flex-end;
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  
+  .seed-range {
+    flex-direction: column;
+  }
+  
+  .seed-range span {
+    text-align: center;
+  }
+  
+  .config-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .button-group {
+    align-self: flex-end;
+  }
+  
+  .save-config-btn,
+  .reset-config-btn {
+    font-size: 11px;
+    padding: 5px 10px;
+  }
+  
+  .toggle-group {
+    gap: 15px;
+  }
+  
+  .toggle-btn {
+    width: 45px;
+    height: 22px;
+  }
+  
+  .toggle-slider {
+    width: 14px;
+    height: 14px;
+  }
+  
+  .toggle-btn.active .toggle-slider {
+    transform: translateX(23px);
+  }
+  
+  .strength-control {
+    min-width: 100px;
+  }
+  
+  .strength-control input {
+    width: 70px;
+    font-size: 12px;
+  }
+}

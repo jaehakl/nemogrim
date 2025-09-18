@@ -15,6 +15,7 @@ dotenv = "^0.9.9"
 psycopg = "^3.2.10"
 psycopg-binary = "^3.2.10"
 torch = { version = "2.6.0+cu126", source = "pytorch-gpu" }
+torchvision = { version = "0.21.0+cu126", source = "pytorch-gpu" }
 diffusers = "^0.35.1"
 asyncpg = "^0.30.0"
 sentence-transformers = "^5.1.0"

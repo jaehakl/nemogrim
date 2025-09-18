@@ -28,6 +28,21 @@ class CreateImageData(BaseModel):
     max_chunk_size: Optional[int] = 4
 
 
+class ImageRequestData(BaseModel):
+    path: Optional[str] = "/"
+    ckpt_path: str
+    positive_prompt_list: List[str]
+    negative_prompt_list: List[str]
+    seed_list: List[int]
+    images: Optional[List[str]] = None
+    strength: Optional[float] = 0.85
+    steps: Optional[int] = 30
+    cfg: Optional[float] = 9.0
+    width: Optional[int] = 1024
+    height: Optional[int] = 1024
+    max_chunk_size: Optional[int] = 4
+
+
 class ImageFilterData(BaseModel):
     group_ids: Optional[List[int]] = None
     keywords: Optional[List[ImageKeywordData]] = None    
@@ -68,8 +83,31 @@ class ImageData(BaseModel):
     keywords: List[ImageKeywordData]
 
 class GroupPreviewData(BaseModel):
-    id: int
     name: str
     n_images: int
     keywords: Dict[int, KeywordData]    
     thumbnail_images_urls: List[str]
+
+class SubGroupData(BaseModel):
+    id: int
+    name: str
+    n_images: int
+    thumbnail_images_urls: List[str]
+
+class GroupData(BaseModel):
+    id: int
+    name: str
+    sub_groups: List[SubGroupData]
+    images: List[ImageData]
+    n_images: int
+
+
+class SubDirectoryData(BaseModel):
+    path: str
+    n_images: int
+    thumbnail_images_urls: List[str]
+
+class DirectoryData(BaseModel):
+    path: str
+    sub_dirs: List[SubDirectoryData]
+    images: List[ImageData]

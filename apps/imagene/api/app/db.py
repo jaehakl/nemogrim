@@ -47,6 +47,12 @@ class TimestampMixin:
 # Tables (App Layer)
 # ---------------------------------------------------------------------
 
+class Path(TimestampMixin, Base):
+    __tablename__ = "image_paths"
+    path: Mapped[str] = mapped_column(String, primary_key=True)
+    image_id: Mapped[str] = mapped_column(String, ForeignKey("images.id", ondelete="CASCADE"), nullable=False)
+    image: Mapped["Image"] = relationship("Image", back_populates="paths", lazy="selectin")
+
 class Image(TimestampMixin, Base):
     __tablename__ = "images"
     id: Mapped[str] = mapped_column(String, primary_key=True)
@@ -64,6 +70,7 @@ class Image(TimestampMixin, Base):
     url: Mapped[str] = mapped_column(Text, nullable=False)
     keywords: Mapped[List["ImageKeyword"]] = relationship("ImageKeyword", back_populates="image", cascade="all, delete-orphan")
     groups: Mapped[List["ImageGroup"]] = relationship("ImageGroup", back_populates="image", cascade="all, delete-orphan")
+    paths: Mapped[List["Path"]] = relationship("Path", back_populates="image", cascade="all, delete-orphan")
 
 class Keyword(TimestampMixin, Base):
     __tablename__ = "keywords"
