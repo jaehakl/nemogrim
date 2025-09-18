@@ -40,7 +40,7 @@ export const generateOffsprings = async (params) => {
     let positive_prompt = userPrompt;
     if (generationConfig.useDirectoryPrompt) {
       const user_keywords = userPrompt.split(',').map(keyword => keyword.trim());
-      const dir_keywords = []
+      let dir_keywords = []
 
       for (let i = 0; i < generationConfig.mutation; i++) {
         const random_key = Object.keys(total_dict)[Math.floor(Math.random() * Object.keys(total_dict).length)];
