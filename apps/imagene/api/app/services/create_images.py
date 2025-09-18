@@ -30,8 +30,11 @@ async def create_image_batch(image_request_data: ImageRequestData, db: Session) 
         if ir.images and len(ir.images) == len(ir.positive_prompt_list):
             image_to_image_mode = True
             images = db.query(Image).filter(Image.id.in_(ir.images)).all()
+            image_file_map = {}
             for image in images:
-                image_file_list.append(PILImage.open(image.url))
+                image_file_map[image.id] = PILImage.open(image.url)
+            for image_id in ir.images:
+                image_file_list.append(image_file_map[image_id])
 
         if image_to_image_mode:
             # 멀티 GPU 지원으로 이미지 생성
