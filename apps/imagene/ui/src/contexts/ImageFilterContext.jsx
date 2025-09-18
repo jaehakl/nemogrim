@@ -41,13 +41,14 @@ const DEFAULT_GENERATION_CONFIG = {
     useDirectoryImage: true,
     useImageStrength: 0.999,
     useDirectoryPrompt: true,
+    mutation: 1,
     cfg: 10, 
     steps: 30, 
     maxChunkSize: 16,
     ngen: 2,    
     resolution_options: [[768, 1024], [768, 1280], [1024, 768], [1024, 1024], [1024, 1280], [1280, 768], [1280, 1024], [1280, 1280], [1536, 1280]], 
-    positive_prompt_length_limit: 36,
-    negative_prompt_length_limit: 36, 
+    positive_prompt_length_limit: 35,
+    negative_prompt_length_limit: 35, 
     negative_prompt: 'blurry, low quality, bad anatomy, disfigured, deformed, bad hands, missing fingers, extra fingers, worst quality, jpeg artifacts, signature, watermark, text, bad eyes, grotesque, sketchy, logo, rough, incomplete, disgusting, distorted, deformed face, poorly drawn, bad quality', 
 }
 

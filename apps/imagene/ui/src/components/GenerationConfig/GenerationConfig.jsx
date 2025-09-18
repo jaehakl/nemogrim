@@ -189,6 +189,20 @@ const GenerationConfig = () => {
                 className={!generationConfig.useDirectoryImage ? 'disabled' : ''}
             />
         </div>
+
+        <div className="strength-control" title="프롬프트에 무작위로 새로운 단어를 추가합니다.">
+          <label>
+            Mutation
+            <input
+              type="number"
+              value={generationConfig.mutation}
+              onChange={(e) => handleConfigChange('mutation', parseInt(e.target.value) || 1)}
+              min="0"
+              max="32"
+            />
+          </label>
+        </div>
+
     </div>
 
       <div className="config-section compact">

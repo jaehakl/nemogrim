@@ -1,4 +1,5 @@
 import { createImagesBatch } from '../../api/api';
+import total_dict from './total_dict.json';
 
 export const generateOffsprings = async (params) => {
   const {
@@ -40,15 +41,33 @@ export const generateOffsprings = async (params) => {
     if (generationConfig.useDirectoryPrompt) {
       const user_keywords = userPrompt.split(',').map(keyword => keyword.trim());
       const dir_keywords = []
+
+      for (let i = 0; i < generationConfig.mutation; i++) {
+        const random_key = Object.keys(total_dict)[Math.floor(Math.random() * Object.keys(total_dict).length)];
+        const random_value = total_dict[random_key][Math.floor(Math.random() * total_dict[random_key].length)];
+        if (!dir_keywords.includes(random_value)) {
+          dir_keywords.push(random_value);
+        }        
+        if (dir_keywords.length >= generationConfig.positive_prompt_length_limit - user_keywords.length) {
+          break;
+        }
+      }
+
+      let imageKeywordsList = [];
       Object.entries(imageKeywords).forEach(([key, value]) => {
         if (Math.random() < value && !dir_keywords.includes(key)) {
-          dir_keywords.push(key);
-        }
-        if (dir_keywords.length >= generationConfig.positive_prompt_length_limit - user_keywords.length) {
-          return;
+          imageKeywordsList.push(key);
         }
       });
-      if (positive_prompt !== '') {
+      imageKeywordsList.sort(() => 0.5 - Math.random());
+      for (let i = 0; i < imageKeywordsList.length; i++) {
+        dir_keywords.push(imageKeywordsList[i]);
+        if (dir_keywords.length >= generationConfig.positive_prompt_length_limit - user_keywords.length) {
+          break;
+        }  
+      }
+
+      if (positive_prompt !== '') { 
         positive_prompt += ',';
       }
       positive_prompt += dir_keywords.join(',');
