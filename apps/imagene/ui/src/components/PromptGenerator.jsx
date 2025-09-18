@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Stack, Form, SelectPicker, Divider, Card, Input, Modal, InputGroup } from 'rsuite';
-import prompt_generating from '../service/prompt_generating.json';
 import './PromptGenerator.css';
 
 export const PromptGenerator = ({ onPromptChange, disabled = false, show, onClose }) => {

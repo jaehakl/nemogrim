@@ -3,8 +3,6 @@ import { Button, Stack, Form, InputNumber, Input, Slider, CheckPicker, Divider, 
 import { useImageFilter } from '../../contexts/ImageFilterContext';
 import './ImageGenPage.css';
 import { createImagesBatch } from '../../api/api';
-import prompt_keywords from '../../service/prompt_keywords.json';
-import { genOffsprings } from './genOffsprings';
 import { PromptGenerator } from '../../components/PromptGenerator';
 export const env = import.meta.env;
 
