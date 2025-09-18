@@ -157,10 +157,6 @@
 
 /* 이미지 컨테이너 높이 고정 및 반응형 width */
 .grid-item.image-item {
-  height: 120px;
-  width: auto;
-  min-height: 120px;
-  max-height: 120px;
   display: flex;
   align-items: center;
   justify-content: center;
