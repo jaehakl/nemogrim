@@ -234,6 +234,7 @@ export const GroupExplorer = () => {
               <div 
                 key={image.id} 
                 className={`grid-item image-item ${selectedImageIds.has(image.id) ? 'selected' : ''}`}
+                title={image.positive_prompt}
                 onDragStart={(e) => {if (!selectedImageIds.has(image.id)){toggleSelectImage(image.id);}}}
                 onClick={(e) => {e.preventDefault(); e.stopPropagation(); handleImageClick(e, image.id)}}
               >
