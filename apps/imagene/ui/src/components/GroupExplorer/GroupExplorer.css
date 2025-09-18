@@ -78,6 +78,7 @@
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: 20px;
   padding: 0 10px;
+  align-items: start;
 }
 
 .grid-item {
@@ -147,16 +148,22 @@
 }
 
 .image-preview {
-  width: 100%;
   height: 100%;
-  object-fit: cover;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
   border-radius: 6px;
 }
 
-/* 이미지 컨테이너 aspect ratio 조절 */
+/* 이미지 컨테이너 높이 고정 및 반응형 width */
 .grid-item.image-item {
-  aspect-ratio: var(--image-aspect-ratio, 1/1);
-  min-height: auto;
+  height: 120px;
+  width: auto;
+  min-height: 120px;
+  max-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .item-name {
