@@ -67,6 +67,9 @@ export const generateOffsprings = async (params) => {
         }  
       }
 
+      //중복 제거 및 shuffle
+      dir_keywords = [...new Set(dir_keywords)].sort(() => 0.5 - Math.random()).slice(0, generationConfig.positive_prompt_length_limit - user_keywords.length);
+
       if (positive_prompt !== '') { 
         positive_prompt += ',';
       }
