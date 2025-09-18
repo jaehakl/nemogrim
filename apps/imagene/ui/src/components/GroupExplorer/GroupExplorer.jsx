@@ -24,6 +24,7 @@ export const GroupExplorer = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newDirPath, setNewDirPath] = useState('');  
   const [currentPage, setCurrentPage] = useState(1);
+  const [imageAspectRatio, setImageAspectRatio] = useState('1/1'); // 기본값: 정사각형
   const contextMenuRef = useRef(null);
   
   const ITEMS_PER_PAGE = 30;
@@ -80,6 +81,9 @@ export const GroupExplorer = () => {
       handleDeleteSelected();
     } else if (action === 'selectAllImages') {
       handleSelectAllImages();
+    } else if (action.startsWith('aspectRatio_')) {
+      const ratio = action.split('_')[1];
+      setImageAspectRatio(ratio);
     }
   };
 
@@ -237,6 +241,7 @@ export const GroupExplorer = () => {
                 title={image.positive_prompt}
                 onDragStart={(e) => {if (!selectedImageIds.has(image.id)){toggleSelectImage(image.id);}}}
                 onClick={(e) => {e.preventDefault(); e.stopPropagation(); handleImageClick(e, image.id)}}
+                style={{ '--image-aspect-ratio': imageAspectRatio }}
               >
                 <img 
                   src={API_URL + '/' + image.url} 
@@ -323,20 +328,67 @@ export const GroupExplorer = () => {
             새 폴더 생성
           </div>
           {images && images.length > 0 && (
-            <div 
-              className="context-menu-item"
-              onClick={(e) => {e.preventDefault(); e.stopPropagation(); handleContextMenuAction('selectAllImages')}}
-            >
-              모든 이미지 선택
-            </div>
+            <>
+              <div 
+                className="context-menu-item"
+                onClick={(e) => {e.preventDefault(); e.stopPropagation(); handleContextMenuAction('selectAllImages')}}
+              >
+                모든 이미지 선택
+              </div>
+              <div className="context-menu-separator"></div>
+              <div className="context-menu-submenu">
+                <div className="context-menu-item context-menu-submenu-title">
+                  이미지 비율 조절
+                </div>
+                <div 
+                  className={`context-menu-item context-menu-submenu-item ${imageAspectRatio === '1/1' ? 'active' : ''}`}
+                  onClick={(e) => {e.preventDefault(); e.stopPropagation(); handleContextMenuAction('aspectRatio_1/1')}}
+                >
+                  정사각형 (1:1)
+                </div>
+                <div 
+                  className={`context-menu-item context-menu-submenu-item ${imageAspectRatio === '4/3' ? 'active' : ''}`}
+                  onClick={(e) => {e.preventDefault(); e.stopPropagation(); handleContextMenuAction('aspectRatio_4/3')}}
+                >
+                  표준 (4:3)
+                </div>
+                <div 
+                  className={`context-menu-item context-menu-submenu-item ${imageAspectRatio === '16/9' ? 'active' : ''}`}
+                  onClick={(e) => {e.preventDefault(); e.stopPropagation(); handleContextMenuAction('aspectRatio_16/9')}}
+                >
+                  와이드 (16:9)
+                </div>
+                <div 
+                  className={`context-menu-item context-menu-submenu-item ${imageAspectRatio === '3/2' ? 'active' : ''}`}
+                  onClick={(e) => {e.preventDefault(); e.stopPropagation(); handleContextMenuAction('aspectRatio_3/2')}}
+                >
+                  ㅇㅇ (3:2)
+                </div>
+                <div 
+                  className={`context-menu-item context-menu-submenu-item ${imageAspectRatio === '2/3' ? 'active' : ''}`}
+                  onClick={(e) => {e.preventDefault(); e.stopPropagation(); handleContextMenuAction('aspectRatio_2/3')}}
+                >
+                  세로 (2:3)
+                </div>
+                <div 
+                  className={`context-menu-item context-menu-submenu-item ${imageAspectRatio === '9/16' ? 'active' : ''}`}
+                  onClick={(e) => {e.preventDefault(); e.stopPropagation(); handleContextMenuAction('aspectRatio_9/16')}}
+                >
+                  모바일 (9:16)
+                </div>
+              </div>
+            </>
           )}
           {selectedImageIds.size > 0 && (
-            <div 
-              className="context-menu-item"
-              onClick={(e) => {e.preventDefault(); e.stopPropagation(); handleContextMenuAction('deleteSelected')}}
-            >
-              선택된 이미지 삭제
-            </div>
+            <>
+              <div className="context-menu-separator"></div>
+              <div 
+                className="context-menu-item"
+                onClick={(e) => {e.preventDefault(); e.stopPropagation(); handleContextMenuAction('deleteSelected')}}
+              >
+                선택된 이미지 삭제
+              </div>
+            </>
           )}
         </div>
       )}

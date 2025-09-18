@@ -135,6 +135,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 60px;
   height: 60px;
   border-radius: 8px;
   overflow: hidden;
@@ -150,6 +151,12 @@
   height: 100%;
   object-fit: cover;
   border-radius: 6px;
+}
+
+/* 이미지 컨테이너 aspect ratio 조절 */
+.grid-item.image-item {
+  aspect-ratio: var(--image-aspect-ratio, 1/1);
+  min-height: auto;
 }
 
 .item-name {
@@ -294,6 +301,44 @@
 
 .context-menu-item:hover {
   background-color: #f8f9fa;
+}
+
+/* 컨텍스트 메뉴 서브메뉴 스타일 */
+.context-menu-separator {
+  height: 1px;
+  background-color: #e0e0e0;
+  margin: 4px 0;
+}
+
+.context-menu-submenu {
+  padding-left: 0;
+}
+
+.context-menu-submenu-title {
+  font-weight: 600;
+  color: #555;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 2px;
+}
+
+.context-menu-submenu-item {
+  padding-left: 24px;
+  font-size: 0.85rem;
+  position: relative;
+}
+
+.context-menu-submenu-item.active {
+  background-color: #e3f2fd;
+  color: #1976d2;
+  font-weight: 500;
+}
+
+.context-menu-submenu-item.active::before {
+  content: '✓';
+  position: absolute;
+  left: 8px;
+  font-weight: bold;
 }
 
 /* 모달 스타일 */
