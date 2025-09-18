@@ -378,7 +378,7 @@ def generate_images_from_image_on_device(
         negative_prompt_chunk = negative_prompt_list[i:i+chunk_size]
         seed_chunk = seed_list[i:i+chunk_size]
         generators_chunk = [torch.Generator(device=f"cuda:{device_id}").manual_seed(seed_int) for seed_int in seed_chunk]
-        image_chunk = image_list[i:i+chunk_size]
+        image_chunk = [Image.open(image_url) for image_url in image_list[i:i+chunk_size]]
         
         # 메모리 정리
         torch.cuda.empty_cache()

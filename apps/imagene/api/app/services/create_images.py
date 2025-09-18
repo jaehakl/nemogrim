@@ -32,7 +32,7 @@ async def create_image_batch(image_request_data: ImageRequestData, db: Session) 
             images = db.query(Image).filter(Image.id.in_(ir.images)).all()
             image_file_map = {}
             for image in images:
-                image_file_map[image.id] = PILImage.open(image.url)
+                image_file_map[image.id] = image.url
             for image_id in ir.images:
                 if image_file_map[image_id] is None:
                     raise ValueError(f"Image file not found: {image_id}")
