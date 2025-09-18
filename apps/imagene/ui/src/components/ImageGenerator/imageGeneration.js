@@ -15,9 +15,8 @@ export const generateOffsprings = async (params) => {
   let image_list = [];
   
   if (generationConfig.useDirectoryImage && images.length > 0) {
-    const first_image = images[Math.floor(Math.random() * images.length)];
     for (let i = 0; i < generationConfig.ngen; i++) {
-      image_list.push(first_image.id);
+      image_list.push(images[Math.floor(Math.random() * images.length)].id);
     }
   }
 

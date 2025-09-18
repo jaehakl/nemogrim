@@ -123,12 +123,6 @@ export const GroupExplorer = () => {
     setCurrentPage(page);
   };
 
-  // 이미지 데이터가 변경될 때 첫 페이지로 리셋
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [images]);
-
-
   const getUpperPath = () => {
     const currentPath = directory.path || '/';
     if (currentPath === '/') {
