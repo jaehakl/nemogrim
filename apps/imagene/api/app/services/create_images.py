@@ -34,7 +34,7 @@ async def create_image_batch(image_request_data: ImageRequestData, db: Session) 
             for image in images:
                 image_file_map[image.id] = image.url
             for image_id in ir.images:
-                if image_file_map[image_id] is None:
+                if image_id not in image_file_map:
                     raise ValueError(f"Image file not found: {image_id}")
                 image_file_list.append(image_file_map[image_id])
 
