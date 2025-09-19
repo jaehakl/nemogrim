@@ -120,6 +120,14 @@ export const ImageFilterProvider = ({ children }) => {
     setImages(data.images);  
   }, [directory]);
 
+  const toggleSelectImage = useCallback((imageId) => {
+    setSelectedImageIds(prev => {
+      const newSet = new Set(prev);
+      newSet.has(imageId) ? newSet.delete(imageId) : newSet.add(imageId);
+      return newSet;
+    });
+  }, []);
+
 
 
   const value = useMemo(() => ({
@@ -143,6 +151,7 @@ export const ImageFilterProvider = ({ children }) => {
     resetGenerationConfig,
     isGenerating,
     setIsGenerating,
+    toggleSelectImage,
   }), [
     refreshDirectory,
     images,
@@ -164,6 +173,7 @@ export const ImageFilterProvider = ({ children }) => {
     resetGenerationConfig,
     isGenerating,
     setIsGenerating,
+    toggleSelectImage,
   ]);
 
   return (
