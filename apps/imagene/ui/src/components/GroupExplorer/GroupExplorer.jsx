@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useImageFilter } from '../../contexts/ImageFilterContext';
 import { API_URL, movePathBatch, setImageDirectoryBatch, deletePathBatch } from '../../api/api';
 import { SubGroupItem } from './SubGroupItem';
+import { ImageIcon } from './ImageIcon';
 import { KeywordVisualizer } from '../KeywordVisualizer/KeywordVisualizer';
 import './GroupExplorer.css';
 
@@ -14,7 +15,6 @@ export const GroupExplorer = () => {
     selectedImageIds,
     setSelectedImageIds,
     toggleSelectImage,
-    setHoveredImage,
     imageKeywords,
     userPrompt,
     setUserPrompt,
@@ -231,21 +231,7 @@ export const GroupExplorer = () => {
           </h3>
           <div className="grid-container">
             {currentImages.map((image) => (
-              <div 
-                key={image.id} 
-                className={`grid-item image-item ${selectedImageIds.has(image.id) ? 'selected' : ''}`}
-                title={image.positive_prompt}
-                onDragStart={(e) => {if (!selectedImageIds.has(image.id)){toggleSelectImage(image.id);}}}
-                onClick={(e) => {e.preventDefault(); e.stopPropagation(); handleImageClick(e, image.id)}}
-              >
-                <img 
-                  src={API_URL + '/' + image.url} 
-                  alt={image.name || `Image ${image.id}`}
-                  className="image-preview"
-                  onMouseEnter={() => setHoveredImage(image)}
-                  onMouseLeave={() => setHoveredImage(null)}  
-                  />
-              </div>
+              <ImageIcon key={image.id} image={image} />
             ))}
           </div>
           

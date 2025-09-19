@@ -13,7 +13,7 @@ from settings import settings
 from PIL import Image as PILImage
 
 
-async def create_image_batch(image_request_data: ImageRequestData, db: Session) -> List[ImageData]:
+async def create_image_batch_from_image(image_request_data: ImageRequestData, uploaded_files: List[Any], db: Session) -> List[ImageData]:
     created_images = []
     embedding_list = []
     images_list_total = []
@@ -27,7 +27,20 @@ async def create_image_batch(image_request_data: ImageRequestData, db: Session) 
         for positive_prompt in ir.positive_prompt_list:
             embedding_list.append(await asyncio.to_thread(get_text_embedding, positive_prompt))
 
-        if ir.images and len(ir.images) == len(ir.positive_prompt_list):
+        # 업로드된 파일이 있으면 사용
+        if uploaded_files and len(uploaded_files) > 0:
+            image_to_image_mode = True
+            temp_path_list = []
+            for uploaded_file in uploaded_files:
+                # 업로드된 파일을 임시로 저장
+                temp_path = f"temp_{uuid.uuid4().hex}_{uploaded_file.filename}"
+                with open(temp_path, "wb") as buffer:
+                    content = await uploaded_file.read()
+                    buffer.write(content)     
+                    temp_path_list.append(temp_path)
+            for i in range(len(ir.positive_prompt_list)):
+                image_file_list.append(temp_path_list[i%len(temp_path_list)])
+        elif ir.images and len(ir.images) == len(ir.positive_prompt_list):
             image_to_image_mode = True
             images = db.query(Image).filter(Image.id.in_(ir.images)).all()
             image_file_map = {}
@@ -112,4 +125,13 @@ async def create_image_batch(image_request_data: ImageRequestData, db: Session) 
             ))
 
         db.commit()
+        
+        # 임시 파일들 정리
+        for temp_file in image_file_list:
+            if temp_file.startswith("temp_"):
+                try:
+                    os.remove(temp_file)
+                except:
+                    pass  # 파일 삭제 실패해도 무시
+    
     return created_images

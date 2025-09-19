@@ -1,13 +1,13 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException, Request, Query
 from fastapi.responses import JSONResponse
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from sqlalchemy.orm import Session
 from fastapi import Depends, Form
 from initserver import server
 from models import ImageData, DirectoryData, ImageRequestData
 from utils.get_db import get_db
 
-from services.create_images import create_image_batch
+from services.create_images import create_image_batch_from_image
 from services.image_detail import get_image_detail
 from services.search_from_prompt import search_from_prompt
 from services.directories import (
@@ -55,11 +55,15 @@ async def api_edit_path(request: Request, data: Dict[str, Any], db: Session = De
     )->str:
     return exec_service(db, edit_dir_path, data["prev_path"], data["new_path"])
 
-
-@app.post("/images/create-batch")
-async def api_create_images_batch(request: Request, image_request_data: ImageRequestData, db: Session = Depends(get_db)
-    )->List[ImageData]:
-    return await exec_service_async(db, create_image_batch, image_request_data)
+@app.post("/images/create-batch-from-image")
+async def api_create_images_batch_from_image(
+    imageRequest: str = Form(...),
+    uploadedFiles: Optional[List[UploadFile]] = File(default=[]),
+    db: Session = Depends(get_db)
+) -> List[ImageData]:
+    import json
+    image_request_data = ImageRequestData(**json.loads(imageRequest))
+    return await exec_service_async(db, create_image_batch_from_image, image_request_data, uploadedFiles)
 
 @app.post("/images/get-detail")
 async def api_get_image_detail(request: Request, data: Dict[str, Any], db: Session = Depends(get_db)

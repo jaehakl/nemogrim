@@ -5,6 +5,7 @@ import { API_URL, deletePathBatch } from '../../api/api';
 import { PromptInput } from '../../components/PromptInput/PromptInput';
 import GenerationConfig from '../../components/GenerationConfig/GenerationConfig';
 import { ImageGenerator } from '../../components/ImageGenerator/ImageGenerator';
+import { FileUpload } from '../../components/FileUpload/FileUpload';
 import { getImageDetail } from '../../api/api';
 import './ContentArea.css';
 
@@ -19,6 +20,8 @@ export const ContentArea = () => {
   const [imageDirectories, setImageDirectories] = useState([]);
   const [similarImages, setSimilarImages] = useState([]);
   const [currentImage, setCurrentImage] = useState(null);
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [previewImages, setPreviewImages] = useState([]);
 
   useEffect(() => {
     if (hoveredImage) {
@@ -93,8 +96,19 @@ export const ContentArea = () => {
         ) : (
           <>
             <GenerationConfig />
+            <ImageGenerator 
+              uploadedFiles={uploadedFiles}
+              setUploadedFiles={setUploadedFiles}
+              previewImages={previewImages}
+              setPreviewImages={setPreviewImages}
+            />
             <PromptInput />
-            <ImageGenerator />
+            <FileUpload 
+              uploadedFiles={uploadedFiles}
+              setUploadedFiles={setUploadedFiles}
+              previewImages={previewImages}
+              setPreviewImages={setPreviewImages}
+            />
           </>
         )}
       

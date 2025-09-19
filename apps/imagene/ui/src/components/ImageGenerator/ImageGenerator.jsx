@@ -1,10 +1,10 @@
-import React, { useMemo, useState, useRef, useEffect } from 'react';
-import { Button, Stack, Form, InputNumber, Input, Slider, CheckPicker, Divider, Card } from 'rsuite';
+import React, { useState } from 'react';
+import { Button } from 'rsuite';
 import { useImageFilter } from '../../contexts/ImageFilterContext';
 import { AutoGenerationModal } from './AutoGenerationModal';
 import { generateOffsprings } from './imageGeneration';
 
-export const ImageGenerator = () => {
+export const ImageGenerator = ({ uploadedFiles, setUploadedFiles, previewImages, setPreviewImages }) => {
   const {
     directory,
     images,
@@ -23,6 +23,7 @@ export const ImageGenerator = () => {
         images,
         imageKeywords,
         userPrompt,
+        uploadedFiles,
         generationConfig,
         refreshDirectory
       });
@@ -31,21 +32,25 @@ export const ImageGenerator = () => {
     }
   };
 
+
   return (
-    <div>
-      <Button 
-        onClick={() => setShowAutoGenerationModal(true)}
-        color="blue"
-        appearance="primary"
-      >
-        자동 생성 시작
-      </Button>
-      <Button 
-        onClick={handleGenerateOffsprings}
-        style={{ marginLeft: '10px' }}
-      >
-        한 번 생성
-      </Button>
+    <div style={{ padding: '20px' }}>
+      {/* 이미지 생성 버튼들 */}
+      <div style={{ marginBottom: '20px' }}>
+        <Button 
+          onClick={() => setShowAutoGenerationModal(true)}
+          color="blue"
+          appearance="primary"
+          style={{ marginRight: '10px' }}
+        >
+          자동 생성 시작
+        </Button>
+        <Button 
+          onClick={handleGenerateOffsprings}
+        >
+          한 번 생성
+        </Button>
+      </div>
       
       <AutoGenerationModal 
         show={showAutoGenerationModal}

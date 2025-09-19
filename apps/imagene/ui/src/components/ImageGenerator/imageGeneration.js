@@ -1,4 +1,4 @@
-import { createImagesBatch } from '../../api/api';
+import { createImagesBatch, createImagesBatchFromImage } from '../../api/api';
 import total_dict from './total_dict.json';
 
 export const generateOffsprings = async (params) => {
@@ -7,6 +7,7 @@ export const generateOffsprings = async (params) => {
     images,
     imageKeywords,
     userPrompt,
+    uploadedFiles,
     generationConfig,
     refreshDirectory,
     onComplete
@@ -82,7 +83,18 @@ export const generateOffsprings = async (params) => {
   }
   
   try {
-    const response = await createImagesBatch(imageRequest);
+    let response;
+    
+    const formData = new FormData();
+    formData.append('imageRequest', JSON.stringify(imageRequest));
+
+    if (uploadedFiles) {
+      uploadedFiles.forEach((file, index) => {
+        formData.append(`uploadedFiles`, file);
+      });      
+    }
+    response = await createImagesBatchFromImage(formData);
+    
     refreshDirectory();
     
     if (onComplete) {

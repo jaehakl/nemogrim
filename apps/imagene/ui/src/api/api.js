@@ -12,5 +12,12 @@ export const setImageDirectoryBatch = (dirPath, imageIds) => axios.post(`${API_U
 export const editDirPath = (prevPath, newPath) => axios.post(`${API_URL}/directory/edit-path`, {prev_path: prevPath, new_path: newPath});
 
 export const createImagesBatch = (imageRequestData) => axios.post(`${API_URL}/images/create-batch`, imageRequestData);
+export const createImagesBatchFromImage = (formData) => {
+    return axios.post(`${API_URL}/images/create-batch-from-image`, formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+      },
+    });
+};
 export const getImageDetail = (imageId) => axios.post(`${API_URL}/images/get-detail`, {id: imageId});
 export const searchFromPrompt = (prompt) => axios.post(`${API_URL}/images/search-from-prompt`, {prompt: prompt});
