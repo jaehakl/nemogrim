@@ -1,15 +1,8 @@
 import React, { useState } from 'react';
-import { Container, Content, Sidebar, Divider } from 'rsuite';
-import { Routes, Route, useLocation } from 'react-router-dom';
 import { ContentArea } from './pages/ContentArea/ContentArea';
-import { ImageGenPage } from './pages/ImageGenPage/ImageGenPage';
-import { ImageStatistics } from './components/ImageStatistics/ImageStatistics';
-import { Navbar } from './components/Navbar/Navbar';
-import { Groups } from './components/Groups/Groups';
 import { GroupExplorer } from './components/GroupExplorer/GroupExplorer';
 
 import './App.css';
-
 
 function App() {  
   const [leftWidth, setLeftWidth] = useState(70);
@@ -41,7 +34,6 @@ function App() {
 
   return (
     <div className="app-container">
-      <Navbar />
       <div className="app-home">
         <div className="resizable-container">
           <div 

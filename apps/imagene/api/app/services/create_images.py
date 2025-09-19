@@ -2,8 +2,8 @@ from typing import List, Dict, Any, Optional
 import asyncio
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, func, desc, asc
-from models import CreateImageData, ImageData, ImageFilterData, KeywordData, ImageKeywordData, ImageRequestData
-from db import ImageGroup, Keyword, ImageKeyword, Path, Image
+from models import ImageData, ImageRequestData
+from db import Path, Image
 import random
 from utils.embedding import get_text_embedding
 from utils.stable_diffusion import generate_images_batch_async, generate_images_multi_gpu_async, generate_images_from_image_multi_gpu_async
