@@ -196,7 +196,7 @@ const GenerationConfig = () => {
             <input
               type="number"
               value={generationConfig.mutation}
-              onChange={(e) => handleConfigChange('mutation', parseInt(e.target.value) || 1)}
+              onChange={(e) => handleConfigChange('mutation', parseInt(e.target.value) || 0)}
               min="0"
               max="32"
             />
