@@ -1,0 +1,354 @@
+/* ViewingMode - 감상 모드 스타일 */
+
+.viewing-mode-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #000;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: none;
+}
+
+.viewing-mode-overlay:hover {
+  cursor: default;
+}
+
+/* 이미지 컨테이너 */
+.viewing-mode-image-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.viewing-mode-image-container.transitioning {
+  opacity: 0;
+}
+
+.viewing-mode-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* 빈 상태 */
+.viewing-mode-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  color: #fff;
+}
+
+.viewing-mode-empty button {
+  padding: 12px 24px;
+  background: #4a5568;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background 0.2s;
+}
+
+.viewing-mode-empty button:hover {
+  background: #5a6578;
+}
+
+/* 컨트롤 패널 */
+.viewing-mode-controls {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.viewing-mode-controls.hidden {
+  opacity: 0;
+}
+
+.viewing-mode-controls.visible {
+  opacity: 1;
+}
+
+/* 상단 헤더 */
+.viewing-mode-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 30px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.7) 0%, transparent 100%);
+  pointer-events: auto;
+}
+
+.viewing-mode-counter {
+  color: #fff;
+  font-size: 18px;
+  font-weight: 500;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+.viewing-mode-close {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #fff;
+  font-size: 24px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.viewing-mode-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+/* 하단 푸터 */
+.viewing-mode-footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20px 30px 30px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, transparent 100%);
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* 진행 바 */
+.viewing-mode-progress {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.progress-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.progress-dot:hover {
+  background: rgba(255, 255, 255, 0.6);
+  transform: scale(1.2);
+}
+
+.progress-dot.viewed {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.progress-dot.active {
+  background: #10b981;
+  transform: scale(1.3);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.6);
+}
+
+/* 컨트롤 버튼 */
+.viewing-mode-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.control-btn {
+  padding: 12px 24px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  backdrop-filter: blur(10px);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+.control-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+.control-btn.play-pause {
+  min-width: 120px;
+  background: rgba(16, 185, 129, 0.3);
+  border-color: rgba(16, 185, 129, 0.5);
+}
+
+.control-btn.play-pause:hover {
+  background: rgba(16, 185, 129, 0.4);
+}
+
+/* 속도 조절 */
+.viewing-mode-speed {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: #fff;
+  font-size: 14px;
+  flex-wrap: wrap;
+}
+
+.viewing-mode-speed label {
+  font-weight: 500;
+  min-width: 100px;
+  text-align: right;
+}
+
+.speed-slider {
+  width: 200px;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.speed-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #10b981;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.speed-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.speed-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #10b981;
+  cursor: pointer;
+  border: none;
+}
+
+.speed-presets {
+  display: flex;
+  gap: 8px;
+}
+
+.speed-presets button {
+  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.speed-presets button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* 안내 텍스트 */
+.viewing-mode-hint {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+}
+
+/* 네비게이션 영역 */
+.viewing-mode-nav-left,
+.viewing-mode-nav-right {
+  position: fixed;
+  top: 100px;
+  bottom: 200px;
+  width: 15%;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.viewing-mode-nav-left {
+  left: 0;
+  cursor: w-resize;
+}
+
+.viewing-mode-nav-right {
+  right: 0;
+  cursor: e-resize;
+}
+
+.viewing-mode-nav-left:hover,
+.viewing-mode-nav-right:hover {
+  background: linear-gradient(to right, rgba(255, 255, 255, 0.05), transparent);
+}
+
+.viewing-mode-nav-right:hover {
+  background: linear-gradient(to left, rgba(255, 255, 255, 0.05), transparent);
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .viewing-mode-header {
+    padding: 15px 20px;
+  }
+
+  .viewing-mode-footer {
+    padding: 15px 20px 20px;
+  }
+
+  .viewing-mode-speed {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .viewing-mode-speed label {
+    text-align: center;
+  }
+
+  .speed-slider {
+    width: 100%;
+    max-width: 200px;
+  }
+
+  .control-btn {
+    padding: 10px 16px;
+    font-size: 12px;
+  }
+
+  .viewing-mode-nav-left,
+  .viewing-mode-nav-right {
+    width: 20%;
+  }
+}

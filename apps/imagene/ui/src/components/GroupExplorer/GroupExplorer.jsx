@@ -4,6 +4,7 @@ import { API_URL, movePathBatch, setImageDirectoryBatch, deletePathBatch } from 
 import { SubGroupItem } from './SubGroupItem';
 import { ImageIcon } from './ImageIcon';
 import { KeywordVisualizer } from '../KeywordVisualizer/KeywordVisualizer';
+import { ViewingMode } from './ViewingMode';
 import './GroupExplorer.css';
 
 export const GroupExplorer = () => {
@@ -24,6 +25,7 @@ export const GroupExplorer = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newDirPath, setNewDirPath] = useState('');  
   const [currentPage, setCurrentPage] = useState(1);
+  const [showViewingMode, setShowViewingMode] = useState(false);
   const contextMenuRef = useRef(null);
   
   const ITEMS_PER_PAGE = 30;
@@ -80,6 +82,8 @@ export const GroupExplorer = () => {
       handleDeleteSelected();
     } else if (action === 'selectAllImages') {
       handleSelectAllImages();
+    } else if (action === 'viewingMode') {
+      setShowViewingMode(true);
     }
   };
 
@@ -186,6 +190,8 @@ export const GroupExplorer = () => {
 
   return (
     <div className="group-explorer" onContextMenu={handleRightClick} onClick={(e)=>handleImageClick(e, null)}>
+
+      
       {/* 경로 헤더 */}
       <div className="group-header">
         <h2 className="group-title">{directory.path || '/'}</h2>
@@ -324,6 +330,14 @@ export const GroupExplorer = () => {
               선택된 이미지 삭제
             </div>
           )}
+          {images && images.length > 0 && (
+            <div 
+              className="context-menu-item"
+              onClick={(e) => {e.preventDefault(); e.stopPropagation(); handleContextMenuAction('viewingMode')}}
+            >
+              🖼️ 감상 모드
+            </div>
+          )}
         </div>
       )}
 
@@ -369,6 +383,15 @@ export const GroupExplorer = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* 감상 모드 */}
+      {showViewingMode && (
+        <ViewingMode
+          images={images}
+          onClose={() => setShowViewingMode(false)}
+          refreshDirectory={refreshDirectory}
+        />
       )}
 
     </div>
