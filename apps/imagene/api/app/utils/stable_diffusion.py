@@ -139,12 +139,12 @@ def generate_images_pony(
         n_prompts = negative_prompt_list[i:i+chunk_size]        
         generators = []
         current_seeds = []
-        common_positive_prompt = "score_9, score_8_up, score_7_up, source_anime, rating_safe, masterpiece, best quality, very aesthetic, newest,"        
+        common_positive_prompt = "score_9, score_8_up, score_7_up, source_anime, masterpiece, best quality, very aesthetic, newest,"        
         for p_prompt in p_prompts:
             p_prompt = common_positive_prompt + p_prompt
         common_negative_prompt = (
             "score_4, score_5, score_6, source_pony, source_furry,"
-            "nsfw, sex, romance, woman, portrait, duplicate, "
+            "portrait, duplicate, "
             "lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry,"
             "poor contrast, poor colors"
             )
