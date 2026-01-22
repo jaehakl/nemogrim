@@ -174,7 +174,7 @@ export const ViewingMode = ({
       {/* 메인 이미지 */}
       <div className={`viewing-mode-image-container ${isTransitioning ? 'transitioning' : ''}`}>
         <img
-          src={`${API_URL}/images/${currentImage.id}`}
+          src={`${API_URL}/${currentImage.url}`}
           alt={currentImage.positive_prompt || '이미지'}
           className="viewing-mode-image"
         />
