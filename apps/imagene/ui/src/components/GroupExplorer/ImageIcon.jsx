@@ -1,14 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { API_URL } from '../../api/api';
 import { useImageFilter } from '../../contexts/ImageFilterContext';
+import { useNavigate } from 'react-router-dom';
 
 export const ImageIcon = ({ 
   image
 }) => {
+  const navigator = useNavigate();
+
   const { selectedImageIds, setSelectedImageIds, toggleSelectImage, setHoveredImage } = useImageFilter();
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0 });
   const contextMenuRef = useRef(null);
-  
+
   const isSelected = selectedImageIds.has(image.id);
 
   const handleImageClick = (e, imageId) => {
