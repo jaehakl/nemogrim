@@ -29,12 +29,13 @@ export const ViewingMode = ({
   const imagesVersionRef = useRef(0); // images 변경 추적용
   const MAX_IMAGES = 15;
 
-  // 이미지 준비 함수
+  // 이미지 준비 함수 - 전체에서 무작위로 15개 선택
   const prepareImages = useCallback((sourceImages) => {
     const imgList = sourceImages || images;
     if (!imgList || imgList.length === 0) return [];
-    const limitedImages = imgList.slice(0, MAX_IMAGES);
-    return shuffleArray(limitedImages);
+    // 먼저 전체 이미지를 셔플한 후 15개 선택
+    const shuffled = shuffleArray(imgList);
+    return shuffled.slice(0, MAX_IMAGES);
   }, [images]);
 
   // 초기 이미지 설정
