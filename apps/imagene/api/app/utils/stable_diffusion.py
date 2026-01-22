@@ -15,8 +15,6 @@ from typing import List, Tuple, Any
 # Flux 및 SDXL 파이프라인
 from diffusers import StableDiffusionXLPipeline, AutoencoderKL
 from diffusers import EulerAncestralDiscreteScheduler
-#from huggingface_hub import login
-#login(token="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")
 
 _generation_lock = asyncio.Semaphore(1)
 
