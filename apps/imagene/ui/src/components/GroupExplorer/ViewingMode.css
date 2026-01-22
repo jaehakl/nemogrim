@@ -64,6 +64,22 @@
   background: #5a6578;
 }
 
+/* 로딩 스피너 */
+.viewing-mode-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(255, 255, 255, 0.2);
+  border-top-color: #10b981;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* 컨트롤 패널 */
 .viewing-mode-controls {
   position: fixed;

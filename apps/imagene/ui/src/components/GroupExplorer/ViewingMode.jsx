@@ -23,49 +23,64 @@ export const ViewingMode = ({
   const [isPaused, setIsPaused] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showControls, setShowControls] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const timerRef = useRef(null);
   const controlsTimerRef = useRef(null);
+  const imagesVersionRef = useRef(0); // images 변경 추적용
   const MAX_IMAGES = 15;
 
   // 이미지 준비 함수
-  const prepareImages = useCallback(() => {
-    if (!images || images.length === 0) return [];
-    const limitedImages = images.slice(0, MAX_IMAGES);
+  const prepareImages = useCallback((sourceImages) => {
+    const imgList = sourceImages || images;
+    if (!imgList || imgList.length === 0) return [];
+    const limitedImages = imgList.slice(0, MAX_IMAGES);
     return shuffleArray(limitedImages);
   }, [images]);
 
   // 초기 이미지 설정
   useEffect(() => {
-    const prepared = prepareImages();
+    const prepared = prepareImages(images);
     setDisplayImages(prepared);
     setCurrentIndex(0);
+    imagesVersionRef.current = images?.length || 0;
   }, []);
+
+  // images prop이 변경되면 새 이미지 목록 준비 (refreshDirectory 완료 후)
+  useEffect(() => {
+    if (isRefreshing && images && images.length > 0) {
+      const prepared = prepareImages(images);
+      setDisplayImages(prepared);
+      setCurrentIndex(0);
+      setIsRefreshing(false);
+      imagesVersionRef.current = images.length;
+    }
+  }, [images, isRefreshing, prepareImages]);
 
   // 다음 이미지로 이동
   const goToNext = useCallback(async () => {
-    if (displayImages.length === 0) return;
+    if (displayImages.length === 0 || isRefreshing) return;
+
+    const nextIndex = currentIndex + 1;
+    
+    // 모든 이미지를 다 본 경우
+    if (nextIndex >= displayImages.length) {
+      setIsRefreshing(true);
+      setIsTransitioning(true);
+      
+      // refreshDirectory 호출하여 백엔드에서 새 이미지 목록 가져오기
+      await refreshDirectory();
+      
+      setIsTransitioning(false);
+      // isRefreshing 상태와 images prop 변경으로 위의 useEffect가 트리거됨
+      return;
+    }
 
     setIsTransitioning(true);
     setTimeout(() => {
-      setCurrentIndex(prev => {
-        const nextIndex = prev + 1;
-        // 모든 이미지를 다 본 경우
-        if (nextIndex >= displayImages.length) {
-          // refreshDirectory 호출 후 새 이미지 목록으로 갱신
-          refreshDirectory().then(() => {
-            // 잠시 후에 새 이미지 목록 준비 (refreshDirectory가 완료된 후)
-            setTimeout(() => {
-              const newImages = prepareImages();
-              setDisplayImages(newImages);
-            }, 500);
-          });
-          return 0;
-        }
-        return nextIndex;
-      });
+      setCurrentIndex(nextIndex);
       setIsTransitioning(false);
     }, 300);
-  }, [displayImages.length, refreshDirectory, prepareImages]);
+  }, [displayImages.length, currentIndex, refreshDirectory, isRefreshing]);
 
   // 이전 이미지로 이동
   const goToPrev = useCallback(() => {
@@ -79,7 +94,7 @@ export const ViewingMode = ({
 
   // 자동 재생 타이머
   useEffect(() => {
-    if (isPaused || displayImages.length === 0) {
+    if (isPaused || displayImages.length === 0 || isRefreshing) {
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
@@ -96,7 +111,7 @@ export const ViewingMode = ({
         clearInterval(timerRef.current);
       }
     };
-  }, [isPaused, intervalTime, goToNext, displayImages.length]);
+  }, [isPaused, intervalTime, goToNext, displayImages.length, isRefreshing]);
 
   // 키보드 이벤트
   useEffect(() => {
@@ -145,15 +160,19 @@ export const ViewingMode = ({
     };
   }, []);
 
-  // images prop이 변경되면 displayImages 업데이트 (refreshDirectory 후)
-  useEffect(() => {
-    if (images && images.length > 0 && displayImages.length === 0) {
-      const prepared = prepareImages();
-      setDisplayImages(prepared);
-    }
-  }, [images, displayImages.length, prepareImages]);
-
   const currentImage = displayImages[currentIndex];
+
+  // 새로고침 중 로딩 표시
+  if (isRefreshing) {
+    return (
+      <div className="viewing-mode-overlay">
+        <div className="viewing-mode-empty">
+          <p>새 이미지를 불러오는 중...</p>
+          <div className="viewing-mode-spinner"></div>
+        </div>
+      </div>
+    );
+  }
 
   if (!currentImage) {
     return (
