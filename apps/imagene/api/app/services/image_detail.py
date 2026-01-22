@@ -6,7 +6,6 @@ from models import ImageData
 from db import Image, Path
 import random
 from utils.embedding import get_text_embedding
-from utils.stable_diffusion import generate_images_batch
 import json, uuid
 import os, shutil
 from settings import settings
