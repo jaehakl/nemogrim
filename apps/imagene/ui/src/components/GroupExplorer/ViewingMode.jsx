@@ -192,7 +192,8 @@ export const ViewingMode = ({
       onMouseMove={handleMouseMove}
     >
       {/* 메인 이미지 */}
-      <div className={`viewing-mode-image-container ${isTransitioning ? 'transitioning' : ''}`}>
+      {/*<div className={`viewing-mode-image-container ${isTransitioning ? 'transitioning' : ''}`}>*/}
+      <div className="viewing-mode-image-container">
         <img
           src={`${API_URL}/${currentImage.url}`}
           alt={currentImage.positive_prompt || '이미지'}
