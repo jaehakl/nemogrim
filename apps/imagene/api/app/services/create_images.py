@@ -53,7 +53,6 @@ async def create_image_batch_from_image(image_request_data: ImageRequestData, up
 
         if image_to_image_mode:
             # 멀티 GPU 지원으로 이미지 생성
-            print(f"image_file_list: {image_file_list}")
             images_list, generators_chunk = await generate_images_from_image_multi_gpu_async(
                                             ckpt_path=ir.ckpt_path,
                                             positive_prompt_list=ir.positive_prompt_list, 

@@ -353,7 +353,7 @@ def generate_images_from_image_on_device(
             "madebyollin/sdxl-vae-fp16-fix", 
             torch_dtype=torch.float16
         )
-        pipe = StableDiffusionXLPipeline.from_single_file(
+        pipe = StableDiffusionXLImg2ImgPipeline.from_single_file(
             ckpt_path,
             vae=vae,                # 위에서 설정한 VAE 주입
             torch_dtype=torch.float16,
