@@ -1,12 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { API_URL } from '../../api/api';
 import { useImageFilter } from '../../contexts/ImageFilterContext';
-import { useNavigate } from 'react-router-dom';
 
 export const ImageIcon = ({ 
   image
 }) => {
-  const navigator = useNavigate();
 
   const { selectedImageIds, setSelectedImageIds, toggleSelectImage, setHoveredImage } = useImageFilter();
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0 });
@@ -52,10 +50,38 @@ export const ImageIcon = ({
     });
   };
 
+  const copyTextToClipboard = async (text) => {
+    if (!text) {
+      throw new Error('복사할 텍스트가 없습니다.');
+    }
+
+    // Secure Context가 아닐 때를 위한 fallback
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.top = '-1000px';
+    textArea.style.left = '-1000px';
+    textArea.setAttribute('readonly', '');
+    document.body.appendChild(textArea);
+    textArea.select();
+
+    const successful = document.execCommand('copy');
+    document.body.removeChild(textArea);
+
+    if (!successful) {
+      throw new Error('execCommand 복사 실패');
+    }
+  };
+
   const handleContextMenuAction = (action) => {
     setContextMenu({ visible: false, x: 0, y: 0 });
     if (action === 'copyPrompt') {
-      navigator.clipboard.writeText(image.positive_prompt).then(() => {
+      copyTextToClipboard(image.positive_prompt).then(() => {
         console.log('프롬프트가 클립보드에 복사되었습니다.');
       }).catch((error) => {
         console.error('클립보드 복사 실패:', error);
