@@ -14,13 +14,13 @@ diffusers = ">=0.31.0"
 transformers = ">=4.49.0"
 tokenizers = ">=0.20.3"
 accelerate = ">=1.1.1"
-tqdm
-imageio
-easydict
-ftfy
-dashscope
-imageio-ffmpeg
-flash_attn
+tqdm = ">=0"
+imageio  = ">=0"
+easydict  = ">=0"
+ftfy  = ">=0"
+dashscope  = ">=0"
+imageio-ffmpeg  = ">=0"
+flash_attn  = ">=0"
 numpy = ">=1.23.5,<2""
 
 
