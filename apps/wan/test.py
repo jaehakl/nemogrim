@@ -5,12 +5,12 @@ from wan_lightning.wan_api import prepare_dual_noise_ckpt_dir, run_i2v
 #logging.set_verbosity_error()
 
 # Civitai에서 받은 safetensors (예: high_noise_fp16, low_noise_fp16)
-HIGH = Path(r"~/ai/wan/high_noise_model/wanVideo22_i2vHighNoise14BFp8Sd.safetensors")
-LOW  = Path(r"~/ai/wan/low_noise_model/wanVideo22_i2vLowNoise14BFp16.safetensors")
+HIGH = Path(r"/home/cavenet/ai/wan/high_noise_model/wanVideo22_i2vHighNoise14BFp8Sd.safetensors")
+LOW  = Path(r"/home/cavenet/ai/wan/low_noise_model/wanVideo22_i2vLowNoise14BFp16.safetensors")
 
 # 듀얼 노이즈 ckpt_dir 준비
 CKPT = prepare_dual_noise_ckpt_dir(
-    model_root=Path(r"~/ai/wan/"),
+    model_root=Path(r"/home/cavenet/ai/wan/"),
     high_noise_safetensors=HIGH,
     low_noise_safetensors=LOW,
     use_symlink=False,  # Windows는 보통 False 권장
