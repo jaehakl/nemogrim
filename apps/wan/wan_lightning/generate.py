@@ -231,6 +231,16 @@ def _parse_args():
         action="store_true",
         default=False,
         help="Whether to convert model paramerters dtype.")
+    parser.add_argument(
+        "--low_noise_device_id",
+        type=int,
+        default=None,
+        help="GPU device id for low-noise I2V model.")
+    parser.add_argument(
+        "--high_noise_device_id",
+        type=int,
+        default=None,
+        help="GPU device id for high-noise I2V model.")
 
     args = parser.parse_args()
 
@@ -444,6 +454,8 @@ def generate(args):
             checkpoint_dir=args.ckpt_dir,
             lora_dir=args.lora_dir,
             device_id=device,
+            low_noise_device_id=args.low_noise_device_id,
+            high_noise_device_id=args.high_noise_device_id,
             rank=rank,
             t5_fsdp=args.t5_fsdp,
             dit_fsdp=args.dit_fsdp,

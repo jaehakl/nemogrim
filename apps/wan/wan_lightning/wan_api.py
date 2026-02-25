@@ -45,6 +45,8 @@ class WanArgs:
     sample_shift: Optional[float] = None
     sample_guide_scale: Optional[float] = None
     convert_model_dtype: bool = False
+    low_noise_device_id: Optional[int] = None
+    high_noise_device_id: Optional[int] = None
 
 
 def prepare_dual_noise_ckpt_dir(
@@ -145,6 +147,8 @@ def run_i2v(
     guide_scale: Optional[float] = None,
     lora_dir: Optional[Path] = None,
     convert_model_dtype: bool = False,
+    low_noise_device_id: Optional[int] = None,
+    high_noise_device_id: Optional[int] = None,
 ) -> None:
     """
     subprocess 없이 generate(args) 직접 호출.
@@ -174,6 +178,8 @@ def run_i2v(
         sample_shift=sample_shift,
         sample_guide_scale=guide_scale,
         convert_model_dtype=convert_model_dtype,
+        low_noise_device_id=low_noise_device_id,
+        high_noise_device_id=high_noise_device_id,
     )
 
     # generate.py의 검증/기본값 채우기 로직 재사용

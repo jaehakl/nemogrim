@@ -39,6 +39,8 @@ class WanI2V:
         checkpoint_dir,
         lora_dir=None,
         device_id=0,
+        low_noise_device_id=None,
+        high_noise_device_id=None,
         rank=0,
         t5_fsdp=False,
         dit_fsdp=False,
@@ -74,6 +76,10 @@ class WanI2V:
                 Only works without FSDP.
         """
         self.device = torch.device(f"cuda:{device_id}")
+        self.low_noise_device = torch.device(
+            f"cuda:{device_id if low_noise_device_id is None else low_noise_device_id}")
+        self.high_noise_device = torch.device(
+            f"cuda:{device_id if high_noise_device_id is None else high_noise_device_id}")
         self.config = config
         self.rank = rank
         self.t5_cpu = t5_cpu
@@ -113,7 +119,8 @@ class WanI2V:
             use_sp=use_sp,
             dit_fsdp=dit_fsdp,
             shard_fn=shard_fn,
-            convert_model_dtype=convert_model_dtype)
+            convert_model_dtype=convert_model_dtype,
+            target_device=self.low_noise_device)
 
         self.high_noise_model = WanModel.from_pretrained(
             checkpoint_dir, subfolder=config.high_noise_checkpoint)
@@ -125,7 +132,8 @@ class WanI2V:
             use_sp=use_sp,
             dit_fsdp=dit_fsdp,
             shard_fn=shard_fn,
-            convert_model_dtype=convert_model_dtype)
+            convert_model_dtype=convert_model_dtype,
+            target_device=self.high_noise_device)
         if use_sp:
             self.sp_size = get_world_size()
         else:
@@ -134,7 +142,7 @@ class WanI2V:
         self.sample_neg_prompt = config.sample_neg_prompt
 
     def _configure_model(self, model, use_sp, dit_fsdp, shard_fn,
-                         convert_model_dtype):
+                         convert_model_dtype, target_device):
         """
         Configures a model object. This includes setting evaluation modes,
         applying distributed parallel strategy, and handling device placement.
@@ -179,7 +187,7 @@ class WanI2V:
                     keep_in_fp32_modules=[],
                     keep_in_fp32_parameters=model._keep_in_fp32_params)
             if not self.init_on_cpu:
-                model.to(self.device)
+                model.to(target_device)
 
         return model
 
@@ -203,9 +211,11 @@ class WanI2V:
         if t.item() >= boundary:
             required_model_name = 'high_noise_model'
             offload_model_name = 'low_noise_model'
+            required_device = self.high_noise_device
         else:
             required_model_name = 'low_noise_model'
             offload_model_name = 'high_noise_model'
+            required_device = self.low_noise_device
         if offload_model or self.init_on_cpu:
             if next(getattr(
                     self,
@@ -214,8 +224,8 @@ class WanI2V:
             if next(getattr(
                     self,
                     required_model_name).parameters()).device.type == 'cpu':
-                getattr(self, required_model_name).to(self.device)
-        return getattr(self, required_model_name)
+                getattr(self, required_model_name).to(required_device)
+        return getattr(self, required_model_name), required_device
 
     def generate(self,
                  input_prompt,
@@ -289,15 +299,18 @@ class WanI2V:
         max_seq_len = int(math.ceil(max_seq_len / self.sp_size)) * self.sp_size
 
         seed = seed if seed >= 0 else random.randint(0, sys.maxsize)
-        seed_g = torch.Generator(device=self.device)
-        seed_g.manual_seed(seed)
+        generator_by_device = {}
+        for d in {self.device, self.low_noise_device, self.high_noise_device}:
+            g = torch.Generator(device=d)
+            g.manual_seed(seed)
+            generator_by_device[str(d)] = g
         noise = torch.randn(
             16,
             (F - 1) // self.vae_stride[0] + 1,
             lat_h,
             lat_w,
             dtype=torch.float32,
-            generator=seed_g,
+            generator=generator_by_device[str(self.device)],
             device=self.device)
 
         msk = torch.ones(1, F, lat_h, lat_w, device=self.device)
@@ -386,39 +399,43 @@ class WanI2V:
             # sample videos
             latent = noise
 
-            arg_c = {
-                'context': [context[0]],
-                'seq_len': max_seq_len,
-                'y': [y],
-            }
-
-            arg_null = {
-                'context': context_null,
-                'seq_len': max_seq_len,
-                'y': [y],
-            }
-
             if offload_model:
                 torch.cuda.empty_cache()
 
+            cond_cache = {}
+            null_cache = {}
+            y_cache = {}
+
             for _, t in enumerate(tqdm(timesteps)):
-                latent_model_input = [latent.to(self.device)]
                 timestep = [t]
-
-                timestep = torch.stack(timestep).to(self.device)
-
-                model = self._prepare_model_for_timestep(
+                model, model_device = self._prepare_model_for_timestep(
                     t, boundary, offload_model)
+                latent_model_input = [latent.to(model_device)]
+                timestep = torch.stack(timestep).to(model_device)
                 sample_guide_scale = guide_scale[1] if t.item(
                 ) >= boundary else guide_scale[0]
 
+                cache_key = str(model_device)
+                if cache_key not in cond_cache:
+                    cond_cache[cache_key] = [context[0].to(model_device)]
+                    null_cache[cache_key] = [tctx.to(model_device) for tctx in context_null]
+                    y_cache[cache_key] = [y.to(model_device)]
+
                 noise_pred_cond = model(
-                    latent_model_input, t=timestep, **arg_c)[0]
+                    latent_model_input,
+                    t=timestep,
+                    context=cond_cache[cache_key],
+                    seq_len=max_seq_len,
+                    y=y_cache[cache_key])[0]
                 if offload_model:
                     torch.cuda.empty_cache()
                 if use_cfg(sample_guide_scale):
                     noise_pred_uncond = model(
-                        latent_model_input, t=timestep, **arg_null)[0]
+                        latent_model_input,
+                        t=timestep,
+                        context=null_cache[cache_key],
+                        seq_len=max_seq_len,
+                        y=y_cache[cache_key])[0]
                     if offload_model:
                         torch.cuda.empty_cache()
                     noise_pred = noise_pred_uncond + sample_guide_scale * (
@@ -430,9 +447,9 @@ class WanI2V:
                 temp_x0 = sample_scheduler.step(
                     noise_pred.unsqueeze(0),
                     t,
-                    latent.unsqueeze(0),
+                    latent_model_input[0].unsqueeze(0),
                     return_dict=False,
-                    generator=seed_g)[0]
+                    generator=generator_by_device[cache_key])[0]
                 latent = temp_x0.squeeze(0)
 
                 x0 = [latent]
@@ -444,6 +461,8 @@ class WanI2V:
                 torch.cuda.empty_cache()
 
             if self.rank == 0:
+                if x0[0].device != self.device:
+                    x0 = [x0[0].to(self.device)]
                 videos = self.vae.decode(x0)
 
         del noise, latent, x0
