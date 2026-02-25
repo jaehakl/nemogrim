@@ -22,10 +22,10 @@ run_i2v(
     image_path=Path(r"./sample.jpg"),
     prompt="2D anime style, clean lineart, fixed camera, same background, full body, walking forward slowly, natural motion",
     save_dir=Path(r"./"),
-    size="1280*720",
-    frame_num=81,      # 81프레임이면 12fps 기준 약 6.7초, 16fps 기준 약 5.0초
+    size="480*832",
+    frame_num=61,      # 81프레임이면 12fps 기준 약 6.7초, 16fps 기준 약 5.0초
     seed=1234,
-    offload_model=True,
+    offload_model=False,
     sample_steps=26,
     guide_scale=5.5,
 )
