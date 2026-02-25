@@ -47,6 +47,7 @@ class WanArgs:
     convert_model_dtype: bool = False
     low_noise_device_id: Optional[int] = None
     high_noise_device_id: Optional[int] = None
+    time_embed_fp32: bool = True
 
 
 def prepare_dual_noise_ckpt_dir(
@@ -149,6 +150,7 @@ def run_i2v(
     convert_model_dtype: bool = False,
     low_noise_device_id: Optional[int] = None,
     high_noise_device_id: Optional[int] = None,
+    time_embed_fp32: bool = True,
 ) -> None:
     """
     subprocess 없이 generate(args) 직접 호출.
@@ -180,6 +182,7 @@ def run_i2v(
         convert_model_dtype=convert_model_dtype,
         low_noise_device_id=low_noise_device_id,
         high_noise_device_id=high_noise_device_id,
+        time_embed_fp32=time_embed_fp32,
     )
 
     # generate.py의 검증/기본값 채우기 로직 재사용

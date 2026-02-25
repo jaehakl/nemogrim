@@ -41,6 +41,7 @@ class WanI2V:
         device_id=0,
         low_noise_device_id=None,
         high_noise_device_id=None,
+        time_embed_fp32=True,
         rank=0,
         t5_fsdp=False,
         dit_fsdp=False,
@@ -84,6 +85,7 @@ class WanI2V:
         self.rank = rank
         self.t5_cpu = t5_cpu
         self.init_on_cpu = init_on_cpu
+        self.time_embed_fp32 = time_embed_fp32
 
         self.num_train_timesteps = config.num_train_timesteps
         self.boundary = config.boundary
@@ -121,6 +123,7 @@ class WanI2V:
             shard_fn=shard_fn,
             convert_model_dtype=convert_model_dtype,
             target_device=self.low_noise_device)
+        self.low_noise_model.time_embed_fp32 = self.time_embed_fp32
 
         self.high_noise_model = WanModel.from_pretrained(
             checkpoint_dir, subfolder=config.high_noise_checkpoint)
@@ -134,12 +137,15 @@ class WanI2V:
             shard_fn=shard_fn,
             convert_model_dtype=convert_model_dtype,
             target_device=self.high_noise_device)
+        self.high_noise_model.time_embed_fp32 = self.time_embed_fp32
         if use_sp:
             self.sp_size = get_world_size()
         else:
             self.sp_size = 1
 
         self.sample_neg_prompt = config.sample_neg_prompt
+        logging.info(
+            f"WanI2V devices: runtime={self.device}, low_noise={self.low_noise_device}, high_noise={self.high_noise_device}, time_embed_fp32={self.time_embed_fp32}")
 
     def _configure_model(self, model, use_sp, dit_fsdp, shard_fn,
                          convert_model_dtype, target_device):

@@ -234,10 +234,8 @@ class WanAttentionBlock(nn.Module):
             grid_sizes(Tensor): Shape [B, 3], the second dimension contains (F, H, W)
             freqs(Tensor): Rope freqs, shape [1024, C / num_heads / 2]
         """
-        assert e.dtype == torch.float32
         with torch.amp.autocast('cuda', dtype=torch.float32):
             e = (self.modulation.unsqueeze(0) + e).chunk(6, dim=2)
-        assert e[0].dtype == torch.float32
 
         # self-attention
         y = self.self_attn(
@@ -282,7 +280,6 @@ class Head(nn.Module):
             x(Tensor): Shape [B, L1, C]
             e(Tensor): Shape [B, L1, C]
         """
-        assert e.dtype == torch.float32
         with torch.amp.autocast('cuda', dtype=torch.float32):
             e = (self.modulation.unsqueeze(0) + e.unsqueeze(2)).chunk(2, dim=2)
             x = (
@@ -411,6 +408,7 @@ class WanModel(ModelMixin, ConfigMixin):
             'norm_k', 'img_emb.proj.0', 'img_emb.proj.4'
         ]
         self._keep_in_fp32_params = self._find_fp32_params(['modulation'])
+        self.time_embed_fp32 = True
 
     def _find_fp32_params(self, keywords):
         return [
@@ -470,14 +468,15 @@ class WanModel(ModelMixin, ConfigMixin):
         # time embeddings
         if t.dim() == 1:
             t = t.expand(t.size(0), seq_len)
-        with torch.amp.autocast('cuda', dtype=torch.float32):
+        use_fp32_time_embed = getattr(self, "time_embed_fp32", True)
+        time_embed_dtype = torch.float32 if use_fp32_time_embed else x.dtype
+        with torch.amp.autocast('cuda', dtype=time_embed_dtype):
             bt = t.size(0)
             t = t.flatten()
             e = self.time_embedding(
                 sinusoidal_embedding_1d(self.freq_dim,
                                         t).unflatten(0, (bt, seq_len)).float())
             e0 = self.time_projection(e).unflatten(2, (6, self.dim))
-            assert e.dtype == torch.float32 and e0.dtype == torch.float32
 
         # context
         context_lens = None

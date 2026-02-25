@@ -28,6 +28,7 @@ run_i2v(
     offload_model=False,
     sample_steps=26,
     guide_scale=5.5,
-    low_noise_device_id=1,
-    high_noise_device_id=0,
+    low_noise_device_id=0,
+    high_noise_device_id=1,
+    time_embed_fp32=False,
 )

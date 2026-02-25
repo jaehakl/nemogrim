@@ -241,6 +241,11 @@ def _parse_args():
         type=int,
         default=None,
         help="GPU device id for high-noise I2V model.")
+    parser.add_argument(
+        "--time_embed_fp32",
+        type=str2bool,
+        default=True,
+        help="Whether to run DiT time embedding/projection in float32.")
 
     args = parser.parse_args()
 
@@ -456,6 +461,7 @@ def generate(args):
             device_id=device,
             low_noise_device_id=args.low_noise_device_id,
             high_noise_device_id=args.high_noise_device_id,
+            time_embed_fp32=args.time_embed_fp32,
             rank=rank,
             t5_fsdp=args.t5_fsdp,
             dit_fsdp=args.dit_fsdp,
