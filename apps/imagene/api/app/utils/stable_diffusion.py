@@ -383,8 +383,10 @@ def generate_images_from_image_on_device(
         common_negative_prompt = (
             "score_4, score_5, score_6, source_pony, source_furry,"
             "portrait, duplicate, "
-            "lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry,"
-            "poor contrast, poor colors"
+            "lowres, bad anatomy, bad hands, bad eyes, text, error, missing fingers, "
+            "disfigured, deformed, grotesque, incomplete, sketchy, disgusting, distorted, deformed face, poorly drawn, bad quality, "
+            "extra digit, fewer digits, cropped, worst quality, low quality, normal quality, "
+            "jpeg artifacts, signature, watermark, username, blurry, poor contrast, poor colors"
             )
         for n_prompt in negative_prompt_chunk:
             n_prompt = common_negative_prompt

@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "imagene"
+name = "Wan"
 version = "0.0.1"
-description = "Imagene API"
+description = "Wan Test"
 authors = ["Jaehak Lee <leejaehak87@gmail.com>"]
 package-mode = false
 
@@ -26,6 +26,23 @@ einops = "^0.8.2"
 imageio = "^2.37.2"
 dashscope = "^1.25.12"
 accelerate = "^1.12.0"
+
+torch = ">=2.4.0"
+torchvision = ">=0.19.0"
+opencv-python = ">=4.9.0.80"
+diffusers = ">=0.31.0"
+transformers = ">=4.49.0"
+tokenizers = ">=0.20.3"
+accelerate = ">=1.1.1"
+tqdm
+imageio
+easydict
+ftfy
+dashscope
+imageio-ffmpeg
+flash_attn
+numpy = ">=1.23.5,<2""
+
 
 [build-system]
 requires = ["poetry-core"]
