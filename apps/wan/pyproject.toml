@@ -21,8 +21,7 @@ ftfy  = ">=0"
 dashscope  = ">=0"
 imageio-ffmpeg  = ">=0"
 flash_attn  = ">=0"
-numpy = ">=1.23.5,<2""
-
+numpy = ">=1.23.5,<2"
 
 [build-system]
 requires = ["poetry-core"]
