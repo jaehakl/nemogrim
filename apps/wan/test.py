@@ -10,7 +10,7 @@ LOW  = Path(r"~/ai/wan/low_noise_model/wanVideo22_i2vLowNoise14BFp16.safetensors
 
 # 듀얼 노이즈 ckpt_dir 준비
 CKPT = prepare_dual_noise_ckpt_dir(
-    model_root=Path(r"~/ai/wan"),
+    model_root=Path(r"~/ai/wan/"),
     high_noise_safetensors=HIGH,
     low_noise_safetensors=LOW,
     use_symlink=False,  # Windows는 보통 False 권장
