@@ -107,6 +107,17 @@ def generate_images_pony(
     torch.cuda.set_device(device_id)
     device = f"cuda:{device_id}"
     cache_key = f"pipe_{device_id}"
+    ckpt_key = f"ckpt_path_{device_id}"
+
+    cached_ckpt = getattr(generate_images_pony, ckpt_key, None)
+    if cached_ckpt != ckpt_path:
+        print(f"[generate_images_pony] ckpt_path 변경 → {ckpt_path}")
+        if hasattr(generate_images_pony, cache_key):
+            delattr(generate_images_pony, cache_key)
+            torch.cuda.empty_cache()
+            gc.collect()
+        setattr(generate_images_pony, ckpt_key, ckpt_path)
+
     if not hasattr(generate_images_pony, cache_key):
         #vae_path = ckpt_path.split("/")[:-1] + "/pony_vae.safetensors"
         #vae = AutoencoderKL.from_pretrained(vae_path, torch_dtype=torch.float16)
@@ -256,11 +267,12 @@ async def generate_images_multi_gpu_async(
 def clear_pipeline_cache() -> None:
     """캐시된 파이프라인을 제거하고 GPU 메모리를 정리합니다."""
     pipeline_funcs = [
-        generate_images_pony
+        generate_images_pony,
+        generate_images_from_image_on_device,
     ]
     for func in pipeline_funcs:
         for attr_name in list(getattr(func, "__dict__", {}).keys()):
-            if attr_name.startswith("pipe_"):
+            if attr_name.startswith("pipe_") or attr_name.startswith("ckpt_path_"):
                 delattr(func, attr_name)
 
     gc.collect()
@@ -348,6 +360,17 @@ def generate_images_from_image_on_device(
     torch.cuda.set_device(device_id)
     device = f"cuda:{device_id}"    
     cache_key = f"pipe_{device_id}"
+    ckpt_key = f"ckpt_path_{device_id}"
+
+    cached_ckpt = getattr(generate_images_from_image_on_device, ckpt_key, None)
+    if cached_ckpt != ckpt_path:
+        print(f"[generate_images_from_image_on_device] ckpt_path 변경 → {ckpt_path}")
+        if hasattr(generate_images_from_image_on_device, cache_key):
+            delattr(generate_images_from_image_on_device, cache_key)
+            torch.cuda.empty_cache()
+            gc.collect()
+        setattr(generate_images_from_image_on_device, ckpt_key, ckpt_path)
+
     if not hasattr(generate_images_from_image_on_device, cache_key):
         vae = AutoencoderKL.from_pretrained(
             "madebyollin/sdxl-vae-fp16-fix", 
