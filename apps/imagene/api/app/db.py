@@ -69,3 +69,16 @@ class Image(TimestampMixin, Base):
     embedding: Mapped[Vector] = mapped_column(Vector(768), nullable=False)
     url: Mapped[str] = mapped_column(Text, nullable=False)
     paths: Mapped[List["Path"]] = relationship("Path", back_populates="image", cascade="all, delete-orphan")
+    videos: Mapped[List["Video"]] = relationship("Video", back_populates="image", cascade="all, delete-orphan")
+
+class Video(TimestampMixin, Base):
+    __tablename__ = "videos"
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    image_id: Mapped[str] = mapped_column(String, ForeignKey("images.id", ondelete="CASCADE"), nullable=False)
+    positive_prompt: Mapped[str] = mapped_column(Text, nullable=False)
+    negative_prompt: Mapped[str] = mapped_column(Text, nullable=False)
+    height: Mapped[int] = mapped_column(Integer, nullable=False)
+    width: Mapped[int] = mapped_column(Integer, nullable=False)
+    seed: Mapped[int] = mapped_column(Integer, nullable=False)
+    url: Mapped[str] = mapped_column(Text, nullable=False)
+    image: Mapped["Image"] = relationship("Image", back_populates="videos", lazy="selectin")
