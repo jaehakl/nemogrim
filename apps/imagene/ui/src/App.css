@@ -5,6 +5,10 @@
   flex-direction: column;
 }
 .app-content-area { padding: 0; }
+.app-page {
+  flex: 1;
+  min-height: 0;
+}
 
 :root {
   --color-bg: #0a0b0f;
@@ -99,7 +103,42 @@ html, body, #root {
 }
 
 
-/* Home.css */
+.app-navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.app-nav {
+  display: flex;
+  gap: 10px;
+}
+
+.app-nav-link {
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  transition: var(--transition);
+}
+
+.app-nav-link:hover {
+  color: var(--color-text-primary);
+  background: var(--color-primary-light);
+  border-color: var(--color-border-light);
+}
+
+.app-nav-link.active {
+  color: var(--color-text-primary);
+  background: var(--color-primary-light);
+  border-color: var(--color-primary);
+}
+
 .app-home { 
   height: calc(100vh - 60px); 
   flex: 1;

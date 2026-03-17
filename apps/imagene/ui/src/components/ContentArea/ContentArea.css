@@ -26,21 +26,21 @@
 .content-area-main { 
   display: flex; 
   gap: 20px; 
-  height: calc(100vh - 270px); /* 툴바 높이를 제외한 전체 높이 */
+  height: calc(100vh - 270px); /* ?대컮 ?믪씠瑜??쒖쇅???꾩껜 ?믪씠 */
 }
 
 .content-area-left {
   flex: 1;
   overflow-y: auto;
-  padding-right: 8px; /* 스크롤바 공간 확보 */
+  padding-right: 8px; /* ?ㅽ겕濡ㅻ컮 怨듦컙 ?뺣낫 */
   display: flex;
   flex-wrap: wrap;
   gap: 16px;
   align-content: flex-start;
-  min-height: 0; /* flex 아이템이 축소될 수 있도록 */
+  min-height: 0; /* flex ?꾩씠?쒖씠 異뺤냼?????덈룄濡?*/
 }
 
-/* 스크롤바 스타일링 */
+/* ?ㅽ겕濡ㅻ컮 ?ㅽ??쇰쭅 */
 .content-area-left::-webkit-scrollbar {
   width: 8px;
 }
@@ -255,7 +255,7 @@
   border: 1px solid var(--color-border);
 }
 
-/* 이미지 상세 정보 스타일 */
+/* ?대?吏 ?곸꽭 ?뺣낫 ?ㅽ???*/
 .image-directories {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -335,4 +335,3 @@
   object-fit: cover;
   display: block;
 }
-

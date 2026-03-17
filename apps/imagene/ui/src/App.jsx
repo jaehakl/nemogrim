@@ -1,58 +1,35 @@
-import React, { useState } from 'react';
-import { ContentArea } from './pages/ContentArea/ContentArea';
-import { GroupExplorer } from './components/GroupExplorer/GroupExplorer';
-
+import React from 'react';
+import { NavLink, Navigate, Route, Routes } from 'react-router-dom';
+import { Generate } from './pages/Generate/Generate';
+import { Story } from './pages/Story/Story';
 import './App.css';
 
-function App() {  
-  const [leftWidth, setLeftWidth] = useState(70);
-
-  const handleResize = (e) => {
-    const container = document.querySelector('.resizable-container');
-    if (!container) return;
-    
-    const rect = container.getBoundingClientRect();
-    const newLeftWidth = ((e.clientX - rect.left) / rect.width) * 100;
-    
-    // 최소 20%, 최대 80%로 제한
-    const clampedWidth = Math.min(Math.max(newLeftWidth, 20), 80);
-    setLeftWidth(clampedWidth);
-  };
-
-  const handleMouseDown = (e) => {
-    e.preventDefault();
-    
-    const handleMouseMove = (e) => handleResize(e);
-    const handleMouseUp = () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-    
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-  };
-
+function App() {
   return (
     <div className="app-container">
-      <div className="app-home">
-        <div className="resizable-container">
-          <div 
-            className="left-panel" 
-            style={{ width: `${leftWidth}%` }}
+      <header className="app-navbar">
+        <nav className="app-nav">
+          <NavLink
+            to="/generate"
+            className={({ isActive }) => `app-nav-link${isActive ? ' active' : ''}`}
           >
-            <GroupExplorer />
-          </div>
-          <div 
-            className="resize-handle"
-            onMouseDown={handleMouseDown}
-          />
-          <div 
-            className="right-panel" 
-            style={{ width: `${100 - leftWidth}%` }}
+            Generate
+          </NavLink>
+          <NavLink
+            to="/story"
+            className={({ isActive }) => `app-nav-link${isActive ? ' active' : ''}`}
           >
-            <ContentArea />
-          </div>
-        </div>
+            Story
+          </NavLink>
+        </nav>
+      </header>
+
+      <div className="app-page">
+        <Routes>
+          <Route path="/" element={<Navigate to="/generate" replace />} />
+          <Route path="/generate" element={<Generate />} />
+          <Route path="/story" element={<Story />} />
+        </Routes>
       </div>
     </div>
   );

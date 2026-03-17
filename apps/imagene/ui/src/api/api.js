@@ -21,3 +21,5 @@ export const createImagesBatchFromImage = (formData) => {
 };
 export const getImageDetail = (imageId) => axios.post(`${API_URL}/images/get-detail`, {id: imageId});
 export const searchFromPrompt = (prompt) => axios.post(`${API_URL}/images/search-from-prompt`, {prompt: prompt});
+
+export const getStoryImages = (imageId, imageIdPrev) => axios.post(`${API_URL}/images/story`, {image_id: imageId, image_id_prev: imageIdPrev});

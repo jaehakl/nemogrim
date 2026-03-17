@@ -2,10 +2,10 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { Panel, Stack, Button, Input, Pagination, InputNumber, SelectPicker } from 'rsuite';
 import { useImageFilter } from '../../contexts/ImageFilterContext';
 import { API_URL, deletePathBatch } from '../../api/api';
-import { PromptInput } from '../../components/PromptInput/PromptInput';
-import GenerationConfig from '../../components/GenerationConfig/GenerationConfig';
-import { ImageGenerator } from '../../components/ImageGenerator/ImageGenerator';
-import { FileUpload } from '../../components/FileUpload/FileUpload';
+import { PromptInput } from '../PromptInput/PromptInput';
+import GenerationConfig from '../GenerationConfig/GenerationConfig';
+import { ImageGenerator } from '../ImageGenerator/ImageGenerator';
+import { FileUpload } from '../FileUpload/FileUpload';
 import { getImageDetail } from '../../api/api';
 import './ContentArea.css';
 
@@ -115,5 +115,4 @@ export const ContentArea = () => {
     </div>
   );
 };
-
 

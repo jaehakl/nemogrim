@@ -10,6 +10,7 @@ from utils.get_db import get_db
 from services.create_images import create_image_batch_from_image
 from services.image_detail import get_image_detail
 from services.search_from_prompt import search_from_prompt
+from services.story import get_story_images
 from services.directories import (
     get_directory,
     set_image_directory_batch,
@@ -74,6 +75,11 @@ async def api_get_image_detail(request: Request, data: Dict[str, Any], db: Sessi
 async def api_search_from_prompt(request: Request, data: Dict[str, Any], db: Session = Depends(get_db)
     )->Dict[str, Any]:
     return exec_service(db, search_from_prompt, data["prompt"])
+
+@app.post("/images/story")
+async def api_get_story_images(request: Request, data: Dict[str, Any], db: Session = Depends(get_db)
+    )->List[ImageData]:
+    return exec_service(db, get_story_images, data.get("image_id"), image_id_prev=data.get("image_id_prev"))
 
 
 
