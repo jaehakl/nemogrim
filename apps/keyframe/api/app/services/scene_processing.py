@@ -6,7 +6,7 @@ from sqlalchemy import select
 
 from ..db import DATA_DIR, SCENE_DIR, MovieFile, Scene, SessionLocal, utc_now
 from .media_processing import _run_command
-from .scene_models import CLIP_MODEL_NAME, WD14_MODEL_REPO, extract_clip_embedding, extract_wd14_tags
+from .scene_models import CLIP_MODEL_NAME, WD14_MODEL_REPO, analyze_scene
 
 
 ACTIVE_SCENE_STATUSES = ("pending", "processing")
@@ -46,8 +46,7 @@ def process_scene(scene_id: int) -> None:
                 scene.updated_at = utc_now()
                 database.commit()
 
-        embedding = extract_clip_embedding(snapshot)
-        prompt, keywords = extract_wd14_tags(snapshot)
+        analysis = analyze_scene(snapshot)
     except Exception as error:
         error_message = str(error) or error.__class__.__name__
 
@@ -59,10 +58,10 @@ def process_scene(scene_id: int) -> None:
             scene.analysis_status = "failed"
             scene.analysis_error = error_message[-2000:]
         else:
-            scene.embedding = embedding
+            scene.embedding = analysis.embedding
             scene.embedding_model = CLIP_MODEL_NAME
-            scene.prompt = prompt
-            scene.keywords = keywords
+            scene.prompt = analysis.prompt
+            scene.keywords = analysis.keywords
             scene.prompt_model = WD14_MODEL_REPO
             scene.analysis_status = "ready"
             scene.analysis_error = None

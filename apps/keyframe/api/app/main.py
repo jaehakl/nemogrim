@@ -5,15 +5,29 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .db import init_db
 from .routers import health, movies, scenes
+from .settings import KeyframeSettings
 from .services.media_queue import start_media_queue, stop_media_queue
+from .services.scene_models import start_scene_model_runtime, stop_scene_model_runtime
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
-    start_media_queue(app)
-    yield
-    stop_media_queue(app)
+    settings = KeyframeSettings()
+    app.state.settings = settings
+    runtime_started = False
+    queue_started = False
+    try:
+        start_scene_model_runtime(settings)
+        runtime_started = True
+        start_media_queue(app)
+        queue_started = True
+        yield
+    finally:
+        if queue_started:
+            stop_media_queue(app)
+        if runtime_started:
+            stop_scene_model_runtime()
 
 
 app = FastAPI(title="Nemogrim Keyframe API", version="0.1.0", lifespan=lifespan)

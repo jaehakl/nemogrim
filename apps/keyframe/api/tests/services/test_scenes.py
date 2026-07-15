@@ -6,7 +6,7 @@ from sqlalchemy import select
 
 from app.db import Scene
 from app.routers import scenes
-from app.services import scene_processing, scene_query
+from app.services import scene_models, scene_processing, scene_query
 from tests.test_models import make_movie
 
 
@@ -299,11 +299,14 @@ def test_scene_analysis_saves_snapshot_embedding_and_prompt(
         return target
 
     monkeypatch.setattr(scene_processing, "create_scene_snapshot", snapshot)
-    monkeypatch.setattr(scene_processing, "extract_clip_embedding", lambda _path: embedding)
     monkeypatch.setattr(
         scene_processing,
-        "extract_wd14_tags",
-        lambda _path: ("blue sky, 1girl", ["blue sky", "1girl"]),
+        "analyze_scene",
+        lambda _path: scene_models.SceneAnalysis(
+            embedding=embedding,
+            prompt="blue sky, 1girl",
+            keywords=["blue sky", "1girl"],
+        ),
     )
     with session_factory() as database:
         movie = make_movie(str(source), duration_ms=30_000)
@@ -347,7 +350,7 @@ def test_scene_analysis_failure_keeps_snapshot_and_can_retry(
     monkeypatch.setattr(scene_processing, "create_scene_snapshot", snapshot)
     monkeypatch.setattr(
         scene_processing,
-        "extract_clip_embedding",
+        "analyze_scene",
         lambda _path: (_ for _ in ()).throw(RuntimeError("model failure")),
     )
     with session_factory() as database:

@@ -62,6 +62,9 @@ def api_client(session_factory, monkeypatch):
     from fastapi.testclient import TestClient
 
     monkeypatch.setattr(main, "init_db", lambda: None)
+    monkeypatch.setattr(main, "KeyframeSettings", lambda: object())
+    monkeypatch.setattr(main, "start_scene_model_runtime", lambda _settings: None)
+    monkeypatch.setattr(main, "stop_scene_model_runtime", lambda: None)
     monkeypatch.setattr(media_queue, "reset_interrupted_jobs", lambda: [])
     monkeypatch.setattr(media_queue, "reset_scene_jobs", lambda: [])
     monkeypatch.setattr(media_queue, "process_movie_metadata", lambda _movie_id: None)

@@ -25,7 +25,6 @@ APP_ROOT = Path(__file__).resolve().parents[2]
 DATA_DIR = APP_ROOT / "data"
 THUMBNAIL_DIR = DATA_DIR / "thumbnails"
 SCENE_DIR = DATA_DIR / "scenes"
-MODEL_DIR = DATA_DIR / "models"
 DATABASE_PATH = DATA_DIR / "keyframe.sqlite3"
 DATABASE_URL = f"sqlite:///{DATABASE_PATH.as_posix()}"
 
@@ -153,7 +152,6 @@ def init_db() -> None:
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     THUMBNAIL_DIR.mkdir(parents=True, exist_ok=True)
     SCENE_DIR.mkdir(parents=True, exist_ok=True)
-    MODEL_DIR.mkdir(parents=True, exist_ok=True)
     Base.metadata.create_all(bind=engine)
     _run_additive_migrations()
 

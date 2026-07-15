@@ -15,10 +15,10 @@
 - 영상·Scene 상세의 공용 플레이어와 10초·1분·5분 키보드 탐색
 - 브라우저 호환 원본의 Range 스트리밍과 비호환 codec 재생 차단
 - 현재 재생 위치의 Scene snapshot 생성
-- OpenAI CLIP `ViT-L/14` 768차원 이미지 embedding
-- `SmilingWolf/wd-eva02-large-tagger-v3` 기반 prompt·keyword 추출
+- GP Station `ai.clip.image` handler 기반 OpenAI CLIP `ViT-L/14` 768차원 이미지 embedding
+- GP Station `ai.wd14.tags` handler 기반 `SmilingWolf/wd-eva02-large-tagger-v3` prompt·keyword 추출
 - 최신순 Scene tile grid와 무한 스크롤 탐색
-- OpenAI CLIP 텍스트·이미지 embedding cosine similarity 기반 Scene 검색
+- GP Station `ai.clip.text`와 이미지 embedding cosine similarity 기반 Scene 검색
 - Scene timestamp 자동 재생 상세 화면과 이미지 embedding 기반 유사 Scene 탐색
 - 서버 재시작 시 중단된 메타데이터·Scene 분석 재개
 
@@ -33,14 +33,16 @@ apps/keyframe/
 │   │   ├── routers/     # health, movies, scenes API
 │   │   └── services/    # 선택기, import, 조회, 재생·Scene 처리·queue
 │   ├── tests/
+│   ├── .env.example
 │   └── pyproject.toml
 ├── ui/                  # React 19, TypeScript, React Router, Vite
 │   └── src/             # api, layout, page, component, hook 모듈
+├── vendor/
+│   └── gpstation-master-python/ # Keyframe 전용 vendored Python master SDK
 └── data/                # 실행 시 생성, Git 제외
     ├── keyframe.sqlite3
     ├── thumbnails/
-    ├── scenes/{movie_id}/
-    └── models/          # CLIP·WD14 다운로드 캐시
+    └── scenes/{movie_id}/
 ```
 
 ## 사전 요구사항
@@ -51,19 +53,24 @@ apps/keyframe/
 - pnpm (`corepack pnpm` 권장)
 - PATH에서 실행 가능한 `ffmpeg`, `ffprobe`
 - Windows PowerShell 5.1 및 .NET Framework 4.8 WinForms
-- NVIDIA GPU 사용 시 CUDA 12.8 계열 드라이버 호환 환경
+- 실행 중인 GP Station v1 server
+- `ai` 앱을 광고하며 연결된 launcher와 GP Station AI slave
+- `client` scope를 가진 GP Station Access Token
 
-현재 앱은 Windows 단일 사용자 로컬 실행을 전제로 합니다. FastAPI는 `powershell.exe -NoProfile -STA`로 별도 WinForms 선택기를 실행하므로 API worker thread와 파일 탐색기의 UI thread가 분리됩니다. CLIP과 WD14는 CUDA를 우선 사용하며 CUDA를 사용할 수 없으면 CPU로 fallback합니다.
+현재 앱은 Windows 단일 사용자 로컬 실행을 전제로 합니다. FastAPI는 `powershell.exe -NoProfile -STA`로 별도 WinForms 선택기를 실행하므로 API worker thread와 파일 탐색기의 UI thread가 분리됩니다. CLIP·WD14 추론은 Keyframe 프로세스가 아닌 GP Station AI slave 호스트에서 실행됩니다.
 
 ## 설치
 
 ```powershell
 cd E:\nemogrim\apps\keyframe\api
 poetry install
+Copy-Item .env.example .env
 
 cd E:\nemogrim
 corepack pnpm install
 ```
+
+`api/.env`의 `GPSTATION_API_BASE_URL`과 `GPSTATION_CLIENT_TOKEN`을 실제 server URL과 `client` scope Access Token으로 바꿉니다. `GPSTATION_JOB_TIMEOUT_SECONDS`의 기본 예시는 600초입니다.
 
 ## 실행
 
@@ -86,6 +93,8 @@ corepack pnpm dev
 - UI: http://127.0.0.1:5175
 - API: http://127.0.0.1:8002
 - API 문서: http://127.0.0.1:8002/docs
+
+API 시작 시 별도 asyncio thread에서 GP Station client 하나를 만들고 `/v1/launchers`를 호출해 URL과 bearer token을 검증합니다. 인증 또는 연결 검증이 실패하면 Keyframe도 시작하지 않으며, 인증에 성공한 빈 launcher 목록은 허용합니다.
 
 ## 데이터베이스
 
@@ -127,7 +136,8 @@ corepack pnpm dev
 - 이전에 등록된 AVI·MKV 레코드와 기존 `data/playback` 캐시는 삭제하지 않지만 재생에는 사용하지 않습니다.
 - 플레이어에서 `←`/`→`는 10초, `Ctrl` 조합은 1분, `Shift` 조합은 5분 이동합니다. `Shift`와 `Ctrl`이 함께 눌리면 5분이 우선합니다.
 - `S` 또는 **현재 위치에 Scene 생성** 버튼으로 Scene을 등록합니다. snapshot을 먼저 표시하고 CLIP·WD14 분석은 단일 백그라운드 작업열에서 이어서 실행됩니다.
-- 첫 Scene 분석 때 모델을 `data/models`에 다운로드합니다. 모델 캐시는 이후 실행에서도 재사용되며 첫 작업은 네트워크와 모델 로드 때문에 오래 걸릴 수 있습니다.
+- 한 Scene은 하나의 GP Station job session에서 `ai.clip.image` 다음 `ai.wd14.tags` 순서로 처리합니다. 두 결과가 모두 유효할 때만 embedding·prompt·keyword를 함께 저장합니다.
+- WebP snapshot attachment의 상한은 20 MiB입니다. 모델 다운로드와 cache는 Keyframe의 `data/models`가 아니라 AI slave 호스트에 생성됩니다. 기존 Keyframe `data/models`가 있더라도 자동 삭제하지 않습니다.
 
 ## Scene 탐색과 검색
 
@@ -140,11 +150,23 @@ corepack pnpm dev
 - 원본 OpenAI CLIP 특성상 영어 검색어를 사용할 때 더 안정적인 검색 품질을 기대할 수 있습니다.
 - 아직 분석 중이거나 실패했거나 호환되는 CLIP embedding이 없는 Scene은 기본 목록에는 표시되지만 검색 결과에서는 제외됩니다.
 
+## GP Station Python SDK vendoring
+
+Keyframe은 외부 checkout을 런타임 path로 참조하지 않고 `vendor/gpstation-master-python`의 editable dependency를 사용합니다. 현재 사본은 upstream `D:\dev\gpstation\app_v1\sdk\master\python`의 GP Station commit `bf76e6c1e3a9a0bbdc5dcb6ffb192c18ebf1e67a`에서 tracked 파일 19개를 복제한 것입니다.
+
+SDK 수정은 먼저 GP Station upstream에 반영하고 commit한 뒤, `gpstation_master/`, `tests/`, `README.md`, `pyproject.toml`, `poetry.lock`의 tracked 파일을 이 vendor 디렉터리에 다시 복제합니다. `.venv`, `dist`, pytest/cache 파일은 복제하지 않습니다.
+
 ## 테스트와 빌드
 
 ```powershell
 cd E:\nemogrim\apps\keyframe\api
 poetry run pytest
+poetry check --lock
+
+cd E:\nemogrim\apps\keyframe\vendor\gpstation-master-python
+poetry install
+poetry run pytest
+poetry check --lock
 
 cd E:\nemogrim\apps\keyframe\ui
 corepack pnpm test
