@@ -25,6 +25,8 @@ vi.mock('../api/movies', () => ({
 }))
 
 vi.mock('../api/scenes', () => ({
+  getScene: vi.fn(),
+  getSimilarScenes: vi.fn(),
   getMovieScenes: vi.fn(),
   createMovieScene: vi.fn(),
   retryScene: vi.fn(),
@@ -93,18 +95,17 @@ describe('Keyframe movie detail', () => {
     mockedPrepare.mockResolvedValue(movie())
     mockedCreateScene.mockResolvedValue(scene({ id: 30, timestamp_ms: 12_345, prompt: null, keywords: null, analysis_status: 'pending', snapshot_url: null }))
     mockedRetryScene.mockResolvedValue(scene({ analysis_status: 'pending', analysis_error: null }))
-    vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue()
     Element.prototype.scrollIntoView = vi.fn()
   })
 
   afterEach(() => {
     vi.useRealTimers()
-    vi.restoreAllMocks()
   })
 
   it('renders the player and applies seek shortcuts with priority and clamping', async () => {
     renderDetail()
     await screen.findByRole('heading', { name: '상세 테스트 영상' })
+    await act(async () => { await Promise.resolve() })
     const player = document.querySelector('video') as HTMLVideoElement
     Object.defineProperty(player, 'duration', { configurable: true, value: 600 })
 
@@ -164,9 +165,11 @@ describe('Keyframe movie detail', () => {
     const user = userEvent.setup()
     await screen.findByRole('heading', { name: '상세 테스트 영상' })
     const player = document.querySelector('video') as HTMLVideoElement
+    const play = vi.fn().mockResolvedValue(undefined)
+    Object.defineProperty(player, 'play', { configurable: true, value: play })
     await user.click(await screen.findByRole('button', { name: /00:01\.500/ }))
     expect(player.currentTime).toBe(1.5)
-    expect(HTMLMediaElement.prototype.play).toHaveBeenCalled()
+    expect(play).toHaveBeenCalled()
   })
 
   it('shows a failed Scene and explicitly retries its analysis', async () => {
@@ -188,7 +191,7 @@ describe('Keyframe movie detail', () => {
       stream_url: null,
     }))
     renderDetail()
-    expect(await screen.findByText('브라우저에서 직접 재생할 수 없는 형식입니다')).toBeInTheDocument()
+    expect(await screen.findByText('브라우저에서 직접 재생할 수 없는 영상입니다')).toBeInTheDocument()
     expect(screen.getByText('브라우저에서 직접 재생할 수 없는 영상 codec입니다')).toBeInTheDocument()
     expect(document.querySelector('video')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /다시 준비/ })).not.toBeInTheDocument()

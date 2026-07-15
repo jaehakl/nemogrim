@@ -1,0 +1,21 @@
+.scene-video-player { overflow: hidden; border: 1px solid var(--line); border-radius: 18px; background: #fff; box-shadow: 0 12px 32px rgba(15, 23, 42, .055); }
+.scene-video-player__frame { position: relative; display: grid; aspect-ratio: 16 / 9; place-items: center; overflow: hidden; background: #080b11; }
+.scene-video-player__frame video { display: block; width: 100%; height: 100%; background: #000; object-fit: contain; }
+.scene-video-player__state { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; width: 100%; height: 100%; padding: 36px; color: #d4dbea; text-align: center; }
+.scene-video-player__state > svg { width: 31px; height: 31px; color: #71a3ff; animation: spin 900ms linear infinite; }
+.scene-video-player__state strong { color: #fff; font-size: 16px; }
+.scene-video-player__state span { max-width: 440px; color: #8f9caf; font-size: 12px; line-height: 1.6; }
+.scene-video-player__state--error > svg { color: #ff8c8c; animation: none; }
+.scene-video-player__toolbar { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 17px 19px 13px; }
+.scene-video-player__toolbar > div { display: flex; flex-direction: column; gap: 3px; }
+.scene-video-player__toolbar span { color: #8a94a6; font-size: 11px; font-weight: 700; }
+.scene-video-player__toolbar strong { color: #1b2639; font-size: 18px; font-variant-numeric: tabular-nums; }
+.scene-video-player__shortcuts { margin: 0; padding: 0 19px 18px; color: #7a8598; font-size: 11px; line-height: 1.8; }
+.scene-video-player__shortcuts kbd { display: inline-flex; min-width: 22px; min-height: 21px; align-items: center; justify-content: center; margin: 0 2px; padding: 0 5px; color: #475467; font: inherit; font-weight: 800; border: 1px solid #d6dce6; border-bottom-width: 2px; border-radius: 5px; background: #f8fafc; }
+
+@media (max-width: 620px) {
+  .scene-video-player { border-radius: 14px; }
+  .scene-video-player__toolbar { align-items: stretch; flex-direction: column; }
+  .scene-video-player__toolbar .primary-button { width: 100%; }
+  .scene-video-player__shortcuts { text-align: center; }
+}

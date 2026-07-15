@@ -16,6 +16,9 @@ vi.mock('../api/movies', () => ({
 }))
 
 vi.mock('../api/scenes', () => ({
+  getScenes: vi.fn().mockResolvedValue({ items: [], total: 0, next_offset: null, has_more: false }),
+  getScene: vi.fn(),
+  getSimilarScenes: vi.fn(),
   getMovieScenes: vi.fn().mockResolvedValue({ items: [] }),
   createMovieScene: vi.fn(),
   retryScene: vi.fn(),

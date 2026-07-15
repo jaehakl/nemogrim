@@ -12,11 +12,14 @@
 - FFprobe 기반 길이·해상도·FPS 분석
 - FFmpeg 기반 WebP 대표 썸네일 백그라운드 생성
 - 밝은 카드형 영상 라이브러리와 무한 스크롤
-- 영상 상세 플레이어와 10초·1분·5분 키보드 탐색
+- 영상·Scene 상세의 공용 플레이어와 10초·1분·5분 키보드 탐색
 - 브라우저 호환 원본의 Range 스트리밍과 비호환 codec 재생 차단
 - 현재 재생 위치의 Scene snapshot 생성
 - OpenAI CLIP `ViT-L/14` 768차원 이미지 embedding
 - `SmilingWolf/wd-eva02-large-tagger-v3` 기반 prompt·keyword 추출
+- 최신순 Scene tile grid와 무한 스크롤 탐색
+- OpenAI CLIP 텍스트·이미지 embedding cosine similarity 기반 Scene 검색
+- Scene timestamp 자동 재생 상세 화면과 이미지 embedding 기반 유사 Scene 탐색
 - 서버 재시작 시 중단된 메타데이터·Scene 분석 재개
 
 신규 등록 지원 확장자: `.mp4`, `.m4v`, `.webm`
@@ -111,6 +114,9 @@ corepack pnpm dev
 | GET | `/api/movies/{id}/thumbnail` | 생성된 WebP 썸네일 조회 |
 | GET | `/api/movies/{id}/scenes` | timestamp 오름차순 Scene 목록 |
 | POST | `/api/movies/{id}/scenes` | 현재 timestamp의 Scene 등록 및 분석 예약 |
+| GET | `/api/scenes` | 최신순 Scene 목록 또는 CLIP 검색 결과 (`query`, `offset`, `limit`) |
+| GET | `/api/scenes/{id}` | 영상 제목을 포함한 Scene 상세 정보 |
+| GET | `/api/scenes/{id}/similar` | CLIP 이미지 embedding 기반 유사 Scene 목록 (`offset`, `limit`) |
 | GET | `/api/scenes/{id}/snapshot` | 생성된 Scene WebP snapshot 조회 |
 | POST | `/api/scenes/{id}/retry` | 실패한 Scene 분석 재예약 |
 
@@ -122,6 +128,17 @@ corepack pnpm dev
 - 플레이어에서 `←`/`→`는 10초, `Ctrl` 조합은 1분, `Shift` 조합은 5분 이동합니다. `Shift`와 `Ctrl`이 함께 눌리면 5분이 우선합니다.
 - `S` 또는 **현재 위치에 Scene 생성** 버튼으로 Scene을 등록합니다. snapshot을 먼저 표시하고 CLIP·WD14 분석은 단일 백그라운드 작업열에서 이어서 실행됩니다.
 - 첫 Scene 분석 때 모델을 `data/models`에 다운로드합니다. 모델 캐시는 이후 실행에서도 재사용되며 첫 작업은 네트워크와 모델 로드 때문에 오래 걸릴 수 있습니다.
+
+## Scene 탐색과 검색
+
+- 사이드바의 **Scene 탐색**에서 모든 Scene을 최신순 tile grid로 확인할 수 있습니다.
+- 목록과 검색 결과는 48개씩 불러오며 페이지 하단에 도달하면 다음 결과를 자동으로 추가합니다.
+- Scene tile을 선택하면 상세 페이지로 이동하고 원본 영상을 해당 Scene timestamp부터 자동 재생합니다. 브라우저의 자동 재생 정책에 의해 차단되면 같은 위치에서 직접 재생할 수 있습니다.
+- Scene 상세에서도 `S` 또는 생성 버튼으로 현재 재생 위치의 Scene을 등록할 수 있으며, 생성 후에도 현재 상세 페이지와 재생 위치를 유지합니다.
+- 검색어를 전송하면 기존 OpenAI CLIP `ViT-L/14`의 텍스트 임베딩을 생성하고, 같은 모델로 분석 완료된 Scene 이미지 임베딩과 cosine similarity를 비교해 가까운 순서로 정렬합니다.
+- 상세 페이지의 **비슷한 Scene**은 현재 Scene의 이미지 embedding과 다른 Scene 이미지 embedding을 직접 비교하며, 현재 Scene을 제외한 전체 라이브러리 결과를 24개씩 자동으로 추가합니다.
+- 원본 OpenAI CLIP 특성상 영어 검색어를 사용할 때 더 안정적인 검색 품질을 기대할 수 있습니다.
+- 아직 분석 중이거나 실패했거나 호환되는 CLIP embedding이 없는 Scene은 기본 목록에는 표시되지만 검색 결과에서는 제외됩니다.
 
 ## 테스트와 빌드
 
@@ -138,9 +155,8 @@ corepack pnpm build
 
 ## 향후 기능
 
-- embedding 기반 유사 Scene 검색과 연속 재생
+- Scene 연속 재생
 - Scene 수정·삭제와 batch 생성
-- Scene 탐색 전용 화면
 - 재생 기록과 통계
 
 원본 파일이 이동하거나 삭제되어도 현재 DB 레코드는 유지됩니다. 경로 재연결과 삭제 기능은 후속 범위입니다.

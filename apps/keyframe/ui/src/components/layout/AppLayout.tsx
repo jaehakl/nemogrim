@@ -12,9 +12,12 @@ export function AppLayout() {
         </div>
 
         <nav className="sidebar__nav" aria-label="주요 메뉴">
-          <button type="button" className="nav-item" disabled>
-            <FiGrid aria-hidden="true" /><span>Scene 탐색</span><small>준비 중</small>
-          </button>
+          <NavLink
+            to="/scenes"
+            className={({ isActive }) => `nav-item${isActive ? ' nav-item--active' : ''}`}
+          >
+            <FiGrid aria-hidden="true" /><span>Scene 탐색</span>
+          </NavLink>
           <NavLink
             to="/movies"
             className={({ isActive }) => `nav-item${isActive ? ' nav-item--active' : ''}`}

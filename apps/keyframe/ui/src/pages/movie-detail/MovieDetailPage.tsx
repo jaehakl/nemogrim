@@ -1,58 +1,21 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useRef } from 'react'
 import { FiAlertCircle, FiArrowLeft, FiCamera, FiClock, FiFilm, FiLoader, FiRefreshCw, FiX } from 'react-icons/fi'
 import { Link, useParams } from 'react-router-dom'
 import type { Scene } from '../../api/scenes'
+import { SceneVideoPlayer, type SceneVideoPlayerHandle } from '../../components/scene/SceneVideoPlayer'
 import { formatDuration } from '../movies/formatters'
-import { formatSceneTimestamp } from './formatters'
 import { SceneCard } from './SceneCard'
 import { useMovieDetail } from './useMovieDetail'
 import './MovieDetailPage.css'
-
-function editableTarget(target: EventTarget | null): boolean {
-  return target instanceof HTMLElement && Boolean(target.closest('input, textarea, select, [contenteditable="true"]'))
-}
 
 export function MovieDetailPage() {
   const params = useParams()
   const movieId = Number(params.movieId)
   const detail = useMovieDetail(Number.isInteger(movieId) && movieId > 0 ? movieId : -1)
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const [currentTimeMs, setCurrentTimeMs] = useState(0)
-
-  const createAtCurrentTime = useCallback(() => {
-    const player = videoRef.current
-    if (!player || !detail.movie?.stream_url || detail.creating) return
-    void detail.create(Math.max(0, Math.round(player.currentTime * 1000)))
-  }, [detail])
-
-  useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
-      if (editableTarget(event.target)) return
-      const player = videoRef.current
-      if ((event.key === 'ArrowLeft' || event.key === 'ArrowRight') && player) {
-        event.preventDefault()
-        if (event.repeat) return
-        const step = event.shiftKey ? 300 : event.ctrlKey ? 60 : 10
-        const direction = event.key === 'ArrowRight' ? 1 : -1
-        const duration = Number.isFinite(player.duration) ? player.duration : (detail.movie?.duration_ms || 0) / 1000
-        player.currentTime = Math.min(Math.max(player.currentTime + direction * step, 0), duration || Number.MAX_SAFE_INTEGER)
-        setCurrentTimeMs(Math.round(player.currentTime * 1000))
-      } else if (event.key.toLowerCase() === 's' && !event.ctrlKey && !event.metaKey && !event.altKey && !event.repeat) {
-        event.preventDefault()
-        createAtCurrentTime()
-      }
-    }
-    window.addEventListener('keydown', handleKeyDown, true)
-    return () => window.removeEventListener('keydown', handleKeyDown, true)
-  }, [createAtCurrentTime, detail.movie?.duration_ms])
+  const playerRef = useRef<SceneVideoPlayerHandle>(null)
 
   function playScene(scene: Scene) {
-    const player = videoRef.current
-    if (!player) return
-    player.currentTime = scene.timestamp_ms / 1000
-    setCurrentTimeMs(scene.timestamp_ms)
-    void player.play().catch(() => undefined)
-    player.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    playerRef.current?.playAt(scene.timestamp_ms, true)
   }
 
   if (detail.loading) {
@@ -91,30 +54,14 @@ export function MovieDetailPage() {
       ) : null}
 
       <div className="detail-layout">
-        <section className="player-panel" aria-label="영상 플레이어">
-          <div className="player-frame">
-            {movie.stream_url ? (
-              <video
-                key={movie.stream_url}
-                ref={videoRef}
-                controls
-                preload="metadata"
-                src={movie.stream_url}
-                onTimeUpdate={(event) => setCurrentTimeMs(Math.round(event.currentTarget.currentTime * 1000))}
-              >이 브라우저는 영상 재생을 지원하지 않습니다.</video>
-            ) : (
-              <div className="player-state player-state--error" role="alert"><FiAlertCircle /><strong>브라우저에서 직접 재생할 수 없는 형식입니다</strong><span>{movie.playback_error || '지원하는 파일과 codec의 영상만 직접 재생할 수 있습니다.'}</span></div>
-            )}
-          </div>
-          <div className="player-toolbar">
-            <div><span>현재 위치</span><strong>{formatSceneTimestamp(currentTimeMs)}</strong></div>
-            <button type="button" className="primary-button" disabled={!movie.stream_url || detail.creating} onClick={createAtCurrentTime}>
-              {detail.creating ? <FiLoader className="button-spinner" /> : <FiCamera />}
-              {detail.creating ? 'Scene 등록 중' : '현재 위치에 Scene 생성'}
-            </button>
-          </div>
-          <p className="player-shortcuts"><kbd>←</kbd><kbd>→</kbd> 10초 · <kbd>Ctrl</kbd> 1분 · <kbd>Shift</kbd> 5분 · <kbd>S</kbd> Scene 생성</p>
-        </section>
+        <SceneVideoPlayer
+          ref={playerRef}
+          streamUrl={movie.stream_url}
+          durationMs={movie.duration_ms}
+          playbackError={movie.playback_error}
+          creating={detail.creating}
+          onCreateScene={(timestampMs) => void detail.create(timestampMs)}
+        />
 
         <aside className="scene-panel" aria-label="Scene 목록">
           <div className="scene-panel__header"><div><p className="eyebrow">SCENES</p><h2>Scene 목록</h2></div><span>{detail.scenes.length.toLocaleString('ko-KR')}개</span></div>

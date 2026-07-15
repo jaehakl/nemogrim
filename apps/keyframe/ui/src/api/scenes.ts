@@ -17,6 +17,36 @@ export interface Scene {
   updated_at: string
 }
 
+export interface ExplorerScene extends Scene {
+  movie_title: string
+}
+
+export interface ScenePage {
+  items: ExplorerScene[]
+  total: number
+  next_offset: number | null
+  has_more: boolean
+}
+
+export interface SimilarScenePage extends ScenePage {
+  available: boolean
+}
+
+export function getScenes(query: string, offset = 0): Promise<ScenePage> {
+  const params = new URLSearchParams({ offset: String(offset), limit: '48' })
+  if (query) params.set('query', query)
+  return request(`/api/scenes?${params}`)
+}
+
+export function getScene(sceneId: number): Promise<ExplorerScene> {
+  return request(`/api/scenes/${sceneId}`)
+}
+
+export function getSimilarScenes(sceneId: number, offset = 0): Promise<SimilarScenePage> {
+  const params = new URLSearchParams({ offset: String(offset), limit: '24' })
+  return request(`/api/scenes/${sceneId}/similar?${params}`)
+}
+
 export function getMovieScenes(movieId: number): Promise<{ items: Scene[] }> {
   return request(`/api/movies/${movieId}/scenes`)
 }

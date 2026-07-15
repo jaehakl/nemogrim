@@ -25,6 +25,18 @@ def extract_clip_embedding(image_path: Path) -> bytes:
     return array.tobytes()
 
 
+def extract_clip_text_embedding(text: str) -> bytes:
+    model, _preprocess, device, torch, _image_type = _load_clip()
+    import clip
+
+    tokens = clip.tokenize([text], truncate=True).to(device)
+    with torch.inference_mode():
+        embedding = model.encode_text(tokens).float()
+        embedding /= embedding.norm(dim=-1, keepdim=True).clamp_min(1e-12)
+    array = embedding[0].cpu().numpy().astype("<f4", copy=False)
+    return array.tobytes()
+
+
 def extract_wd14_tags(image_path: Path) -> tuple[str, list[str]]:
     model, transform, labels, device, torch, image_type = _load_wd14()
     image = transform(image_type.open(image_path).convert("RGB")).unsqueeze(0).to(device)

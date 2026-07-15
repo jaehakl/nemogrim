@@ -6,7 +6,7 @@ from sqlalchemy import select
 
 from app.db import Scene
 from app.routers import scenes
-from app.services import scene_processing
+from app.services import scene_processing, scene_query
 from tests.test_models import make_movie
 
 
@@ -46,6 +46,238 @@ def test_scene_api_validates_timestamp_sorts_and_rejects_duplicates(
     listed = api_client.get(f"/api/movies/{movie_id}/scenes").json()["items"]
     assert [item["timestamp_ms"] for item in listed] == [1_500, 9_000]
     assert all("embedding" not in item for item in listed)
+
+
+def test_scene_explorer_lists_latest_and_searches_by_clip_similarity(
+    api_client, session_factory, tmp_path, monkeypatch
+):
+    first_axis = [1.0] + [0.0] * 767
+    second_axis = [0.0, 1.0] + [0.0] * 766
+    first_embedding = struct.pack("<768f", *first_axis)
+    second_embedding = struct.pack("<768f", *second_axis)
+    monkeypatch.setattr(
+        scene_query,
+        "extract_clip_text_embedding",
+        lambda _query: first_embedding,
+    )
+    with session_factory() as database:
+        movie = make_movie(str(tmp_path / "탐색 영상.mp4"))
+        movie.title = "탐색 영상"
+        database.add(movie)
+        database.flush()
+        database.add_all([
+            Scene(
+                movie_file_id=movie.id,
+                timestamp_ms=1_000,
+                analysis_status="ready",
+                embedding=first_embedding,
+                embedding_model="OpenAI CLIP ViT-L/14",
+            ),
+            Scene(
+                movie_file_id=movie.id,
+                timestamp_ms=2_000,
+                analysis_status="ready",
+                embedding=first_embedding,
+                embedding_model="OpenAI CLIP ViT-L/14",
+            ),
+            Scene(
+                movie_file_id=movie.id,
+                timestamp_ms=3_000,
+                analysis_status="ready",
+                embedding=second_embedding,
+                embedding_model="OpenAI CLIP ViT-L/14",
+            ),
+            Scene(
+                movie_file_id=movie.id,
+                timestamp_ms=4_000,
+                analysis_status="ready",
+                embedding=first_embedding,
+                embedding_model="다른 모델",
+            ),
+            Scene(
+                movie_file_id=movie.id,
+                timestamp_ms=5_000,
+                analysis_status="processing",
+                embedding=first_embedding,
+                embedding_model="OpenAI CLIP ViT-L/14",
+            ),
+        ])
+        database.commit()
+
+    first_page = api_client.get("/api/scenes", params={"limit": 2}).json()
+    assert [item["timestamp_ms"] for item in first_page["items"]] == [5_000, 4_000]
+    assert first_page["total"] == 5
+    assert first_page["next_offset"] == 2
+    assert first_page["has_more"] is True
+    assert first_page["items"][0]["movie_title"] == "탐색 영상"
+
+    search = api_client.get(
+        "/api/scenes", params={"query": "blue sky", "limit": 2}
+    ).json()
+    assert [item["timestamp_ms"] for item in search["items"]] == [2_000, 1_000]
+    assert search["total"] == 3
+    assert search["next_offset"] == 2
+    assert all("embedding" not in item and "similarity" not in item for item in search["items"])
+
+    last_page = api_client.get(
+        "/api/scenes",
+        params={"query": "blue sky", "offset": 2, "limit": 2},
+    ).json()
+    assert [item["timestamp_ms"] for item in last_page["items"]] == [3_000]
+    assert last_page["next_offset"] is None
+    assert last_page["has_more"] is False
+
+
+def test_scene_explorer_validates_paging_and_reports_search_model_errors(
+    api_client, monkeypatch
+):
+    assert api_client.get("/api/scenes", params={"offset": -1}).status_code == 422
+    assert api_client.get("/api/scenes", params={"limit": 101}).status_code == 422
+    assert api_client.get("/api/scenes", params={"query": "x" * 501}).status_code == 422
+
+    monkeypatch.setattr(
+        scene_query,
+        "extract_clip_text_embedding",
+        lambda _query: (_ for _ in ()).throw(RuntimeError("model load failure")),
+    )
+    response = api_client.get("/api/scenes", params={"query": "blue sky"})
+    assert response.status_code == 503
+    assert response.json()["detail"] == (
+        "Scene 검색을 실행하지 못했습니다: model load failure"
+    )
+
+
+def test_scene_detail_and_similar_scenes_rank_across_movies(
+    api_client, session_factory, tmp_path
+):
+    first_axis = struct.pack("<768f", 1.0, *([0.0] * 767))
+    second_axis = struct.pack("<768f", 0.0, 1.0, *([0.0] * 766))
+    with session_factory() as database:
+        first_movie = make_movie(str(tmp_path / "첫 영상.mp4"))
+        first_movie.title = "첫 영상"
+        second_movie = make_movie(str(tmp_path / "둘째 영상.mp4"))
+        second_movie.title = "둘째 영상"
+        database.add_all([first_movie, second_movie])
+        database.flush()
+        source = Scene(
+            movie_file_id=first_movie.id,
+            timestamp_ms=1_000,
+            analysis_status="ready",
+            embedding=first_axis,
+            embedding_model="OpenAI CLIP ViT-L/14",
+        )
+        same_movie = Scene(
+            movie_file_id=first_movie.id,
+            timestamp_ms=2_000,
+            analysis_status="ready",
+            embedding=first_axis,
+            embedding_model="OpenAI CLIP ViT-L/14",
+        )
+        other_movie = Scene(
+            movie_file_id=second_movie.id,
+            timestamp_ms=3_000,
+            analysis_status="ready",
+            embedding=first_axis,
+            embedding_model="OpenAI CLIP ViT-L/14",
+        )
+        orthogonal = Scene(
+            movie_file_id=second_movie.id,
+            timestamp_ms=4_000,
+            analysis_status="ready",
+            embedding=second_axis,
+            embedding_model="OpenAI CLIP ViT-L/14",
+        )
+        database.add_all([
+            source,
+            same_movie,
+            other_movie,
+            orthogonal,
+            Scene(
+                movie_file_id=second_movie.id,
+                timestamp_ms=5_000,
+                analysis_status="ready",
+                embedding=first_axis,
+                embedding_model="다른 모델",
+            ),
+            Scene(
+                movie_file_id=second_movie.id,
+                timestamp_ms=6_000,
+                analysis_status="processing",
+                embedding=first_axis,
+                embedding_model="OpenAI CLIP ViT-L/14",
+            ),
+            Scene(
+                movie_file_id=second_movie.id,
+                timestamp_ms=7_000,
+                analysis_status="ready",
+                embedding=struct.pack("<2f", 1.0, 0.0),
+                embedding_model="OpenAI CLIP ViT-L/14",
+            ),
+        ])
+        database.commit()
+        source_id = source.id
+        same_movie_id = same_movie.id
+        other_movie_id = other_movie.id
+        orthogonal_id = orthogonal.id
+
+    detail = api_client.get(f"/api/scenes/{source_id}")
+    assert detail.status_code == 200
+    assert detail.json()["movie_title"] == "첫 영상"
+    assert "embedding" not in detail.json()
+
+    first_page = api_client.get(
+        f"/api/scenes/{source_id}/similar", params={"limit": 2}
+    ).json()
+    assert [item["id"] for item in first_page["items"]] == [
+        other_movie_id,
+        same_movie_id,
+    ]
+    assert first_page["total"] == 3
+    assert first_page["next_offset"] == 2
+    assert first_page["has_more"] is True
+    assert first_page["available"] is True
+
+    last_page = api_client.get(
+        f"/api/scenes/{source_id}/similar",
+        params={"offset": 2, "limit": 2},
+    ).json()
+    assert [item["id"] for item in last_page["items"]] == [orthogonal_id]
+    assert last_page["next_offset"] is None
+    assert last_page["has_more"] is False
+
+
+def test_similar_scenes_reports_unavailable_not_found_and_invalid_paging(
+    api_client, session_factory, tmp_path
+):
+    with session_factory() as database:
+        movie = make_movie(str(tmp_path / "미분석 영상.mp4"))
+        database.add(movie)
+        database.flush()
+        scene = Scene(
+            movie_file_id=movie.id,
+            timestamp_ms=1_000,
+            analysis_status="pending",
+        )
+        database.add(scene)
+        database.commit()
+        scene_id = scene.id
+
+    unavailable = api_client.get(f"/api/scenes/{scene_id}/similar").json()
+    assert unavailable == {
+        "items": [],
+        "total": 0,
+        "next_offset": None,
+        "has_more": False,
+        "available": False,
+    }
+    assert api_client.get("/api/scenes/999999").status_code == 404
+    assert api_client.get("/api/scenes/999999/similar").status_code == 404
+    assert api_client.get(
+        f"/api/scenes/{scene_id}/similar", params={"offset": -1}
+    ).status_code == 422
+    assert api_client.get(
+        f"/api/scenes/{scene_id}/similar", params={"limit": 101}
+    ).status_code == 422
 
 
 def test_scene_analysis_saves_snapshot_embedding_and_prompt(

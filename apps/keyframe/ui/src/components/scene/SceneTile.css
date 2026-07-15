@@ -1,0 +1,18 @@
+.explorer-tile { display: block; overflow: hidden; min-width: 0; color: inherit; text-decoration: none; border: 1px solid #e1e7ef; border-radius: 16px; background: #fff; box-shadow: 0 9px 24px rgba(15, 23, 42, .05); transition: border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease; }
+.explorer-tile:hover { border-color: #c8d5e8; box-shadow: 0 13px 30px rgba(20, 39, 72, .1); transform: translateY(-2px); }
+.explorer-tile--failed { border-color: #efcdcd; }
+.explorer-tile__snapshot { position: relative; display: grid; aspect-ratio: 16 / 9; place-items: center; overflow: hidden; background: #e8edf4; }
+.explorer-tile__snapshot img { width: 100%; height: 100%; object-fit: cover; }
+.explorer-tile__placeholder { display: grid; width: 100%; height: 100%; place-items: center; color: #8ea0b9; background: linear-gradient(145deg, #eef2f7, #dfe6ef); }
+.explorer-tile__placeholder svg { width: 30px; height: 30px; }
+.explorer-tile--pending .explorer-tile__placeholder svg, .explorer-tile--processing .explorer-tile__placeholder svg { animation: spin 900ms linear infinite; }
+.explorer-tile__time { position: absolute; right: 9px; bottom: 9px; padding: 5px 7px; color: #fff; font-size: 11px; font-weight: 800; font-variant-numeric: tabular-nums; border-radius: 7px; background: rgba(7, 12, 21, .76); backdrop-filter: blur(5px); }
+.explorer-tile__content { display: block; min-height: 128px; padding: 15px 16px 17px; }
+.explorer-tile__meta { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.explorer-tile__meta > span:last-child { overflow: hidden; color: #667085; font-size: 11px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.explorer-tile__status { flex: 0 0 auto; padding: 4px 7px; color: #5b6576; font-size: 9px; font-weight: 800; border-radius: 99px; background: #eef1f5; }
+.explorer-tile__status--pending, .explorer-tile__status--processing { color: #285fc1; background: #eaf2ff; }
+.explorer-tile__status--ready { color: #147a52; background: #e9f8f1; }
+.explorer-tile__status--failed { color: #b23d3d; background: #fff0f0; }
+.explorer-tile__prompt { display: -webkit-box; overflow: hidden; margin-top: 12px; color: #344054; font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+.explorer-tile__content small { display: block; overflow: hidden; margin-top: 9px; color: #ad3e3e; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }

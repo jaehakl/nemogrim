@@ -1,5 +1,7 @@
 import math
 import struct
+import sys
+from types import SimpleNamespace
 
 import pytest
 import torch
@@ -22,6 +24,30 @@ def test_clip_embedding_is_768_float32_values_and_l2_normalized(tmp_path, monkey
         lambda: (Model(), lambda _image: torch.zeros(3, 8, 8), "cpu", torch, Image),
     )
     embedding = scene_models.extract_clip_embedding(image_path)
+    values = struct.unpack("<768f", embedding)
+    assert len(embedding) == 768 * 4
+    assert math.sqrt(sum(value * value for value in values)) == pytest.approx(1.0, abs=1e-5)
+
+
+def test_clip_text_embedding_is_768_float32_values_and_l2_normalized(monkeypatch):
+    class Model:
+        def encode_text(self, _tokens):
+            return torch.arange(1, 769, dtype=torch.float32).unsqueeze(0)
+
+    monkeypatch.setattr(
+        scene_models,
+        "_load_clip",
+        lambda: (Model(), None, "cpu", torch, None),
+    )
+    monkeypatch.setitem(
+        sys.modules,
+        "clip",
+        SimpleNamespace(
+            tokenize=lambda texts, truncate: torch.zeros((len(texts), 77), dtype=torch.int64)
+        ),
+    )
+
+    embedding = scene_models.extract_clip_text_embedding("blue sky")
     values = struct.unpack("<768f", embedding)
     assert len(embedding) == 768 * 4
     assert math.sqrt(sum(value * value for value in values)) == pytest.approx(1.0, abs=1e-5)
