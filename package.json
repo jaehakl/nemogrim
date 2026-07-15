@@ -4,7 +4,10 @@
   "scripts": {
     "dev": "pnpm --filter nemogrim-video dev",
     "build": "pnpm --filter nemogrim-video build",
-    "start": "pnpm --filter nemogrim-video start"
+    "start": "pnpm --filter nemogrim-video start",
+    "dev:keyframe": "corepack pnpm --filter nemogrim-keyframe-ui dev",
+    "build:keyframe": "corepack pnpm --filter nemogrim-keyframe-ui build",
+    "test:keyframe": "corepack pnpm --filter nemogrim-keyframe-ui test"
   },
   "devDependencies": {
     "prettier": "^3.0.0",

@@ -47,5 +47,6 @@ Thumbs.db
 alembic.ini
 **/video_files/
 **/figures/
+apps/keyframe/data/
 sample.jpg
 temp_*

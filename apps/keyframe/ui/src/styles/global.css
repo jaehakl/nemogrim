@@ -1,0 +1,48 @@
+:root {
+  font-family: Pretendard, "Noto Sans KR", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: #172033;
+  background: #f4f6fa;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  --blue: #2563eb;
+  --blue-dark: #1d4ed8;
+  --navy: #172033;
+  --muted: #667085;
+  --line: #e3e8f0;
+  --panel: #ffffff;
+  --background: #f4f6fa;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; min-height: 100vh; background: var(--background); }
+button, input { font: inherit; }
+button { -webkit-tap-highlight-color: transparent; }
+button:focus-visible, a:focus-visible { outline: 3px solid rgba(37, 99, 235, 0.28); outline-offset: 2px; }
+
+.primary-button, .secondary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 0 17px;
+  font-weight: 700;
+  border-radius: 11px;
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+.primary-button { color: #fff; border: 1px solid #1f5fe6; background: var(--blue); box-shadow: 0 8px 18px rgba(37, 99, 235, 0.2); }
+.primary-button:hover:not(:disabled) { background: var(--blue-dark); box-shadow: 0 10px 22px rgba(37, 99, 235, 0.27); transform: translateY(-1px); }
+.primary-button:disabled { cursor: wait; opacity: 0.72; }
+.secondary-button { color: #344054; border: 1px solid #d7dde7; background: #fff; box-shadow: 0 2px 5px rgba(15, 23, 42, 0.04); }
+.secondary-button:hover { border-color: #b9c3d3; background: #f9fafb; transform: translateY(-1px); }
+.secondary-button:disabled { cursor: wait; opacity: 0.62; transform: none; }
+
+.button-spinner, .preview-placeholder__spinner, .initial-loading svg, .load-sentinel svg, .processing-chip svg { animation: spin 900ms linear infinite; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}

@@ -1,0 +1,11 @@
+.add-menu { position: relative; flex: 0 0 auto; }
+.add-menu__popover { position: absolute; top: calc(100% + 10px); right: 0; width: 300px; padding: 8px; border: 1px solid #e2e7ef; border-radius: 14px; background: #fff; box-shadow: 0 18px 45px rgba(24, 36, 58, 0.16); z-index: 30; }
+.add-menu__popover button { display: flex; align-items: center; gap: 12px; width: 100%; padding: 13px; color: #344054; text-align: left; border: 0; border-radius: 10px; background: transparent; cursor: pointer; }
+.add-menu__popover button:hover, .add-menu__popover button:focus-visible { background: #f2f6fc; }
+.add-menu__popover button > svg { flex: 0 0 auto; width: 21px; height: 21px; color: var(--blue); }
+.add-menu__popover span { display: flex; flex-direction: column; }
+.add-menu__popover small { margin-top: 3px; color: #7d8799; font-size: 11px; }
+@media (max-width: 620px) {
+  .add-menu, .add-menu .primary-button { width: 100%; }
+  .add-menu__popover { right: auto; left: 0; width: 100%; }
+}
