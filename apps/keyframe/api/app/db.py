@@ -25,6 +25,7 @@ APP_ROOT = Path(__file__).resolve().parents[2]
 DATA_DIR = APP_ROOT / "data"
 THUMBNAIL_DIR = DATA_DIR / "thumbnails"
 SCENE_DIR = DATA_DIR / "scenes"
+IMAGE_DIR = DATA_DIR / "images"
 DATABASE_PATH = DATA_DIR / "keyframe.sqlite3"
 DATABASE_URL = f"sqlite:///{DATABASE_PATH.as_posix()}"
 
@@ -130,6 +131,15 @@ class Scene(Base):
     movie_file: Mapped[MovieFile] = relationship(back_populates="scenes")
 
 
+class Image(Base):
+    __tablename__ = "images"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    file_path: Mapped[str] = mapped_column(Text, nullable=False)
+    prompt: Mapped[str | None] = mapped_column(Text)
+    embedding: Mapped[bytes | None] = mapped_column(LargeBinary)
+
+
 engine = create_engine(
     DATABASE_URL,
     connect_args={"check_same_thread": False, "timeout": 30},
@@ -152,4 +162,58 @@ def init_db() -> None:
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     THUMBNAIL_DIR.mkdir(parents=True, exist_ok=True)
     SCENE_DIR.mkdir(parents=True, exist_ok=True)
+    IMAGE_DIR.mkdir(parents=True, exist_ok=True)
     Base.metadata.create_all(bind=engine)
+
+    _run_additive_migrations()
+
+
+def _run_additive_migrations() -> None:
+    movie_columns = {
+        "video_codec": "VARCHAR(32)",
+        "audio_codec": "VARCHAR(32)",
+        "playback_status": "VARCHAR(16) NOT NULL DEFAULT 'unprepared'",
+        "playback_path": "TEXT",
+        "playback_error": "TEXT",
+    }
+    scene_columns = {
+        "prompt_model": "VARCHAR(255)",
+        "analysis_status": "VARCHAR(16) NOT NULL DEFAULT 'pending'",
+        "analysis_error": "TEXT",
+    }
+
+    with engine.begin() as connection:
+        Image.__table__.create(bind=connection, checkfirst=True)
+
+        existing_movie_columns = {
+            row[1] for row in connection.exec_driver_sql("PRAGMA table_info(movie_files)")
+        }
+        for name, definition in movie_columns.items():
+            if name not in existing_movie_columns:
+                connection.exec_driver_sql(
+                    f"ALTER TABLE movie_files ADD COLUMN {name} {definition}"
+                )
+
+        existing_scene_columns = {
+            row[1] for row in connection.exec_driver_sql("PRAGMA table_info(scenes)")
+        }
+        analysis_status_added = "analysis_status" not in existing_scene_columns
+        for name, definition in scene_columns.items():
+            if name not in existing_scene_columns:
+                connection.exec_driver_sql(
+                    f"ALTER TABLE scenes ADD COLUMN {name} {definition}"
+                )
+
+        if analysis_status_added:
+            connection.exec_driver_sql(
+                "UPDATE scenes SET analysis_status = 'ready' "
+                "WHERE snapshot_path IS NOT NULL AND embedding IS NOT NULL AND prompt IS NOT NULL"
+            )
+        connection.exec_driver_sql(
+            "CREATE INDEX IF NOT EXISTS ix_movie_files_playback_status "
+            "ON movie_files (playback_status)"
+        )
+        connection.exec_driver_sql(
+            "CREATE INDEX IF NOT EXISTS ix_scenes_analysis_status "
+            "ON scenes (analysis_status)"
+        )

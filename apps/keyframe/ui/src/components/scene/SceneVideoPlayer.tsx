@@ -13,6 +13,10 @@ interface SceneVideoPlayerProps {
   playbackError: string | null
   creating: boolean
   onCreateScene: (timestampMs: number) => void
+  actionLabel?: string
+  creatingLabel?: string
+  actionDisabled?: boolean
+  shortcutKey?: string | null
   startAtMs?: number
   autoPlayStart?: boolean
 }
@@ -23,7 +27,11 @@ function editableTarget(target: EventTarget | null): boolean {
 
 export const SceneVideoPlayer = forwardRef<SceneVideoPlayerHandle, SceneVideoPlayerProps>(
   function SceneVideoPlayer(
-    { streamUrl, durationMs, playbackError, creating, onCreateScene, startAtMs, autoPlayStart = false },
+    {
+      streamUrl, durationMs, playbackError, creating, onCreateScene,
+      actionLabel = '현재 위치에 Scene 생성', creatingLabel = 'Scene 등록 중',
+      actionDisabled = false, shortcutKey = 's', startAtMs, autoPlayStart = false,
+    },
     ref,
   ) {
     const playerRef = useRef<HTMLVideoElement>(null)
@@ -65,9 +73,9 @@ export const SceneVideoPlayer = forwardRef<SceneVideoPlayerHandle, SceneVideoPla
 
     const createAtCurrentTime = useCallback(() => {
       const player = playerRef.current
-      if (!player || !streamUrl || creating) return
+      if (!player || !streamUrl || creating || actionDisabled) return
       onCreateScene(Math.max(0, Math.round(player.currentTime * 1000)))
-    }, [creating, onCreateScene, streamUrl])
+    }, [actionDisabled, creating, onCreateScene, streamUrl])
 
     useEffect(() => {
       function handleKeyDown(event: KeyboardEvent) {
@@ -85,7 +93,8 @@ export const SceneVideoPlayer = forwardRef<SceneVideoPlayerHandle, SceneVideoPla
           player.currentTime = Math.min(Math.max(player.currentTime + direction * step, 0), duration)
           setCurrentTimeMs(Math.round(player.currentTime * 1000))
         } else if (
-          event.key.toLowerCase() === 's'
+          shortcutKey
+          && event.key.toLowerCase() === shortcutKey.toLowerCase()
           && !event.ctrlKey
           && !event.metaKey
           && !event.altKey
@@ -97,7 +106,7 @@ export const SceneVideoPlayer = forwardRef<SceneVideoPlayerHandle, SceneVideoPla
       }
       window.addEventListener('keydown', handleKeyDown, true)
       return () => window.removeEventListener('keydown', handleKeyDown, true)
-    }, [createAtCurrentTime, durationMs])
+    }, [createAtCurrentTime, durationMs, shortcutKey])
 
     return (
       <section ref={panelRef} className="scene-video-player" aria-label="영상 플레이어">
@@ -125,12 +134,15 @@ export const SceneVideoPlayer = forwardRef<SceneVideoPlayerHandle, SceneVideoPla
         </div>
         <div className="scene-video-player__toolbar">
           <div><span>현재 위치</span><strong>{formatSceneTimestamp(currentTimeMs)}</strong></div>
-          <button type="button" className="primary-button" disabled={!streamUrl || creating} onClick={createAtCurrentTime}>
+          <button type="button" className="primary-button" disabled={!streamUrl || creating || actionDisabled} onClick={createAtCurrentTime}>
             {creating ? <FiLoader className="button-spinner" aria-hidden="true" /> : <FiCamera aria-hidden="true" />}
-            {creating ? 'Scene 등록 중' : '현재 위치에 Scene 생성'}
+            {creating ? creatingLabel : actionLabel}
           </button>
         </div>
-        <p className="scene-video-player__shortcuts"><kbd>←</kbd><kbd>→</kbd> 10초 · <kbd>Ctrl</kbd> 1분 · <kbd>Shift</kbd> 5분 · <kbd>S</kbd> Scene 생성</p>
+        <p className="scene-video-player__shortcuts">
+          <kbd>←</kbd><kbd>→</kbd> 10초 · <kbd>Ctrl</kbd> 1분 · <kbd>Shift</kbd> 5분
+          {shortcutKey ? <> · <kbd>{shortcutKey.toUpperCase()}</kbd> {actionLabel}</> : null}
+        </p>
       </section>
     )
   },

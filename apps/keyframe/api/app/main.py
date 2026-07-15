@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .db import init_db
-from .routers import health, movies, scenes
+from .routers import health, images, movies, scenes
 from .settings import KeyframeSettings
 from .services.media_queue import start_media_queue, stop_media_queue
 from .services.scene_models import start_scene_model_runtime, stop_scene_model_runtime
@@ -41,3 +41,4 @@ app.add_middleware(
 app.include_router(health.router)
 app.include_router(movies.router)
 app.include_router(scenes.router)
+app.include_router(images.router)

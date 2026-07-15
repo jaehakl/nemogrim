@@ -27,6 +27,9 @@ def test_additive_startup_migration_is_idempotent(tmp_path, monkeypatch):
         scene_columns = {
             row[1] for row in connection.exec_driver_sql("PRAGMA table_info(scenes)")
         }
+        image_columns = {
+            row[1] for row in connection.exec_driver_sql("PRAGMA table_info(images)")
+        }
         statuses = connection.exec_driver_sql(
             "SELECT analysis_status FROM scenes ORDER BY id"
         ).scalars().all()
@@ -34,5 +37,6 @@ def test_additive_startup_migration_is_idempotent(tmp_path, monkeypatch):
         "video_codec", "audio_codec", "playback_status", "playback_path", "playback_error"
     }.issubset(movie_columns)
     assert {"prompt_model", "analysis_status", "analysis_error"}.issubset(scene_columns)
+    assert {"id", "file_path", "prompt", "embedding"}.issubset(image_columns)
     assert statuses == ["ready", "pending"]
     engine.dispose()

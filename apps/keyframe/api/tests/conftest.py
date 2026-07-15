@@ -14,8 +14,10 @@ if str(API_ROOT) not in sys.path:
 
 from app import main  # noqa: E402
 from app.db import Base  # noqa: E402
-from app.routers import health, movies  # noqa: E402
+from app.routers import health, images, movies  # noqa: E402
 from app.services import (  # noqa: E402
+    image_generation,
+    image_query,
     media_processing,
     media_queue,
     movie_import,
@@ -45,6 +47,8 @@ def session_factory(tmp_path, monkeypatch):
     for module in (
         movie_import,
         movie_query,
+        image_generation,
+        image_query,
         media_processing,
         playback,
         scene_processing,

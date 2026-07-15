@@ -1,4 +1,4 @@
-import { FiBarChart2, FiFilm, FiGrid, FiHardDrive } from 'react-icons/fi'
+import { FiBarChart2, FiFilm, FiGrid, FiHardDrive, FiImage } from 'react-icons/fi'
 import { NavLink, Outlet } from 'react-router-dom'
 import './AppLayout.css'
 
@@ -23,6 +23,12 @@ export function AppLayout() {
             className={({ isActive }) => `nav-item${isActive ? ' nav-item--active' : ''}`}
           >
             <FiFilm aria-hidden="true" /><span>영상 라이브러리</span>
+          </NavLink>
+          <NavLink
+            to="/images"
+            className={({ isActive }) => `nav-item${isActive ? ' nav-item--active' : ''}`}
+          >
+            <FiImage aria-hidden="true" /><span>이미지 생성</span>
           </NavLink>
           <button type="button" className="nav-item" disabled>
             <FiBarChart2 aria-hidden="true" /><span>통계</span><small>준비 중</small>

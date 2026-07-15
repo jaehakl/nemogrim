@@ -9,12 +9,12 @@ const statusText: Record<MetadataStatus, string> = {
   pending: '대기 중', processing: '미리보기 생성 중', ready: '준비 완료', failed: '미리보기 실패',
 }
 
-export function MovieCard({ movie }: { movie: Movie }) {
+export function MovieCard({ movie, to }: { movie: Movie; to?: string }) {
   const isWorking = PROCESSING_STATUSES.has(movie.metadata_status)
   const extension = movie.ext?.replace('.', '').toUpperCase() || 'VIDEO'
 
   return (
-    <Link className="movie-card-link" to={`/movies/${movie.id}`} aria-label={`${movie.title} 상세 보기`}>
+    <Link className="movie-card-link" to={to || `/movies/${movie.id}`} aria-label={`${movie.title} 상세 보기`}>
     <article className="movie-card">
       <div className="movie-card__preview">
         {movie.thumbnail_url ? (
