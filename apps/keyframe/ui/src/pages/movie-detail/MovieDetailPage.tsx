@@ -42,8 +42,8 @@ export function MovieDetailPage() {
         createAtCurrentTime()
       }
     }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
+    window.addEventListener('keydown', handleKeyDown, true)
+    return () => window.removeEventListener('keydown', handleKeyDown, true)
   }, [createAtCurrentTime, detail.movie?.duration_ms])
 
   function playScene(scene: Scene) {

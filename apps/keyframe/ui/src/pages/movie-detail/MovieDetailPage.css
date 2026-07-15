@@ -41,7 +41,7 @@
 .scene-card:hover { border-color: #c9d6ed; box-shadow: 0 8px 22px rgba(30, 52, 88, .09); transform: translateY(-1px); }
 .scene-card--failed { border-color: #efcdcd; }
 .scene-card__play { display: grid; grid-template-columns: 136px minmax(0, 1fr); width: 100%; padding: 0; color: inherit; text-align: left; border: 0; background: transparent; cursor: pointer; }
-.scene-card__snapshot { position: relative; display: grid; aspect-ratio: 16 / 9; place-items: center; overflow: hidden; align-self: stretch; background: #e8edf4; }
+.scene-card__snapshot { position: relative; display: grid; min-width: 0; width: 100%; aspect-ratio: 16 / 9; place-items: center; overflow: hidden; align-self: stretch; background: #e8edf4; }
 .scene-card__snapshot img { width: 100%; height: 100%; object-fit: cover; }
 .scene-card__placeholder { display: grid; width: 100%; height: 100%; place-items: center; color: #8ea0b9; background: linear-gradient(145deg, #eef2f7, #dfe6ef); }
 .scene-card__placeholder svg { width: 24px; height: 24px; }

@@ -108,6 +108,14 @@ describe('Keyframe movie detail', () => {
     const player = document.querySelector('video') as HTMLVideoElement
     Object.defineProperty(player, 'duration', { configurable: true, value: 600 })
 
+    player.currentTime = 100
+    player.focus()
+    player.addEventListener('keydown', (event) => {
+      if (!event.defaultPrevented) player.currentTime += 10
+    }, { once: true })
+    fireEvent.keyDown(player, { key: 'ArrowRight' })
+    expect(player.currentTime).toBe(110)
+
     player.currentTime = 5
     fireEvent.keyDown(window, { key: 'ArrowLeft' })
     expect(player.currentTime).toBe(0)
