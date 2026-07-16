@@ -43,6 +43,12 @@ def test_picker_filter_only_lists_direct_playback_extensions():
     assert not any(extension in script for extension in ("*.avi", "*.mkv", "*.mov", "*.wmv", "*.flv"))
 
 
+def test_picker_owner_is_centered_on_screen():
+    script = dialogs._PICKER_SCRIPT.read_text(encoding="utf-8")
+    assert "FormStartPosition]::CenterScreen" in script
+    assert "-32000" not in script
+
+
 @pytest.mark.skipif(os.name != "nt" or not shutil.which("powershell.exe"), reason="Windows PowerShell 필요")
 def test_picker_script_loads_winforms_in_sta():
     assert dialogs._run_picker("probe") == ["STA", "WinForms"]

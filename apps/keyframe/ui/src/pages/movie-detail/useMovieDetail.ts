@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { getMovieDetail, prepareMoviePlayback, type MovieDetail } from '../../api/movies'
-import { createMovieScene, getMovieScenes, retryScene, type Scene } from '../../api/scenes'
+import { createMovieScene, deleteScene, getMovieScenes, retryScene, type Scene } from '../../api/scenes'
 
 function message(error: unknown): string {
   return error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.'
@@ -18,6 +18,7 @@ export function useMovieDetail(movieId: number) {
   const [actionError, setActionError] = useState('')
   const [creating, setCreating] = useState(false)
   const [retryingIds, setRetryingIds] = useState<Set<number>>(new Set())
+  const [deletingIds, setDeletingIds] = useState<Set<number>>(new Set())
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -96,8 +97,29 @@ export function useMovieDetail(movieId: number) {
     }
   }
 
+  async function removeScene(sceneId: number) {
+    if (deletingIds.has(sceneId)) return
+    setDeletingIds((current) => new Set(current).add(sceneId))
+    setActionError('')
+    try {
+      await deleteScene(sceneId)
+      setScenes((current) => current.filter((scene) => scene.id !== sceneId))
+      setMovie((current) => current
+        ? { ...current, scene_count: Math.max(0, current.scene_count - 1) }
+        : current)
+    } catch (deleteError) {
+      setActionError(message(deleteError))
+    } finally {
+      setDeletingIds((current) => {
+        const next = new Set(current)
+        next.delete(sceneId)
+        return next
+      })
+    }
+  }
+
   return {
-    movie, scenes, loading, error, actionError, creating, retryingIds,
-    load, create, retryAnalysis, clearActionError: () => setActionError(''),
+    movie, scenes, loading, error, actionError, creating, retryingIds, deletingIds,
+    load, create, retryAnalysis, removeScene, clearActionError: () => setActionError(''),
   }
 }

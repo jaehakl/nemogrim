@@ -18,6 +18,11 @@ export function MovieDetailPage() {
     playerRef.current?.playAt(scene.timestamp_ms, true)
   }
 
+  function removeScene(scene: Scene) {
+    if (!window.confirm('이 Scene을 삭제할까요? 삭제한 Scene과 snapshot은 복구할 수 없습니다.')) return
+    void detail.removeScene(scene.id)
+  }
+
   if (detail.loading) {
     return <div className="detail-loading" role="status"><FiLoader /><span>영상 상세 정보를 불러오는 중입니다.</span></div>
   }
@@ -67,7 +72,9 @@ export function MovieDetailPage() {
           <div className="scene-panel__header"><div><p className="eyebrow">SCENES</p><h2>Scene 목록</h2></div><span>{detail.scenes.length.toLocaleString('ko-KR')}개</span></div>
           {detail.scenes.length ? (
             <div className="scene-list">{detail.scenes.map((scene) => (
-              <SceneCard key={scene.id} scene={scene} retrying={detail.retryingIds.has(scene.id)} onPlay={playScene} onRetry={(id) => void detail.retryAnalysis(id)} />
+              <SceneCard key={scene.id} scene={scene} retrying={detail.retryingIds.has(scene.id)}
+                deleting={detail.deletingIds.has(scene.id)} onPlay={playScene}
+                onRetry={(id) => void detail.retryAnalysis(id)} onDelete={removeScene} />
             ))}</div>
           ) : (
             <div className="scene-empty"><FiCamera /><strong>아직 Scene이 없습니다</strong><p>영상을 재생하고 원하는 위치에서 Scene을 생성하세요.</p></div>

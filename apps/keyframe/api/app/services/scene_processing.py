@@ -30,6 +30,7 @@ def process_scene(scene_id: int) -> None:
         database.commit()
 
     error_message: str | None = None
+    snapshot: Path | None = None
     try:
         snapshot = (DATA_DIR / snapshot_path).resolve() if snapshot_path else None
         if (
@@ -41,6 +42,7 @@ def process_scene(scene_id: int) -> None:
             with SessionLocal() as database:
                 scene = database.get(Scene, scene_id)
                 if scene is None:
+                    snapshot.unlink(missing_ok=True)
                     return
                 scene.snapshot_path = snapshot.relative_to(DATA_DIR).as_posix()
                 scene.updated_at = utc_now()
@@ -53,6 +55,8 @@ def process_scene(scene_id: int) -> None:
     with SessionLocal() as database:
         scene = database.get(Scene, scene_id)
         if scene is None:
+            if snapshot and snapshot.is_relative_to(SCENE_DIR.resolve()):
+                snapshot.unlink(missing_ok=True)
             return
         if error_message:
             scene.analysis_status = "failed"

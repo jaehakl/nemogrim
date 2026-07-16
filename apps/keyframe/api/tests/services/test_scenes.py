@@ -280,6 +280,90 @@ def test_similar_scenes_reports_unavailable_not_found_and_invalid_paging(
     ).status_code == 422
 
 
+def test_scene_delete_removes_database_row_and_snapshot_artifacts(
+    api_client, session_factory, tmp_path, monkeypatch
+):
+    data_dir = tmp_path / "data"
+    scene_dir = data_dir / "scenes"
+    monkeypatch.setattr(scene_query, "DATA_DIR", data_dir)
+    monkeypatch.setattr(scene_query, "SCENE_DIR", scene_dir)
+    with session_factory() as database:
+        movie = make_movie(str(tmp_path / "삭제 영상.mp4"))
+        database.add(movie)
+        database.flush()
+        stored = Scene(
+            movie_file_id=movie.id,
+            timestamp_ms=1_000,
+            analysis_status="ready",
+        )
+        without_snapshot = Scene(
+            movie_file_id=movie.id,
+            timestamp_ms=2_000,
+            analysis_status="pending",
+        )
+        database.add_all([stored, without_snapshot])
+        database.flush()
+        stored.snapshot_path = f"scenes/{movie.id}/{stored.id}.webp"
+        database.commit()
+        stored_id = stored.id
+        without_snapshot_id = without_snapshot.id
+        movie_id = movie.id
+
+    snapshot = scene_dir / str(movie_id) / f"{stored_id}.webp"
+    temporary = scene_dir / str(movie_id) / f"{stored_id}.tmp.webp"
+    snapshot.parent.mkdir(parents=True)
+    snapshot.write_bytes(b"webp")
+    temporary.write_bytes(b"temporary")
+
+    response = api_client.delete(f"/api/scenes/{stored_id}")
+    assert response.status_code == 200
+    assert response.json() == {"deleted_id": stored_id}
+    assert not snapshot.exists()
+    assert not temporary.exists()
+    with session_factory() as database:
+        assert database.get(Scene, stored_id) is None
+        assert database.get(Scene, without_snapshot_id) is not None
+
+    assert api_client.delete(f"/api/scenes/{without_snapshot_id}").status_code == 200
+    missing = api_client.delete("/api/scenes/999999")
+    assert missing.status_code == 404
+    assert missing.json()["detail"] == "Scene을 찾을 수 없습니다"
+
+
+def test_scene_processing_removes_snapshot_when_scene_is_deleted_mid_job(
+    session_factory, tmp_path, monkeypatch
+):
+    data_dir = tmp_path / "data"
+    scene_dir = data_dir / "scenes"
+    source = tmp_path / "movie.mp4"
+    source.write_bytes(b"video")
+    monkeypatch.setattr(scene_processing, "DATA_DIR", data_dir)
+    monkeypatch.setattr(scene_processing, "SCENE_DIR", scene_dir)
+    with session_factory() as database:
+        movie = make_movie(str(source))
+        database.add(movie)
+        database.flush()
+        scene = Scene(movie_file_id=movie.id, timestamp_ms=1_000, analysis_status="pending")
+        database.add(scene)
+        database.commit()
+        scene_id = scene.id
+        movie_id = movie.id
+
+    def snapshot(_source, _movie_id, _scene_id, _timestamp_ms):
+        target = scene_dir / str(movie_id) / f"{scene_id}.webp"
+        target.parent.mkdir(parents=True)
+        target.write_bytes(b"webp")
+        with session_factory() as database:
+            database.delete(database.get(Scene, scene_id))
+            database.commit()
+        return target
+
+    monkeypatch.setattr(scene_processing, "create_scene_snapshot", snapshot)
+    scene_processing.process_scene(scene_id)
+
+    assert not (scene_dir / str(movie_id) / f"{scene_id}.webp").exists()
+
+
 def test_scene_analysis_saves_snapshot_embedding_and_prompt(
     session_factory, tmp_path, monkeypatch
 ):

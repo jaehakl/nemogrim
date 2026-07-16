@@ -22,8 +22,7 @@ if ($Mode -eq 'probe') {
 $owner = [System.Windows.Forms.Form]::new()
 $owner.ShowInTaskbar = $false
 $owner.TopMost = $true
-$owner.StartPosition = [System.Windows.Forms.FormStartPosition]::Manual
-$owner.Location = [System.Drawing.Point]::new(-32000, -32000)
+$owner.StartPosition = [System.Windows.Forms.FormStartPosition]::CenterScreen
 $owner.Size = [System.Drawing.Size]::new(1, 1)
 $owner.Opacity = 0
 

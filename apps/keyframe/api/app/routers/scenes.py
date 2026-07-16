@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from ..services.media_queue import schedule_scenes
 from ..services.scene_query import (
     create_scene,
+    delete_scene,
     get_scene_detail,
     get_scene_page,
     get_similar_scene_page,
@@ -46,6 +47,13 @@ def scene_detail(scene_id: int) -> dict:
     if scene is None:
         raise HTTPException(status_code=404, detail="Scene을 찾을 수 없습니다")
     return scene
+
+
+@router.delete("/scenes/{scene_id}")
+def remove_scene(scene_id: int) -> dict:
+    if not delete_scene(scene_id):
+        raise HTTPException(status_code=404, detail="Scene을 찾을 수 없습니다")
+    return {"deleted_id": scene_id}
 
 
 @router.get("/scenes/{scene_id}/similar")

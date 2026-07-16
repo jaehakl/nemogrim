@@ -61,3 +61,7 @@ export function createMovieScene(movieId: number, timestampMs: number): Promise<
 export function retryScene(sceneId: number): Promise<Scene> {
   return request(`/api/scenes/${sceneId}/retry`, { method: 'POST' })
 }
+
+export async function deleteScene(sceneId: number): Promise<void> {
+  await request(`/api/scenes/${sceneId}`, { method: 'DELETE' })
+}

@@ -6,7 +6,9 @@ import App from '../App'
 import { getMovieDetail, prepareMoviePlayback, type MovieDetail } from '../api/movies'
 import {
   createMovieScene,
+  deleteScene,
   getScene,
+  getMovieScenes,
   getSimilarScenes,
   type ExplorerScene,
   type Scene,
@@ -28,6 +30,7 @@ vi.mock('../api/scenes', () => ({
   getSimilarScenes: vi.fn(),
   getMovieScenes: vi.fn(),
   createMovieScene: vi.fn(),
+  deleteScene: vi.fn(),
   retryScene: vi.fn(),
 }))
 
@@ -36,6 +39,8 @@ const mockedGetSimilar = vi.mocked(getSimilarScenes)
 const mockedGetMovie = vi.mocked(getMovieDetail)
 const mockedPrepare = vi.mocked(prepareMoviePlayback)
 const mockedCreateScene = vi.mocked(createMovieScene)
+const mockedDeleteScene = vi.mocked(deleteScene)
+const mockedGetMovieScenes = vi.mocked(getMovieScenes)
 
 function scene(overrides: Partial<ExplorerScene> = {}): ExplorerScene {
   return {
@@ -109,8 +114,11 @@ describe('Scene detail', () => {
     mockedPrepare.mockResolvedValue(movie())
     mockedGetSimilar.mockResolvedValue(similarPage())
     mockedCreateScene.mockResolvedValue(scene())
+    mockedDeleteScene.mockResolvedValue(undefined)
+    mockedGetMovieScenes.mockResolvedValue({ items: [] })
     Element.prototype.scrollIntoView = vi.fn()
     window.scrollTo = vi.fn()
+    window.confirm = vi.fn(() => true)
   })
 
   afterEach(() => { vi.clearAllTimers() })
@@ -209,6 +217,39 @@ describe('Scene detail', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('같은 timestamp의 Scene이 이미 있습니다.')
     await user.click(screen.getByRole('button', { name: '오류 알림 닫기' }))
     expect(screen.queryByText('같은 timestamp의 Scene이 이미 있습니다.')).not.toBeInTheDocument()
+  })
+
+  it('confirms deletion and returns to the owning Movie detail', async () => {
+    const confirm = vi.mocked(window.confirm)
+    confirm.mockReturnValueOnce(false).mockReturnValueOnce(true)
+    renderDetail()
+    const user = userEvent.setup()
+    const deleteButton = await screen.findByRole('button', { name: 'Scene 삭제' })
+
+    await user.click(deleteButton)
+    expect(mockedDeleteScene).not.toHaveBeenCalled()
+    expect(screen.getByText('Scene 정보')).toBeInTheDocument()
+
+    await user.click(deleteButton)
+    await waitFor(() => expect(mockedDeleteScene).toHaveBeenCalledWith(21))
+    await waitFor(() => expect(mockedGetMovieScenes).toHaveBeenCalledWith(7))
+    expect(document.querySelector('.detail-back')).toHaveAttribute('href', '/movies')
+  })
+
+  it('keeps Scene detail visible and reports a delete failure', async () => {
+    let rejectDelete: ((error: Error) => void) | undefined
+    mockedDeleteScene.mockImplementationOnce(() => new Promise((_resolve, reject) => { rejectDelete = reject }))
+    renderDetail()
+    const user = userEvent.setup()
+    const deleteButton = await screen.findByRole('button', { name: 'Scene 삭제' })
+
+    await user.click(deleteButton)
+    expect(screen.getByRole('button', { name: '삭제 중' })).toBeDisabled()
+    await act(async () => { rejectDelete?.(new Error('Scene 삭제 실패')) })
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Scene 삭제 실패')
+    expect(screen.getByText('Scene 정보')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Scene 삭제' })).toBeEnabled()
   })
 
   it('loads more similar Scenes and navigates between Scene detail routes', async () => {

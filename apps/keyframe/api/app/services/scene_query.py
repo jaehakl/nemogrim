@@ -6,7 +6,7 @@ from pathlib import Path
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 
-from ..db import DATA_DIR, MovieFile, Scene, SessionLocal, utc_now
+from ..db import DATA_DIR, SCENE_DIR, MovieFile, Scene, SessionLocal, utc_now
 from .movie_query import iso_utc
 from .scene_models import CLIP_MODEL_NAME, extract_clip_text_embedding
 
@@ -211,6 +211,29 @@ def retry_scene(scene_id: int) -> dict | None:
             database.commit()
             database.refresh(scene)
         return serialize_scene(scene)
+
+
+def delete_scene(scene_id: int) -> bool:
+    with SessionLocal() as database:
+        scene = database.get(Scene, scene_id)
+        if scene is None:
+            return False
+        movie_id = scene.movie_file_id
+        snapshot_path = scene.snapshot_path
+        database.delete(scene)
+        database.commit()
+
+    candidates = {
+        (SCENE_DIR / str(movie_id) / f"{scene_id}.webp").resolve(),
+        (SCENE_DIR / str(movie_id) / f"{scene_id}.tmp.webp").resolve(),
+    }
+    if snapshot_path:
+        candidates.add((DATA_DIR / snapshot_path).resolve())
+    scene_root = SCENE_DIR.resolve()
+    for path in candidates:
+        if path.is_relative_to(scene_root):
+            path.unlink(missing_ok=True)
+    return True
 
 
 def scene_snapshot_file(scene_id: int) -> Path:

@@ -10,6 +10,7 @@ import {
 } from '../api/movies'
 import {
   createMovieScene,
+  deleteScene,
   getMovieScenes,
   retryScene,
   type Scene,
@@ -29,6 +30,7 @@ vi.mock('../api/scenes', () => ({
   getSimilarScenes: vi.fn(),
   getMovieScenes: vi.fn(),
   createMovieScene: vi.fn(),
+  deleteScene: vi.fn(),
   retryScene: vi.fn(),
 }))
 
@@ -36,6 +38,7 @@ const mockedGetDetail = vi.mocked(getMovieDetail)
 const mockedPrepare = vi.mocked(prepareMoviePlayback)
 const mockedGetScenes = vi.mocked(getMovieScenes)
 const mockedCreateScene = vi.mocked(createMovieScene)
+const mockedDeleteScene = vi.mocked(deleteScene)
 const mockedRetryScene = vi.mocked(retryScene)
 
 function movie(overrides: Partial<MovieDetail> = {}): MovieDetail {
@@ -94,8 +97,10 @@ describe('Keyframe movie detail', () => {
     mockedGetScenes.mockResolvedValue({ items: [] })
     mockedPrepare.mockResolvedValue(movie())
     mockedCreateScene.mockResolvedValue(scene({ id: 30, timestamp_ms: 12_345, prompt: null, keywords: null, analysis_status: 'pending', snapshot_url: null }))
+    mockedDeleteScene.mockResolvedValue(undefined)
     mockedRetryScene.mockResolvedValue(scene({ analysis_status: 'pending', analysis_error: null }))
     Element.prototype.scrollIntoView = vi.fn()
+    window.confirm = vi.fn(() => true)
   })
 
   afterEach(() => {
@@ -182,6 +187,43 @@ describe('Keyframe movie detail', () => {
     await user.click(screen.getByRole('button', { name: /재시도/ }))
     await waitFor(() => expect(mockedRetryScene).toHaveBeenCalledWith(21))
     expect(await screen.findByText('분석 대기 중')).toBeInTheDocument()
+  })
+
+  it('confirms deletion and removes the last Scene from the list', async () => {
+    mockedGetDetail.mockResolvedValue(movie({ scene_count: 1 }))
+    mockedGetScenes.mockResolvedValue({ items: [scene()] })
+    const confirm = vi.mocked(window.confirm)
+    confirm.mockReturnValueOnce(false).mockReturnValueOnce(true)
+    renderDetail()
+    const user = userEvent.setup()
+    const deleteButton = await screen.findByRole('button', { name: 'Scene #21 삭제' })
+
+    await user.click(deleteButton)
+    expect(mockedDeleteScene).not.toHaveBeenCalled()
+    expect(screen.getByText('1개')).toBeInTheDocument()
+
+    await user.click(deleteButton)
+    await waitFor(() => expect(mockedDeleteScene).toHaveBeenCalledWith(21))
+    expect(await screen.findByText('아직 Scene이 없습니다')).toBeInTheDocument()
+    expect(screen.getByText('0개')).toBeInTheDocument()
+  })
+
+  it('disables duplicate deletion and reports a delete failure', async () => {
+    mockedGetScenes.mockResolvedValue({ items: [scene()] })
+    let rejectDelete: ((error: Error) => void) | undefined
+    mockedDeleteScene.mockImplementationOnce(() => new Promise((_resolve, reject) => { rejectDelete = reject }))
+    renderDetail()
+    const user = userEvent.setup()
+    const deleteButton = await screen.findByRole('button', { name: 'Scene #21 삭제' })
+
+    await user.click(deleteButton)
+    expect(deleteButton).toBeDisabled()
+    await user.click(deleteButton)
+    expect(mockedDeleteScene).toHaveBeenCalledTimes(1)
+    await act(async () => { rejectDelete?.(new Error('Scene 삭제 실패')) })
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Scene 삭제 실패')
+    expect(screen.getByText('분석 완료')).toBeInTheDocument()
   })
 
   it('shows a direct-playback block without proxy polling or retry controls', async () => {

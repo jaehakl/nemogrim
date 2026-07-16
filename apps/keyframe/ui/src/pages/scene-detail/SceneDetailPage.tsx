@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { FiAlertCircle, FiArrowLeft, FiCheckCircle, FiClock, FiFilm, FiImage, FiLoader, FiRefreshCw, FiX } from 'react-icons/fi'
-import { Link, useParams } from 'react-router-dom'
+import { FiAlertCircle, FiArrowLeft, FiCheckCircle, FiClock, FiFilm, FiImage, FiLoader, FiRefreshCw, FiTrash2, FiX } from 'react-icons/fi'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { getMovieDetail, prepareMoviePlayback, type MovieDetail } from '../../api/movies'
-import { createMovieScene, getScene, getSimilarScenes, type ExplorerScene } from '../../api/scenes'
+import { createMovieScene, deleteScene, getScene, getSimilarScenes, type ExplorerScene } from '../../api/scenes'
 import { SceneTile } from '../../components/scene/SceneTile'
 import { SceneVideoPlayer } from '../../components/scene/SceneVideoPlayer'
 import { formatSceneTimestamp } from '../movie-detail/formatters'
@@ -14,6 +14,7 @@ function message(error: unknown): string {
 
 export function SceneDetailPage() {
   const params = useParams()
+  const navigate = useNavigate()
   const sceneId = Number(params.sceneId)
   const validSceneId = Number.isInteger(sceneId) && sceneId > 0 ? sceneId : -1
   const [scene, setScene] = useState<ExplorerScene | null>(null)
@@ -24,6 +25,8 @@ export function SceneDetailPage() {
   const [creating, setCreating] = useState(false)
   const [createSuccess, setCreateSuccess] = useState('')
   const [createError, setCreateError] = useState('')
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
   const [similarScenes, setSimilarScenes] = useState<ExplorerScene[]>([])
   const [similarTotal, setSimilarTotal] = useState(0)
   const [similarAvailable, setSimilarAvailable] = useState(true)
@@ -45,6 +48,8 @@ export function SceneDetailPage() {
     setCreating(false)
     setCreateSuccess('')
     setCreateError('')
+    setDeleting(false)
+    setDeleteError('')
     setLoading(true)
     window.scrollTo({ top: 0 })
     try {
@@ -151,6 +156,20 @@ export function SceneDetailPage() {
     }
   }
 
+  async function removeScene() {
+    if (!scene || deleting) return
+    if (!window.confirm('이 Scene을 삭제할까요? 삭제한 Scene과 snapshot은 복구할 수 없습니다.')) return
+    setDeleting(true)
+    setDeleteError('')
+    try {
+      await deleteScene(scene.id)
+      navigate(`/movies/${scene.movie_file_id}`)
+    } catch (error) {
+      setDeleteError(message(error))
+      setDeleting(false)
+    }
+  }
+
   if (loading) {
     return <div className="scene-detail-loading" role="status"><FiLoader /><span>Scene 상세 정보를 불러오는 중입니다.</span></div>
   }
@@ -183,6 +202,10 @@ export function SceneDetailPage() {
             <span><FiFilm />Scene #{scene.id}</span>
           </div>
         </div>
+        <button type="button" className="scene-detail-delete" disabled={deleting} onClick={() => void removeScene()}>
+          {deleting ? <FiLoader className="button-spinner" /> : <FiTrash2 />}
+          {deleting ? '삭제 중' : 'Scene 삭제'}
+        </button>
       </header>
 
       {createSuccess ? (
@@ -195,6 +218,12 @@ export function SceneDetailPage() {
         <div className="notice notice--error" role="alert">
           <strong>{createError}</strong>
           <button type="button" aria-label="오류 알림 닫기" onClick={() => setCreateError('')}><FiX /></button>
+        </div>
+      ) : null}
+      {deleteError ? (
+        <div className="notice notice--error" role="alert">
+          <strong>{deleteError}</strong>
+          <button type="button" aria-label="삭제 오류 알림 닫기" onClick={() => setDeleteError('')}><FiX /></button>
         </div>
       ) : null}
 

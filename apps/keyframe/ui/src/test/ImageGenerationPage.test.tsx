@@ -26,7 +26,7 @@ vi.mock('../api/movies', () => ({
 
 vi.mock('../api/scenes', () => ({
   getScenes: vi.fn(), getScene: vi.fn(), getSimilarScenes: vi.fn(),
-  getMovieScenes: vi.fn(), createMovieScene: vi.fn(), retryScene: vi.fn(),
+  getMovieScenes: vi.fn(), createMovieScene: vi.fn(), deleteScene: vi.fn(), retryScene: vi.fn(),
 }))
 
 const mockedGetImages = vi.mocked(getImages)

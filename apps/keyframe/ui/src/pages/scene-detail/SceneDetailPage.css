@@ -3,11 +3,15 @@
 .scene-detail-loading svg { width: 20px; height: 20px; color: var(--blue); animation: spin 900ms linear infinite; }
 .scene-detail-back { display: inline-flex; align-items: center; gap: 7px; margin-bottom: 22px; color: #5f6b7e; font-size: 13px; font-weight: 700; text-decoration: none; }
 .scene-detail-back:hover { color: var(--blue); }
-.scene-detail-header { margin-bottom: 26px; }
+.scene-detail-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 26px; }
+.scene-detail-header > div { min-width: 0; }
 .scene-detail-header h1 { overflow: hidden; margin: 0; color: #111827; font-size: clamp(28px, 3vw, 42px); line-height: 1.16; letter-spacing: -.04em; text-overflow: ellipsis; white-space: nowrap; }
 .scene-detail-header__meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 .scene-detail-header__meta span { display: inline-flex; align-items: center; gap: 7px; padding: 7px 10px; color: #5f6b7e; font-size: 12px; font-weight: 700; border: 1px solid var(--line); border-radius: 99px; background: #fff; }
 .scene-detail-header__meta svg { color: var(--blue); }
+.scene-detail-delete { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 7px; padding: 9px 12px; color: #a63232; font-size: 12px; font-weight: 800; border: 1px solid #edc3c3; border-radius: 9px; background: #fff; cursor: pointer; }
+.scene-detail-delete:hover { border-color: #d99f9f; background: #fff7f7; }
+.scene-detail-delete:disabled { cursor: wait; opacity: .65; }
 .scene-detail-page > .notice { align-items: center; }
 .scene-detail-page > .notice > span { flex-direction: row; align-items: center; gap: 7px; }
 .scene-detail-page > .notice button { margin-left: auto; }
@@ -38,7 +42,9 @@
   .scene-detail-layout { grid-template-columns: 1fr; }
 }
 @media (max-width: 620px) {
+  .scene-detail-header { align-items: stretch; flex-direction: column; }
   .scene-detail-header h1 { white-space: normal; }
+  .scene-detail-delete { align-self: flex-start; }
   .scene-detail-info { border-radius: 14px; }
   .similar-scenes__grid { grid-template-columns: 1fr; }
   .scene-detail-error-actions { width: 100%; flex-direction: column; }
