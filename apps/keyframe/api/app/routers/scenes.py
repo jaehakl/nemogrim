@@ -109,5 +109,5 @@ def scene_snapshot(scene_id: int) -> FileResponse:
     return FileResponse(
         path,
         media_type="image/webp",
-        headers={"Cache-Control": "public, max-age=31536000, immutable"},
+        headers={"Cache-Control": "no-cache"},
     )

@@ -101,7 +101,7 @@ def get_image_file(image_id: int) -> FileResponse:
     return FileResponse(
         path,
         media_type=media_type,
-        headers={"Cache-Control": "public, max-age=31536000, immutable"},
+        headers={"Cache-Control": "no-cache"},
     )
 
 

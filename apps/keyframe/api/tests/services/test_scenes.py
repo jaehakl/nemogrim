@@ -330,6 +330,38 @@ def test_scene_delete_removes_database_row_and_snapshot_artifacts(
     assert missing.json()["detail"] == "Scene을 찾을 수 없습니다"
 
 
+def test_scene_snapshot_is_served_with_revalidation_cache_policy(
+    api_client, session_factory, tmp_path, monkeypatch
+):
+    data_dir = tmp_path / "data"
+    monkeypatch.setattr(scene_query, "DATA_DIR", data_dir)
+
+    with session_factory() as database:
+        movie = make_movie(str(tmp_path / "movie.mp4"))
+        database.add(movie)
+        database.flush()
+        scene = Scene(
+            movie_file_id=movie.id,
+            timestamp_ms=1_000,
+            analysis_status="ready",
+        )
+        database.add(scene)
+        database.flush()
+        scene.snapshot_path = f"scenes/{movie.id}/{scene.id}.webp"
+        database.commit()
+        scene_id = scene.id
+        snapshot_path = data_dir / scene.snapshot_path
+
+    snapshot_path.parent.mkdir(parents=True)
+    snapshot_path.write_bytes(b"snapshot")
+
+    response = api_client.get(f"/api/scenes/{scene_id}/snapshot")
+
+    assert response.content == b"snapshot"
+    assert response.headers["content-type"] == "image/webp"
+    assert response.headers["cache-control"] == "no-cache"
+
+
 def test_scene_processing_removes_snapshot_when_scene_is_deleted_mid_job(
     session_factory, tmp_path, monkeypatch
 ):

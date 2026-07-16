@@ -44,7 +44,8 @@ def test_image_api_lists_latest_with_cursor_and_serves_safe_files(
     assert [item["id"] for item in second["items"]] == [1]
     response = api_client.get("/api/images/3/file")
     assert response.content == b"image-3"
-    assert response.headers["cache-control"] == "public, max-age=31536000, immutable"
+    assert response.headers["content-type"] == "image/png"
+    assert response.headers["cache-control"] == "no-cache"
 
     outside = tmp_path / "outside.png"
     outside.write_bytes(b"outside")

@@ -14,6 +14,31 @@ def test_movies_api_uses_stable_id_cursor(api_client, session_factory, tmp_path)
     assert not ({item["id"] for item in first["items"]} & {item["id"] for item in second["items"]})
 
 
+def test_movie_thumbnail_is_served_with_revalidation_cache_policy(
+    api_client, session_factory, tmp_path, monkeypatch
+):
+    data_dir = tmp_path / "data"
+    thumbnail = data_dir / "thumbnails" / "1.webp"
+    thumbnail.parent.mkdir(parents=True)
+    thumbnail.write_bytes(b"thumbnail")
+    monkeypatch.setattr(movies, "DATA_DIR", data_dir)
+
+    with session_factory() as database:
+        movie = make_movie(
+            str(tmp_path / "movie.mp4"),
+            thumbnail_path="thumbnails/1.webp",
+        )
+        database.add(movie)
+        database.commit()
+        movie_id = movie.id
+
+    response = api_client.get(f"/api/movies/{movie_id}/thumbnail")
+
+    assert response.content == b"thumbnail"
+    assert response.headers["content-type"] == "image/webp"
+    assert response.headers["cache-control"] == "no-cache"
+
+
 def test_file_import_cancel_and_status_response(api_client, tmp_path, monkeypatch):
     monkeypatch.setattr(movies, "choose_video_files", lambda: [])
     assert api_client.post("/api/movies/import/files").json()["cancelled"] is True

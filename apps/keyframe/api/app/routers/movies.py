@@ -114,5 +114,5 @@ def movie_thumbnail(movie_id: int) -> FileResponse:
     return FileResponse(
         Path(thumbnail),
         media_type="image/webp",
-        headers={"Cache-Control": "public, max-age=31536000, immutable"},
+        headers={"Cache-Control": "no-cache"},
     )
