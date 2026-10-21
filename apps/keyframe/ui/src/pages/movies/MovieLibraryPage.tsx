@@ -1,76 +1,98 @@
-import { useEffect, useRef } from 'react'
-import { FiAlertCircle, FiCheckCircle, FiFilm, FiFolder, FiLoader, FiRefreshCw, FiX } from 'react-icons/fi'
+import { FiCheckCircle, FiFilm, FiFolder, FiRefreshCw } from 'react-icons/fi'
+import type { ImportMode } from '../../api/movies'
+import { MovieCard } from '../../components/media/MovieCard'
+import { LoadMoreSentinel } from '../../components/ui/LoadMoreSentinel'
+import { PageHeader } from '../../components/ui/PageHeader'
+import { Spinner } from '../../components/ui/Spinner'
+import { StatePanel } from '../../components/ui/StatePanel'
+import { useToast } from '../../components/ui/toastContext'
+import { useImportMovies, useMovieLibrary } from '../../hooks/movies'
+import { errorMessage } from '../../lib/errors'
+import { formatCount } from '../../lib/format'
 import { AddMovieMenu } from './AddMovieMenu'
-import { MovieCard } from './MovieCard'
-import { useMovieLibrary } from './useMovieLibrary'
-import './MovieLibraryPage.css'
 
 export function MovieLibraryPage() {
   const library = useMovieLibrary()
-  const sentinelRef = useRef<HTMLDivElement>(null)
-  const { loadMore, loadingInitial, nextCursor } = library
+  const importer = useImportMovies()
+  const notify = useToast()
 
-  useEffect(() => {
-    const sentinel = sentinelRef.current
-    if (!sentinel || !nextCursor || loadingInitial) return
-    const observer = new IntersectionObserver(
-      (entries) => { if (entries[0]?.isIntersecting) void loadMore() },
-      { rootMargin: '320px 0px' },
-    )
-    observer.observe(sentinel)
-    return () => observer.disconnect()
-  }, [loadMore, loadingInitial, nextCursor])
+  const movies = library.data?.pages.flatMap((page) => page.items) ?? []
+  const firstPage = library.data?.pages[0]
+  const importing = importer.isPending ? importer.variables : null
+
+  function startImport(mode: ImportMode) {
+    importer.mutate(mode, {
+      onSuccess: (result) => {
+        if (result.cancelled) {
+          notify({ tone: 'neutral', title: '영상 추가를 취소했습니다.' })
+          return
+        }
+        notify({
+          tone: result.failed_count ? 'warning' : 'success',
+          title: `새 영상 ${result.added_count}개 · 중복 ${result.duplicate_count}개 · 실패 ${result.failed_count}개`,
+          description: result.failures[0],
+        })
+      },
+      onError: (error) => notify({ tone: 'danger', title: '영상을 추가하지 못했습니다', description: errorMessage(error) }),
+    })
+  }
 
   return (
     <>
-      <header className="page-header">
-        <div>
-          <p className="eyebrow">VIDEO LIBRARY</p><h1>영상 라이브러리</h1>
-          <p className="page-header__description">장면을 만들 영상을 추가하고 미디어 정보를 한곳에서 확인하세요.</p>
-        </div>
-        <AddMovieMenu importing={library.importing} onImport={(mode) => void library.handleImport(mode)} />
-      </header>
-
-      <section className="library-summary" aria-label="라이브러리 요약">
-        <div><span className="library-summary__value">{library.total.toLocaleString('ko-KR')}</span><span>개의 영상</span></div>
-        {library.processingCount > 0 ? (
-          <div className="processing-chip" role="status"><FiLoader aria-hidden="true" />{library.processingCount.toLocaleString('ko-KR')}개 미리보기 처리 중</div>
-        ) : (
-          <div className="ready-chip"><FiCheckCircle aria-hidden="true" />모든 작업 완료</div>
-        )}
-      </section>
-
-      {library.notice ? (
-        <div className={`notice notice--${library.notice.tone}`} role={library.notice.tone === 'error' ? 'alert' : 'status'}>
-          <span><strong>{library.notice.text}</strong>{library.notice.detail ? <small title={library.notice.detail}>{library.notice.detail}</small> : null}</span>
-          <button type="button" onClick={() => library.setNotice(null)} aria-label="알림 닫기"><FiX aria-hidden="true" /></button>
-        </div>
-      ) : null}
-
-      {library.loadingInitial ? (
-        <div className="initial-loading" role="status"><FiLoader aria-hidden="true" /><span>영상 라이브러리를 불러오는 중입니다.</span></div>
-      ) : library.error ? (
-        <div className="state-panel state-panel--error" role="alert">
-          <FiAlertCircle aria-hidden="true" /><h2>라이브러리를 불러오지 못했습니다</h2><p>{library.error}</p>
-          <button type="button" className="secondary-button" onClick={() => void library.loadFirstPage()}><FiRefreshCw aria-hidden="true" /> 다시 시도</button>
-        </div>
-      ) : library.movies.length === 0 ? (
-        <div className="state-panel state-panel--empty">
-          <span className="state-panel__icon" aria-hidden="true"><FiFilm /></span><h2>아직 추가된 영상이 없습니다</h2>
-          <p>파일 또는 폴더를 선택하면 새 영상만 자동으로 라이브러리에 등록됩니다.</p>
-          <div className="empty-actions">
-            <button type="button" className="primary-button" disabled={Boolean(library.importing)} onClick={() => void library.handleImport('files')}><FiFilm aria-hidden="true" /> 파일 선택</button>
-            <button type="button" className="secondary-button" disabled={Boolean(library.importing)} onClick={() => void library.handleImport('folder')}><FiFolder aria-hidden="true" /> 폴더 선택</button>
+      <PageHeader
+        eyebrow="LIBRARY"
+        title="영상 라이브러리"
+        description="장면을 만들 영상을 추가하세요. 원본 파일은 이동하거나 복사하지 않습니다."
+        actions={<AddMovieMenu importing={importing ?? null} onImport={startImport} />}
+      >
+        {firstPage ? (
+          <div className="chip-row" aria-label="라이브러리 요약">
+            <span className="chip"><FiFilm aria-hidden="true" />{formatCount(firstPage.total)}개의 영상</span>
+            {firstPage.processing_count > 0 ? (
+              <span className="chip" role="status"><Spinner />{formatCount(firstPage.processing_count)}개 미리보기 처리 중</span>
+            ) : (
+              <span className="chip"><FiCheckCircle aria-hidden="true" />모든 작업 완료</span>
+            )}
           </div>
-        </div>
+        ) : null}
+      </PageHeader>
+
+      {library.isPending ? (
+        <StatePanel kind="loading" title="영상 라이브러리를 불러오는 중입니다." />
+      ) : library.isError ? (
+        <StatePanel
+          kind="error"
+          title="라이브러리를 불러오지 못했습니다"
+          description={errorMessage(library.error)}
+          actions={(
+            <button type="button" className="btn btn--secondary" onClick={() => void library.refetch()}>
+              <FiRefreshCw aria-hidden="true" /> 다시 시도
+            </button>
+          )}
+        />
+      ) : movies.length === 0 ? (
+        <StatePanel
+          kind="empty"
+          icon={<FiFilm aria-hidden="true" />}
+          title="아직 추가된 영상이 없습니다"
+          description="파일 또는 폴더를 선택하면 새 영상만 자동으로 라이브러리에 등록됩니다."
+          actions={(
+            <>
+              <button type="button" className="btn btn--primary" disabled={importer.isPending} onClick={() => startImport('files')}>
+                <FiFilm aria-hidden="true" /> 파일 선택
+              </button>
+              <button type="button" className="btn btn--secondary" disabled={importer.isPending} onClick={() => startImport('folder')}>
+                <FiFolder aria-hidden="true" /> 폴더 선택
+              </button>
+            </>
+          )}
+        />
       ) : (
         <>
-          <section className="movie-grid" aria-label="영상 목록">{library.movies.map((movie) => <MovieCard key={movie.id} movie={movie} />)}</section>
-          <div ref={sentinelRef} className="load-sentinel" aria-hidden={!library.loadingMore}>
-            {library.loadingMore ? <span><FiLoader aria-hidden="true" /> 다음 영상을 불러오는 중</span>
-              : library.nextCursor ? <span className="sr-only">더 많은 영상이 있습니다.</span>
-                : <span>모든 영상을 불러왔습니다.</span>}
-          </div>
+          <section className="poster-grid" aria-label="영상 목록">
+            {movies.map((movie) => <MovieCard key={movie.id} movie={movie} />)}
+          </section>
+          <LoadMoreSentinel query={library} itemLabel="영상" />
         </>
       )}
     </>

@@ -1,29 +1,13 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter } from 'react-router-dom'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import App from '../App'
-import { getMovieDetail, prepareMoviePlayback, type MovieDetail } from '../api/movies'
-import {
-  createMovieScene,
-  deleteScene,
-  getScene,
-  getMovieScenes,
-  getSimilarScenes,
-  type ExplorerScene,
-  type Scene,
-  type SimilarScenePage,
-} from '../api/scenes'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { getPlayableMovie } from '../api/movies'
+import { createMovieScene, deleteScene, getMovieScenes, getScene, getSimilarScenes } from '../api/scenes'
+import type { Scene } from '../api/types'
+import { explorerScene, movieDetail, scene, similarPage } from './fixtures'
+import { renderApp, triggerIntersection } from './render'
 
-vi.mock('../api/movies', () => ({
-  getMovies: vi.fn(),
-  getMovieStatuses: vi.fn(),
-  importMovieFiles: vi.fn(),
-  importMovieFolder: vi.fn(),
-  getMovieDetail: vi.fn(),
-  prepareMoviePlayback: vi.fn(),
-}))
-
+vi.mock('../api/movies', () => ({ getMovies: vi.fn(), importMovies: vi.fn(), getPlayableMovie: vi.fn() }))
 vi.mock('../api/scenes', () => ({
   getScenes: vi.fn(),
   getScene: vi.fn(),
@@ -35,257 +19,169 @@ vi.mock('../api/scenes', () => ({
 }))
 
 const mockedGetScene = vi.mocked(getScene)
+const mockedGetMovie = vi.mocked(getPlayableMovie)
 const mockedGetSimilar = vi.mocked(getSimilarScenes)
-const mockedGetMovie = vi.mocked(getMovieDetail)
-const mockedPrepare = vi.mocked(prepareMoviePlayback)
 const mockedCreateScene = vi.mocked(createMovieScene)
 const mockedDeleteScene = vi.mocked(deleteScene)
-const mockedGetMovieScenes = vi.mocked(getMovieScenes)
 
-function scene(overrides: Partial<ExplorerScene> = {}): ExplorerScene {
-  return {
-    id: 21,
-    movie_file_id: 7,
-    movie_title: 'Scene 상세 영상',
-    timestamp_ms: 12_345,
-    prompt: 'blue sky, ocean',
-    keywords: ['blue sky', 'ocean'],
-    embedding_model: 'OpenAI CLIP ViT-L/14',
-    prompt_model: 'SmilingWolf/wd-eva02-large-tagger-v3',
-    analysis_status: 'ready',
-    analysis_error: null,
-    snapshot_url: '/api/scenes/21/snapshot',
-    created_at: '2026-07-15T03:00:00Z',
-    updated_at: '2026-07-15T03:00:00Z',
-    ...overrides,
-  }
+const current = explorerScene({ timestamp_ms: 12_345, movie_title: 'Scene 상세 영상', keywords: ['blue sky', 'ocean'] })
+
+async function renderDetail() {
+  renderApp('/scenes/21')
+  await screen.findByRole('heading', { name: 'Scene 상세 영상', level: 1 })
 }
 
-function movie(overrides: Partial<MovieDetail> = {}): MovieDetail {
-  return {
-    id: 7,
-    title: 'Scene 상세 영상',
-    path: 'E:\\videos\\scene.mp4',
-    ext: '.mp4',
-    size_bytes: 1024,
-    file_modified_at: '2026-07-15T03:00:00Z',
-    duration_ms: 600_000,
-    width: 1920,
-    height: 1080,
-    fps: 30,
-    metadata_status: 'ready',
-    metadata_error: null,
-    thumbnail_url: '/api/movies/7/thumbnail',
-    created_at: '2026-07-15T03:00:00Z',
-    updated_at: '2026-07-15T03:00:00Z',
-    video_codec: 'h264',
-    audio_codec: 'aac',
-    playback_status: 'direct',
-    playback_error: null,
-    stream_url: '/api/movies/7/stream',
-    scene_count: 2,
-    ...overrides,
-  }
+async function preparePlayer(play = vi.fn().mockResolvedValue(undefined)) {
+  await waitFor(() => expect(document.querySelector('video')).not.toBeNull())
+  const player = document.querySelector('video') as HTMLVideoElement
+  Object.defineProperty(player, 'play', { configurable: true, value: play })
+  Object.defineProperty(player, 'duration', { configurable: true, value: 600 })
+  return player
 }
 
-function similarPage(
-  items: ExplorerScene[] = [],
-  overrides: Partial<SimilarScenePage> = {},
-): SimilarScenePage {
-  return {
-    items,
-    total: items.length,
-    next_offset: null,
-    has_more: false,
-    available: true,
-    ...overrides,
-  }
-}
-
-function renderDetail() {
-  return render(<MemoryRouter initialEntries={['/scenes/21']}><App /></MemoryRouter>)
-}
-
-describe('Scene detail', () => {
+describe('Scene 상세', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
-    mockedGetScene.mockResolvedValue(scene())
-    mockedGetMovie.mockResolvedValue(movie())
-    mockedPrepare.mockResolvedValue(movie())
-    mockedGetSimilar.mockResolvedValue(similarPage())
-    mockedCreateScene.mockResolvedValue(scene())
+    mockedGetScene.mockResolvedValue(current)
+    mockedGetMovie.mockResolvedValue(movieDetail())
+    mockedGetSimilar.mockResolvedValue(similarPage([]))
+    mockedCreateScene.mockResolvedValue(scene({ id: 40, timestamp_ms: 45_678 }))
     mockedDeleteScene.mockResolvedValue(undefined)
-    mockedGetMovieScenes.mockResolvedValue({ items: [] })
+    vi.mocked(getMovieScenes).mockResolvedValue([])
     Element.prototype.scrollIntoView = vi.fn()
-    window.scrollTo = vi.fn()
     window.confirm = vi.fn(() => true)
   })
 
-  afterEach(() => { vi.clearAllTimers() })
-
   it('loads Scene context and starts playback at the Scene timestamp', async () => {
-    mockedGetSimilar.mockResolvedValueOnce(similarPage([
-      scene({ id: 22, movie_title: '비슷한 영상', timestamp_ms: 20_000 }),
-    ]))
-    renderDetail()
+    mockedGetSimilar.mockResolvedValue(similarPage([explorerScene({ id: 22, movie_title: '비슷한 영상' })]))
+    await renderDetail()
 
-    expect(await screen.findByRole('heading', { name: 'Scene 상세 영상' })).toBeInTheDocument()
-    expect(screen.getAllByText('blue sky, ocean').length).toBeGreaterThan(0)
-    expect(screen.getByText('blue sky')).toBeInTheDocument()
-    const player = document.querySelector('video') as HTMLVideoElement
-    const play = vi.fn().mockResolvedValue(undefined)
-    Object.defineProperty(player, 'play', { configurable: true, value: play })
-    Object.defineProperty(player, 'duration', { configurable: true, value: 600 })
+    expect(screen.getByText('00:12.345', { selector: '.chip' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'blue sky' })).toHaveAttribute('href', '/scenes?q=blue+sky')
+    const player = await preparePlayer()
     fireEvent.loadedMetadata(player)
 
     expect(player.currentTime).toBe(12.345)
-    expect(play).toHaveBeenCalledOnce()
-    expect(screen.getByRole('link', { name: /비슷한 영상/ })).toHaveAttribute('href', '/scenes/22')
+    expect(player.play).toHaveBeenCalledOnce()
+    expect(await screen.findByRole('link', { name: /비슷한 영상/ })).toHaveAttribute('href', '/scenes/22')
     expect(mockedGetScene).toHaveBeenCalledWith(21)
-    expect(mockedGetSimilar).toHaveBeenCalledWith(21, 0)
+    expect(mockedGetSimilar).toHaveBeenCalledWith(21, null)
+    expect(mockedGetMovie).toHaveBeenCalledWith(7)
   })
 
-  it('prepares unprepared playback and tolerates autoplay rejection', async () => {
-    mockedGetMovie.mockResolvedValueOnce(movie({ playback_status: 'unprepared', stream_url: null }))
-    renderDetail()
-
-    await waitFor(() => expect(mockedPrepare).toHaveBeenCalledWith(7))
-    const player = document.querySelector('video') as HTMLVideoElement
-    Object.defineProperty(player, 'play', {
-      configurable: true,
-      value: vi.fn().mockRejectedValueOnce(new Error('autoplay blocked')),
-    })
-    Object.defineProperty(player, 'duration', { configurable: true, value: 600 })
+  it('keeps the requested position when autoplay is rejected', async () => {
+    await renderDetail()
+    const player = await preparePlayer(vi.fn().mockRejectedValueOnce(new Error('autoplay blocked')))
     fireEvent.loadedMetadata(player)
     await act(async () => { await Promise.resolve() })
 
     expect(player.currentTime).toBe(12.345)
-    expect(await screen.findByRole('heading', { name: 'Scene 상세 영상' })).toBeInTheDocument()
   })
 
   it('keeps Scene information and similar results visible when playback is unavailable', async () => {
-    mockedGetMovie.mockResolvedValueOnce(movie({
+    mockedGetMovie.mockResolvedValue(movieDetail({
       playback_status: 'failed',
       playback_error: '브라우저에서 직접 재생할 수 없는 영상 codec입니다',
       stream_url: null,
     }))
-    mockedGetSimilar.mockResolvedValueOnce(similarPage([scene({ id: 22, movie_title: '비슷한 영상' })]))
-    renderDetail()
+    mockedGetSimilar.mockResolvedValue(similarPage([explorerScene({ id: 22, movie_title: '비슷한 영상' })]))
+    await renderDetail()
 
-    expect(await screen.findByText('브라우저에서 직접 재생할 수 없는 영상입니다')).toBeInTheDocument()
-    expect(screen.getByText('브라우저에서 직접 재생할 수 없는 영상 codec입니다')).toBeInTheDocument()
-    expect(screen.getAllByText('blue sky, ocean').length).toBeGreaterThan(0)
-    expect(screen.getByRole('link', { name: /비슷한 영상/ })).toBeInTheDocument()
+    expect(await screen.findByText('브라우저에서 직접 재생할 수 없는 영상 codec입니다')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'ocean' })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: /비슷한 영상/ })).toBeInTheDocument()
   })
 
-  it('creates a Scene from the player without leaving or refreshing the detail page', async () => {
+  it('creates a Scene from the player without leaving or reloading the page', async () => {
     const user = userEvent.setup()
-    renderDetail()
-    expect(await screen.findByRole('heading', { name: 'Scene 상세 영상' })).toBeInTheDocument()
-    const player = document.querySelector('video') as HTMLVideoElement
+    await renderDetail()
+    const player = await preparePlayer()
     player.currentTime = 45.678
     fireEvent.timeUpdate(player)
 
     await user.click(screen.getByRole('button', { name: '현재 위치에 Scene 생성' }))
 
     await waitFor(() => expect(mockedCreateScene).toHaveBeenCalledWith(7, 45_678))
-    expect(await screen.findByText('Scene을 생성했습니다.')).toBeInTheDocument()
+    expect(await screen.findByText('00:45.678 위치에 Scene을 만들었습니다.')).toBeInTheDocument()
     expect(mockedGetScene).toHaveBeenCalledTimes(1)
     expect(mockedGetSimilar).toHaveBeenCalledTimes(1)
     expect(player.currentTime).toBe(45.678)
-
-    await user.click(screen.getByRole('button', { name: '성공 알림 닫기' }))
-    player.currentTime = 50
-    fireEvent.keyDown(window, { key: 's' })
-    await waitFor(() => expect(mockedCreateScene).toHaveBeenLastCalledWith(7, 50_000))
-    expect(mockedCreateScene).toHaveBeenCalledTimes(2)
   })
 
-  it('disables creation while pending and shows a dismissible server error', async () => {
+  it('disables creation while pending and reports server errors', async () => {
     const user = userEvent.setup()
     let resolveCreate: ((created: Scene) => void) | undefined
     mockedCreateScene.mockImplementationOnce(() => new Promise((resolve) => { resolveCreate = resolve }))
-    renderDetail()
-    await screen.findByRole('heading', { name: 'Scene 상세 영상' })
+    await renderDetail()
 
     await user.click(screen.getByRole('button', { name: '현재 위치에 Scene 생성' }))
-    expect(screen.getByRole('button', { name: 'Scene 등록 중' })).toBeDisabled()
+    expect(await screen.findByRole('button', { name: 'Scene 등록 중' })).toBeDisabled()
     await act(async () => { resolveCreate?.(scene()) })
 
     mockedCreateScene.mockRejectedValueOnce(new Error('같은 timestamp의 Scene이 이미 있습니다.'))
     await user.click(screen.getByRole('button', { name: '현재 위치에 Scene 생성' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('같은 timestamp의 Scene이 이미 있습니다.')
-    await user.click(screen.getByRole('button', { name: '오류 알림 닫기' }))
-    expect(screen.queryByText('같은 timestamp의 Scene이 이미 있습니다.')).not.toBeInTheDocument()
   })
 
-  it('confirms deletion and returns to the owning Movie detail', async () => {
-    const confirm = vi.mocked(window.confirm)
-    confirm.mockReturnValueOnce(false).mockReturnValueOnce(true)
-    renderDetail()
+  it('confirms deletion and returns to the owning movie', async () => {
     const user = userEvent.setup()
-    const deleteButton = await screen.findByRole('button', { name: 'Scene 삭제' })
+    vi.mocked(window.confirm).mockReturnValueOnce(false).mockReturnValueOnce(true)
+    await renderDetail()
+    const deleteButton = screen.getByRole('button', { name: 'Scene 삭제' })
 
     await user.click(deleteButton)
     expect(mockedDeleteScene).not.toHaveBeenCalled()
-    expect(screen.getByText('Scene 정보')).toBeInTheDocument()
 
     await user.click(deleteButton)
     await waitFor(() => expect(mockedDeleteScene).toHaveBeenCalledWith(21))
-    await waitFor(() => expect(mockedGetMovieScenes).toHaveBeenCalledWith(7))
-    expect(document.querySelector('.detail-back')).toHaveAttribute('href', '/movies')
+    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent('/movies/7'))
   })
 
   it('keeps Scene detail visible and reports a delete failure', async () => {
+    const user = userEvent.setup()
     let rejectDelete: ((error: Error) => void) | undefined
     mockedDeleteScene.mockImplementationOnce(() => new Promise((_resolve, reject) => { rejectDelete = reject }))
-    renderDetail()
-    const user = userEvent.setup()
-    const deleteButton = await screen.findByRole('button', { name: 'Scene 삭제' })
+    await renderDetail()
 
-    await user.click(deleteButton)
-    expect(screen.getByRole('button', { name: '삭제 중' })).toBeDisabled()
+    await user.click(screen.getByRole('button', { name: 'Scene 삭제' }))
+    expect(await screen.findByRole('button', { name: '삭제 중' })).toBeDisabled()
     await act(async () => { rejectDelete?.(new Error('Scene 삭제 실패')) })
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Scene 삭제 실패')
-    expect(screen.getByText('Scene 정보')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Scene 삭제' })).toBeEnabled()
+    expect(screen.getByTestId('location')).toHaveTextContent('/scenes/21')
   })
 
   it('loads more similar Scenes and navigates between Scene detail routes', async () => {
     const user = userEvent.setup()
-    mockedGetScene
-      .mockResolvedValueOnce(scene())
-      .mockResolvedValueOnce(scene({ id: 22, movie_title: '이동한 Scene 영상', timestamp_ms: 30_000 }))
-    mockedGetSimilar
-      .mockResolvedValueOnce(similarPage(
-        [scene({ id: 22, movie_title: '비슷한 첫 영상' })],
-        { total: 2, next_offset: 24, has_more: true },
-      ))
-      .mockResolvedValueOnce(similarPage([scene({ id: 23, movie_title: '비슷한 다음 영상' })], { total: 2 }))
-      .mockResolvedValueOnce(similarPage())
-    renderDetail()
+    mockedGetScene.mockImplementation(async (id) =>
+      id === 22 ? explorerScene({ id: 22, movie_title: '이동한 Scene 영상', timestamp_ms: 30_000 }) : current)
+    mockedGetSimilar.mockImplementation(async (id, cursor) => {
+      if (id === 22) return similarPage([])
+      return cursor === null
+        ? similarPage([explorerScene({ id: 22, movie_title: '비슷한 첫 영상' })], { total: 2, next_cursor: 24 })
+        : similarPage([explorerScene({ id: 23, movie_title: '비슷한 다음 영상' })], { total: 2 })
+    })
+    await renderDetail()
     await screen.findByText('비슷한 첫 영상')
 
-    act(() => globalThis.__latestIntersectionObserver?.trigger())
+    act(() => triggerIntersection())
     expect(await screen.findByText('비슷한 다음 영상')).toBeInTheDocument()
     expect(mockedGetSimilar).toHaveBeenLastCalledWith(21, 24)
 
     await user.click(screen.getByRole('link', { name: /비슷한 첫 영상/ }))
     expect(await screen.findByRole('heading', { name: '이동한 Scene 영상' })).toBeInTheDocument()
-    expect(mockedGetScene).toHaveBeenLastCalledWith(22)
-    expect(mockedGetSimilar).toHaveBeenLastCalledWith(22, 0)
+    await waitFor(() => expect(mockedGetSimilar).toHaveBeenLastCalledWith(22, null))
   })
 
   it('distinguishes unavailable similarity from Scene load errors', async () => {
-    mockedGetSimilar.mockResolvedValueOnce(similarPage([], { available: false }))
-    const view = renderDetail()
+    mockedGetSimilar.mockResolvedValue(similarPage([], { available: false }))
+    const view = renderApp('/scenes/21')
     expect(await screen.findByText('유사도 분석을 사용할 수 없습니다')).toBeInTheDocument()
 
     view.unmount()
-    mockedGetScene.mockRejectedValueOnce(new Error('Scene을 찾을 수 없습니다'))
-    mockedGetSimilar.mockRejectedValueOnce(new Error('Scene을 찾을 수 없습니다'))
-    renderDetail()
+    mockedGetScene.mockRejectedValue(new Error('Scene을 찾을 수 없습니다'))
+    renderApp('/scenes/21')
     expect(await screen.findByText('Scene 상세 정보를 불러오지 못했습니다')).toBeInTheDocument()
+    expect(mockedGetSimilar).toHaveBeenCalledTimes(1)
   })
 })

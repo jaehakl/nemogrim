@@ -1,203 +1,189 @@
 # Keyframe
 
-로컬 영상의 특정 시점을 Scene으로 기록하고, 이후 키워드와 임베딩을 이용해 장면 단위로 탐색하기 위한 도구입니다.
+Keyframe은 로컬 영상의 특정 시점을 Scene으로 기록하고, 태그와 이미지 임베딩으로 장면을 찾아보는 도구입니다.
 
-현재 버전은 영상 라이브러리, 브라우저 호환 원본 재생, 영상별 Scene 생성과 AI 분석을 제공합니다. 원본 영상은 복사하거나 이동하지 않고 절대 경로만 등록합니다.
+- **AI는 모두 이 PC에서 실행됩니다.** CLIP과 WD14 모델이 API 프로세스 안에서 직접 동작하며, 외부 AI 서버가 필요 없습니다.
+- **원본 영상은 그대로 둡니다.** 복사하거나 이동하지 않고 절대 경로만 등록합니다.
 
-## 현재 제공 기능
+## 기능
 
-- 별도 STA PowerShell 프로세스의 Windows 네이티브 탐색기에서 여러 영상 파일 또는 폴더 선택
-- 폴더 선택 시 하위 폴더까지 재귀 검색
-- 정규화 절대 경로 기준 중복 제외 및 새 파일만 등록
-- FFprobe 기반 길이·해상도·FPS 분석
-- FFmpeg 기반 WebP 대표 썸네일 백그라운드 생성
-- 밝은 카드형 영상 라이브러리와 무한 스크롤
-- 영상·Scene 상세의 공용 플레이어와 10초·1분·5분 키보드 탐색
-- 브라우저 호환 원본의 Range 스트리밍과 비호환 codec 재생 차단
-- 현재 재생 위치의 Scene snapshot 생성
-- GP Station `ai.clip.image` handler 기반 OpenAI CLIP `ViT-L/14` 768차원 이미지 embedding
-- GP Station `ai.wd14.tags` handler 기반 `SmilingWolf/wd-eva02-large-tagger-v3` prompt·keyword 추출
-- 최신순 Scene tile grid와 무한 스크롤 탐색
-- GP Station `ai.clip.text`와 이미지 embedding cosine similarity 기반 Scene 검색
-- Scene timestamp 자동 재생 상세 화면과 이미지 embedding 기반 유사 Scene 탐색
-- 영상 snapshot의 WD14 prompt와 SDXL i2i를 이용한 이미지 생성 workspace
-- 생성 이미지 CLIP embedding 저장과 전역 최신순 무한스크롤 Image 피드
-- 서버 재시작 시 중단된 메타데이터·Scene 분석 재개
+- **영상 등록**
+  - Windows 탐색기 창에서 여러 파일이나 폴더를 고릅니다. 폴더를 고르면 하위 폴더까지 찾습니다.
+  - 이미 등록된 경로는 건너뜁니다.
+- **메타데이터와 썸네일**: FFprobe로 길이·해상도·FPS·codec을 읽고, FFmpeg로 WebP 썸네일을 백그라운드에서 만듭니다.
+- **재생**: 브라우저가 지원하는 원본만 Range 스트리밍으로 재생합니다. 지원하지 않는 codec은 변환하지 않고 재생을 막습니다.
+- **Scene 만들기**: 플레이어에서 `S` 키를 누르면 현재 위치에 Scene이 생기고 snapshot이 저장됩니다.
+- **로컬 AI 분석**
+  - OpenAI CLIP ViT-L/14로 768차원 이미지 임베딩을 만듭니다.
+  - SmilingWolf WD14 EVA02-Large v3로 태그를 뽑습니다.
+- **검색**
+  - **CLIP 텍스트 검색**: 상단 검색창에 장면을 글로 적으면 비슷한 Scene을 찾습니다. 단축키는 `/`입니다.
+  - **비슷한 Scene**: Scene 상세 화면에서 이미지 임베딩이 가까운 Scene을 보여줍니다.
+  - **태그 칩**: 칩을 누르면 그 태그로 검색합니다.
+- **화면**: 어두운 미디어 라이브러리 UI입니다. 사이드바를 접을 수 있고, 좁은 화면에서는 drawer로 바뀝니다. 목록은 무한 스크롤입니다.
+- **작업 복구**: 서버가 다시 시작되면 중단됐던 메타데이터와 Scene 분석 작업을 이어서 처리합니다.
 
-신규 등록 지원 확장자: `.mp4`, `.m4v`, `.webm`
+등록할 수 있는 확장자: `.mp4`, `.m4v`, `.webm`
 
 ## 프로젝트 구조
 
 ```text
 apps/keyframe/
-├── api/                 # FastAPI, SQLAlchemy, SQLite
+├── api/                       # FastAPI · SQLAlchemy · SQLite
 │   ├── app/
-│   │   ├── routers/     # health, movies, scenes API
-│   │   └── services/    # 선택기, import, 조회, 재생·Scene 처리·queue
-│   ├── tests/
-│   ├── .env.example
-│   └── pyproject.toml
-├── ui/                  # React 19, TypeScript, React Router, Vite
-│   └── src/             # api, layout, page, component, hook 모듈
-├── vendor/
-│   └── gpstation-master-python/ # Keyframe 전용 vendored Python master SDK
-└── data/                # 실행 시 생성, Git 제외
+│   │   ├── ai/                # 로컬 AI: runtime(단일 워커), clip, tagger, device, types
+│   │   ├── routers/           # health, ai, movies, scenes (얇은 HTTP 계층)
+│   │   ├── services/          # import·조회·재생·FFmpeg·Scene 처리·벡터 인덱스·작업 큐
+│   │   ├── db.py              # 모델, 엔진, 스키마 버전
+│   │   ├── errors.py          # 도메인 예외 → HTTP 응답 매핑
+│   │   ├── paths.py           # data 디렉터리 경로와 경로 이탈 방지
+│   │   ├── schemas.py         # 요청/응답 스키마
+│   │   └── settings.py        # KEYFRAME_* 설정
+│   ├── scripts/ai_smoke.py    # 실제 모델 동작 확인 + 모델 사전 다운로드
+│   └── tests/
+├── ui/                        # React 19 · TypeScript · React Router · TanStack Query · Vite
+│   └── src/
+│       ├── api/               # fetch 클라이언트, 타입, query key
+│       ├── hooks/             # 서버 상태 훅(TanStack Query), 무한 스크롤
+│       ├── components/        # layout, ui(공용), media(카드), player
+│       ├── pages/             # 영상 라이브러리·영상 상세·Scene 탐색·Scene 상세
+│       ├── lib/               # 포맷터, 상태 라벨, 키보드 유틸
+│       └── styles/            # 디자인 토큰, 전역 스타일
+└── data/                      # 실행 중에 생성됨, Git 제외
     ├── keyframe.sqlite3
+    ├── models/                # Hugging Face 모델 캐시 (약 2.8GB)
     ├── thumbnails/
-    ├── images/
     └── scenes/{movie_id}/
 ```
 
 ## 사전 요구사항
 
-- Python 3.11 이상 3.14 미만
-- Poetry
+- Windows. 파일 선택 창에 PowerShell 5.1과 .NET Framework 4.8 WinForms를 사용합니다.
+- Python 3.12 이상 3.14 미만, Poetry
 - Node.js 18 이상
-- pnpm (`corepack pnpm` 권장)
-- PATH에서 실행 가능한 `ffmpeg`, `ffprobe`
-- Windows PowerShell 5.1 및 .NET Framework 4.8 WinForms
-- 실행 중인 GP Station v1 server
-- `ai` 앱을 광고하며 연결된 launcher와 GP Station AI slave
-- `client` scope를 가진 GP Station Access Token
-
-현재 앱은 Windows 단일 사용자 로컬 실행을 전제로 합니다. FastAPI는 `powershell.exe -NoProfile -STA`로 별도 WinForms 선택기를 실행하므로 API worker thread와 파일 탐색기의 UI thread가 분리됩니다. CLIP·WD14 추론은 Keyframe 프로세스가 아닌 GP Station AI slave 호스트에서 실행됩니다.
+- PATH에서 실행할 수 있는 `ffmpeg`, `ffprobe`
+- 권장: CUDA 12.8을 지원하는 NVIDIA GPU. 없으면 CPU로 실행되며, Scene 하나를 분석하는 데 약 4초가 걸립니다.
 
 ## 설치
 
 ```powershell
 cd E:\nemogrim\apps\keyframe\api
-poetry install
-Copy-Item .env.example .env
+poetry install                          # torch cu128 포함
+poetry run python scripts/ai_smoke.py   # 선택: 모델(약 2.8GB)을 미리 내려받고 GPU 동작 확인
 
-cd E:\nemogrim
-corepack pnpm install
+cd ..\ui
+npm install
 ```
 
-`api/.env`의 `GPSTATION_API_BASE_URL`과 `GPSTATION_CLIENT_TOKEN`을 실제 server URL과 `client` scope Access Token으로 바꿉니다. `GPSTATION_JOB_TIMEOUT_SECONDS`의 기본 예시는 600초입니다.
+설정 파일은 필수가 아닙니다. 기본값을 바꾸려면 `api/.env.example`을 `api/.env`로 복사해 고칩니다.
+
+| 환경 변수 | 기본값 | 설명 |
+|---|---|---|
+| `KEYFRAME_AI_DEVICE` | `auto` | `auto`는 CUDA가 있으면 GPU를 씁니다. `cuda`, `cpu`도 지정할 수 있습니다. |
+| `KEYFRAME_AI_MODEL_CACHE_DIR` | `data/models` | 모델 파일을 저장할 위치 |
+| `KEYFRAME_AI_WARMUP` | `false` | 기동 직후 백그라운드에서 모델을 미리 불러옵니다. |
+| `KEYFRAME_AI_OFFLINE` | `false` | 내려받아 둔 모델만 쓰고 네트워크 다운로드를 하지 않습니다. |
+| `KEYFRAME_AI_REQUEST_TIMEOUT_SECONDS` | `180` | 텍스트 검색 요청이 AI 응답을 기다리는 최대 시간(초) |
+| `KEYFRAME_WD14_GENERAL_THRESHOLD` / `_CHARACTER_THRESHOLD` / `_MAX_TAGS` | `0.35` / `0.85` / `64` | 태그를 고르는 기준 |
+| `KEYFRAME_CORS_ORIGINS` | `["http://127.0.0.1:5175","http://localhost:5175"]` | API를 직접 호출할 수 있는 origin |
+
+> 예전 버전의 `GPSTATION_*` 값이 `api/.env`에 남아 있어도 무시됩니다. 지워도 됩니다.
 
 ## 실행
 
-저장소 루트에서 다음 배치 파일을 실행하면 API와 UI가 각각 새 창에서 시작됩니다.
+저장소 루트에서 실행하면 API와 UI가 각각 새 창에서 시작됩니다.
 
 ```powershell
 .\run_keyframe.bat
 ```
 
-개별 실행:
+따로 실행하려면:
 
 ```powershell
 cd E:\nemogrim\apps\keyframe\api
 poetry run uvicorn app.main:app --reload --host 127.0.0.1 --port 8002
 
 cd E:\nemogrim\apps\keyframe\ui
-corepack pnpm dev
+npm run dev
 ```
 
 - UI: http://127.0.0.1:5175
-- API: http://127.0.0.1:8002
-- API 문서: http://127.0.0.1:8002/docs
+- API: http://127.0.0.1:8002 (문서: `/docs`)
 
-API 시작 시 별도 asyncio thread에서 GP Station client 하나를 만들고 `/v1/launchers`를 호출해 URL과 bearer token을 검증합니다. 인증 또는 연결 검증이 실패하면 Keyframe도 시작하지 않으며, 인증에 성공한 빈 launcher 목록은 허용합니다.
+## 로컬 AI
+
+- **기동 시**: API를 시작하면 실행 장치만 확인하고 모델은 불러오지 않습니다.
+- **모델 로드 시점**: 첫 Scene 분석이나 첫 검색 때 불러옵니다. 사이드바의 **모델 미리 불러오기**를 눌러도 됩니다.
+  - 처음에는 내려받느라 몇 분 걸립니다.
+  - 이미 받아 둔 모델은 약 15초 만에 불러옵니다.
+- **실행 방식**: 모든 추론은 `keyframe-ai` 워커 스레드 하나에서 차례로 실행되어 GPU 메모리를 안정적으로 씁니다. 모델이 올라간 뒤에는 Scene 하나에 약 0.1초(RTX 3090 Ti)가 걸립니다.
+- **CLIP**: `open_clip`의 `ViT-L-14`(`pretrained="openai"`, QuickGELU)를 씁니다. 이미지와 텍스트 임베딩은 L2 정규화한 float32 768차원 값입니다.
+- **WD14**: `SmilingWolf/wd-eva02-large-tagger-v3`의 timm 가중치를 torch로 실행합니다. ONNX Runtime은 쓰지 않습니다.
+  - 전처리: 흰 배경에 패딩한 정사각형 → 448px bicubic → 정규화 → BGR
+  - 태그 순서: character 태그가 먼저 오고, 그다음 general 태그가 신뢰도 순으로 옵니다. rating 태그는 제외합니다.
+- **상태 확인**: 모델 상태와 실행 장치는 사이드바 하단이나 `GET /api/ai/status`에서 볼 수 있습니다.
+- **모델 로드 실패**: 그 Scene은 `failed`가 되고 **재시도**할 수 있습니다. 검색은 503과 함께 이유를 알려줍니다.
+- **개발 중 주의**: `--reload`로 실행하면 코드가 바뀔 때마다 모델을 다시 불러옵니다.
 
 ## 데이터베이스
 
-### `movie_files`
+- **`movie_files`**: 원본 경로와 파일 메타데이터, codec, 썸네일 경로, 직접 재생 판정(`unprepared` | `direct` | `failed`)을 저장합니다.
+- **`scenes`**: `timestamp_ms`, 태그 prompt와 keywords, CLIP 임베딩(3072바이트 BLOB), snapshot 경로, 분석 상태를 저장합니다.
+  - `(movie_file_id, timestamp_ms)` 조합은 중복될 수 없습니다.
+  - 영상을 삭제하면 그 영상의 Scene도 함께 삭제됩니다.
 
-원본 경로, 파일 메타데이터, codec, 썸네일과 직접 재생 판정 상태를 저장합니다. `normalized_path`는 대소문자와 경로 표현을 정규화한 unique 값입니다.
+**스키마 버전**: 스키마 버전은 SQLite `PRAGMA user_version`으로 관리하며 현재는 v2입니다. 마이그레이션은 하지 않습니다. 버전이 다른 DB 파일이 있으면 기동을 멈추고 안내를 출력합니다. 그때는 `data/keyframe.sqlite3*`를 백업한 뒤 삭제하고 다시 시작하세요.
 
-### `scenes`
-
-`movie_file_id`, `timestamp_ms`, prompt, keywords, embedding, snapshot 경로, 분석 상태와 재생 횟수를 저장합니다. `(movie_file_id, timestamp_ms)`는 unique이며 영상 삭제 시 Scene도 함께 삭제됩니다.
-
-기존 SQLite는 시작 시 컬럼 존재 여부를 확인하는 additive migration으로 보존합니다. `processing` 상태에서 중단된 작업은 다음 시작 시 `pending`으로 복구됩니다.
-
-### `images`
-
-SDXL로 생성된 이미지의 상대 파일 경로, WD14 prompt와 OpenAI CLIP `ViT-L/14` 768차원 embedding을 저장합니다. 생성 이미지는 `data/images`에 보관되며 영화와 관계없이 ID 내림차순의 전역 피드로 조회됩니다.
+**작업 복구**: `processing` 상태에서 중단된 작업은 다음에 시작할 때 `pending`으로 돌아가 다시 처리됩니다.
 
 ## API
 
+목록 API는 모두 `cursor`와 `limit`를 받고 `{items, total, next_cursor}`를 돌려줍니다. 응답의 `next_cursor`를 다음 요청의 `cursor`로 넘기면 되고, 마지막 페이지에서는 `null`입니다. 오류 응답은 `{"detail": "메시지"}` 형식입니다.
+
 | 메서드 | 경로 | 설명 |
 |---|---|---|
-| GET | `/api/health` | DB와 FFmpeg 상태 확인 |
-| GET | `/api/movies` | ID 커서 기반 영상 목록 |
-| POST | `/api/movies/import/files` | 복수 파일 선택 및 등록 |
-| POST | `/api/movies/import/folder` | 폴더 재귀 검색 및 등록 |
-| POST | `/api/movies/statuses` | 백그라운드 처리 상태 일괄 조회 |
-| GET | `/api/movies/{id}` | 영상 상세·codec·재생 상태·Scene 개수 조회 |
-| POST | `/api/movies/{id}/playback/prepare` | 원본의 브라우저 직접 재생 가능 여부 판정 |
-| GET | `/api/movies/{id}/stream` | 호환 원본 영상 Range 스트리밍 |
-| GET | `/api/movies/{id}/thumbnail` | 생성된 WebP 썸네일 조회 |
-| GET | `/api/movies/{id}/scenes` | timestamp 오름차순 Scene 목록 |
-| POST | `/api/movies/{id}/scenes` | 현재 timestamp의 Scene 등록 및 분석 예약 |
-| GET | `/api/scenes` | 최신순 Scene 목록 또는 CLIP 검색 결과 (`query`, `offset`, `limit`) |
-| GET | `/api/scenes/{id}` | 영상 제목을 포함한 Scene 상세 정보 |
-| GET | `/api/scenes/{id}/similar` | CLIP 이미지 embedding 기반 유사 Scene 목록 (`offset`, `limit`) |
-| GET | `/api/scenes/{id}/snapshot` | 생성된 Scene WebP snapshot 조회 |
-| POST | `/api/scenes/{id}/retry` | 실패한 Scene 분석 재예약 |
-| GET | `/api/images` | 생성 이미지 최신순 cursor 목록 |
-| GET | `/api/images/models` | GP Station SDXL 모델과 공개 기본 설정 조회 |
-| GET | `/api/images/{id}/file` | 생성 이미지 파일 조회 |
-| POST | `/api/movies/{id}/images` | 현재 timestamp snapshot 기반 SDXL i2i 이미지 생성 |
+| GET | `/api/health` | DB, FFmpeg, AI 상태 |
+| GET | `/api/ai/status` | 실행 장치와 모델별 로드 상태 |
+| POST | `/api/ai/warmup` | 모델을 백그라운드에서 미리 불러옴 (202) |
+| GET | `/api/movies` | 영상 목록. id 내림차순이며 `processing_count`를 포함함 |
+| POST | `/api/movies/import/files` | 여러 파일을 골라 등록 |
+| POST | `/api/movies/import/folder` | 폴더를 하위 폴더까지 찾아 등록 |
+| GET | `/api/movies/{id}` | 영상 상세, codec, 재생 상태, Scene 개수 |
+| POST | `/api/movies/{id}/playback/prepare` | 원본을 브라우저에서 직접 재생할 수 있는지 판정 |
+| GET | `/api/movies/{id}/stream` | 원본 영상 Range 스트리밍 |
+| GET | `/api/movies/{id}/thumbnail` | WebP 썸네일 |
+| GET | `/api/movies/{id}/scenes` | 영상의 Scene 목록 (timestamp 오름차순) |
+| POST | `/api/movies/{id}/scenes` | Scene 등록 후 분석 예약 (201, 중복이면 409) |
+| GET | `/api/scenes` | 검색어가 없으면 최신순, `query`가 있으면 CLIP 유사도순 |
+| GET | `/api/scenes/{id}` | Scene 상세 (영상 제목 포함) |
+| DELETE | `/api/scenes/{id}` | Scene과 snapshot 삭제 (204) |
+| GET | `/api/scenes/{id}/similar` | 비슷한 Scene 목록 (`available` 포함) |
+| GET | `/api/scenes/{id}/snapshot` | Scene WebP snapshot |
+| POST | `/api/scenes/{id}/retry` | 실패한 분석 다시 예약 |
 
-## 영상 재생과 Scene 분석
+## 재생과 Scene 단축키
 
-- MP4/M4V H.264와 VP8·VP9 WebM은 원본을 직접 재생합니다.
-- 다른 확장자나 비호환 codec은 변환하지 않고 상세 페이지에서 재생을 차단합니다.
-- 이전에 등록된 AVI·MKV 레코드와 기존 `data/playback` 캐시는 삭제하지 않지만 재생에는 사용하지 않습니다.
-- 플레이어에서 `←`/`→`는 10초, `Ctrl` 조합은 1분, `Shift` 조합은 5분 이동합니다. `Shift`와 `Ctrl`이 함께 눌리면 5분이 우선합니다.
-- `S` 또는 **현재 위치에 Scene 생성** 버튼으로 Scene을 등록합니다. snapshot을 먼저 표시하고 CLIP·WD14 분석은 단일 백그라운드 작업열에서 이어서 실행됩니다.
-- 한 Scene은 하나의 GP Station job session에서 `ai.clip.image` 다음 `ai.wd14.tags` 순서로 처리합니다. 두 결과가 모두 유효할 때만 embedding·prompt·keyword를 함께 저장합니다.
-- WebP snapshot attachment의 상한은 20 MiB입니다. 모델 다운로드와 cache는 Keyframe의 `data/models`가 아니라 AI slave 호스트에 생성됩니다. 기존 Keyframe `data/models`가 있더라도 자동 삭제하지 않습니다.
-
-## Scene 탐색과 검색
-
-- 사이드바의 **Scene 탐색**에서 모든 Scene을 최신순 tile grid로 확인할 수 있습니다.
-- 목록과 검색 결과는 48개씩 불러오며 페이지 하단에 도달하면 다음 결과를 자동으로 추가합니다.
-- Scene tile을 선택하면 상세 페이지로 이동하고 원본 영상을 해당 Scene timestamp부터 자동 재생합니다. 브라우저의 자동 재생 정책에 의해 차단되면 같은 위치에서 직접 재생할 수 있습니다.
-- Scene 상세에서도 `S` 또는 생성 버튼으로 현재 재생 위치의 Scene을 등록할 수 있으며, 생성 후에도 현재 상세 페이지와 재생 위치를 유지합니다.
-- 검색어를 전송하면 기존 OpenAI CLIP `ViT-L/14`의 텍스트 임베딩을 생성하고, 같은 모델로 분석 완료된 Scene 이미지 임베딩과 cosine similarity를 비교해 가까운 순서로 정렬합니다.
-- 상세 페이지의 **비슷한 Scene**은 현재 Scene의 이미지 embedding과 다른 Scene 이미지 embedding을 직접 비교하며, 현재 Scene을 제외한 전체 라이브러리 결과를 24개씩 자동으로 추가합니다.
-- 원본 OpenAI CLIP 특성상 영어 검색어를 사용할 때 더 안정적인 검색 품질을 기대할 수 있습니다.
-- 아직 분석 중이거나 실패했거나 호환되는 CLIP embedding이 없는 Scene은 기본 목록에는 표시되지만 검색 결과에서는 제외됩니다.
-
-## 이미지 생성
-
-- 사이드바의 **이미지 생성**에서 영상을 선택한 뒤 player와 SDXL 설정 패널을 사용합니다.
-- player의 **이미지 생성** 버튼은 현재 timestamp에서 임시 WebP snapshot을 만들고, GP Station의 `ai.wd14.tags`로 prompt를 추출한 다음 `ai.sdxl.i2i`에 전달합니다.
-- WD14, SDXL i2i, 결과별 `ai.clip.image` 호출은 하나의 WebRTC job session에서 순차 실행해 연결 비용을 줄입니다.
-- 생성 개수는 최대 8장이며 모델, negative prompt, seed, step, CFG, strength, 출력 크기와 PNG/JPG 형식을 설정할 수 있습니다.
-- 요청은 생성 완료까지 기다리며 모든 결과의 파일·embedding 저장이 성공한 경우에만 Image 피드에 반영됩니다.
-
-## GP Station Python SDK vendoring
-
-Keyframe은 외부 checkout을 런타임 path로 참조하지 않고 `vendor/gpstation-master-python`의 editable dependency를 사용합니다. 현재 사본은 upstream `D:\dev\gpstation\app_v1\sdk\master\python`의 GP Station commit `bf76e6c1e3a9a0bbdc5dcb6ffb192c18ebf1e67a`에서 tracked 파일 19개를 복제한 것입니다.
-
-SDK 수정은 먼저 GP Station upstream에 반영하고 commit한 뒤, `gpstation_master/`, `tests/`, `README.md`, `pyproject.toml`, `poetry.lock`의 tracked 파일을 이 vendor 디렉터리에 다시 복제합니다. `.venv`, `dist`, pytest/cache 파일은 복제하지 않습니다.
+- MP4/M4V(H.264)와 WebM(VP8·VP9)만 원본 그대로 재생합니다. 그 밖의 형식은 변환하지 않고 재생을 막습니다.
+- 위치 이동
+  - `←` / `→`: 10초
+  - `Ctrl`과 함께: 1분
+  - `Shift`와 함께: 5분. `Ctrl`과 `Shift`를 함께 누르면 5분이 우선합니다.
+- 기타 단축키
+  - `S`: 현재 위치에 Scene 생성
+  - `/`: 검색창으로 이동
+- Scene 상세는 해당 위치부터 자동 재생합니다. 브라우저가 자동 재생을 막아도 위치는 맞춰져 있습니다.
+- 검색은 Scene 이미지와 검색어 사이의 cosine 유사도로 순위를 매기며, 영어 검색어가 가장 정확합니다. 분석이 끝난 Scene만 검색 결과에 나옵니다.
 
 ## 테스트와 빌드
 
 ```powershell
 cd E:\nemogrim\apps\keyframe\api
-poetry run pytest
-poetry check --lock
+poetry run pytest                       # 모델 없이 대체 객체로 실행
+$env:KEYFRAME_RUN_MODEL_TESTS="1"; poetry run pytest -m models   # 실제 모델 테스트 (선택)
 
-cd E:\nemogrim\apps\keyframe\vendor\gpstation-master-python
-poetry install
-poetry run pytest
-poetry check --lock
-
-cd E:\nemogrim\apps\keyframe\ui
-corepack pnpm test
-corepack pnpm typecheck
-corepack pnpm lint
-corepack pnpm build
+cd ..\ui
+npm test
+npm run typecheck
+npm run lint
+npm run build
 ```
-
-## 향후 기능
-
-- Scene 연속 재생
-- Scene 수정·삭제와 batch 생성
-- 재생 기록과 통계
-
-원본 파일이 이동하거나 삭제되어도 현재 DB 레코드는 유지됩니다. 경로 재연결과 삭제 기능은 후속 범위입니다.

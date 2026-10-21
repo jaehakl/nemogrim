@@ -1,147 +1,82 @@
-import { act, render, screen, waitFor } from '@testing-library/react'
+import { act, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter } from 'react-router-dom'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-import App from '../App'
-import type { ExplorerScene, ScenePage } from '../api/scenes'
+import { describe, expect, it, vi } from 'vitest'
+import { getAiStatus } from '../api/ai'
+import { ApiError } from '../api/client'
 import { getScenes } from '../api/scenes'
+import { aiStatus, explorerScene, scenePage } from './fixtures'
+import { renderApp, triggerIntersection } from './render'
 
-vi.mock('../api/movies', () => ({
-  getMovies: vi.fn(),
-  getMovieStatuses: vi.fn(),
-  importMovieFiles: vi.fn(),
-  importMovieFolder: vi.fn(),
-  getMovieDetail: vi.fn(),
-  prepareMoviePlayback: vi.fn(),
-}))
-
-vi.mock('../api/scenes', () => ({
-  getScenes: vi.fn(),
-  getScene: vi.fn(),
-  getSimilarScenes: vi.fn(),
-  getMovieScenes: vi.fn(),
-  createMovieScene: vi.fn(),
-  deleteScene: vi.fn(),
-  retryScene: vi.fn(),
-}))
+vi.mock('../api/movies', () => ({ getMovies: vi.fn(), importMovies: vi.fn(), getPlayableMovie: vi.fn() }))
+vi.mock('../api/scenes', () => ({ getScenes: vi.fn() }))
 
 const mockedGetScenes = vi.mocked(getScenes)
 
-function scene(overrides: Partial<ExplorerScene> = {}): ExplorerScene {
-  return {
-    id: 1,
-    movie_file_id: 7,
-    movie_title: 'Scene 테스트 영상',
-    timestamp_ms: 12_345,
-    prompt: 'blue sky, ocean',
-    keywords: ['blue sky', 'ocean'],
-    embedding_model: 'OpenAI CLIP ViT-L/14',
-    prompt_model: 'SmilingWolf/wd-eva02-large-tagger-v3',
-    analysis_status: 'ready',
-    analysis_error: null,
-    snapshot_url: '/api/scenes/1/snapshot',
-    created_at: '2026-07-15T03:00:00Z',
-    updated_at: '2026-07-15T03:00:00Z',
-    ...overrides,
-  }
-}
+describe('Scene 탐색', () => {
+  it('lists the latest Scenes and links tiles to their detail page', async () => {
+    mockedGetScenes.mockResolvedValue(scenePage([explorerScene({ id: 5, movie_title: '최신 영상' })]))
+    renderApp('/scenes')
 
-function page(items: ExplorerScene[] = [], overrides: Partial<ScenePage> = {}): ScenePage {
-  return {
-    items,
-    total: items.length,
-    next_offset: null,
-    has_more: false,
-    ...overrides,
-  }
-}
-
-function renderExplorer() {
-  return render(<MemoryRouter initialEntries={['/scenes']}><App /></MemoryRouter>)
-}
-
-describe('Scene explorer', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    mockedGetScenes.mockResolvedValue(page())
+    const nav = screen.getByRole('navigation', { name: '주요 메뉴' })
+    expect(within(nav).getByRole('link', { name: 'Scene 탐색' })).toHaveAttribute('aria-current', 'page')
+    expect(await screen.findByRole('link', { name: /최신 영상 00:01\.500 Scene 상세/ })).toHaveAttribute('href', '/scenes/5')
+    expect(screen.getByText('1개의 Scene')).toBeInTheDocument()
+    expect(mockedGetScenes).toHaveBeenCalledWith('', null)
   })
 
-  it('opens from the active sidebar route and links Scene tiles to their detail page', async () => {
-    mockedGetScenes.mockResolvedValueOnce(page([scene()]))
-    renderExplorer()
+  it('searches from the URL query and hides similarity scores', async () => {
+    mockedGetScenes.mockResolvedValue(scenePage([explorerScene({ id: 9, movie_title: '노을 영상' })], { total: 1 }))
+    renderApp('/scenes?q=sunset%20over%20the%20ocean')
 
-    expect(await screen.findByRole('heading', { name: 'Scene 탐색' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Scene 탐색' })).toHaveClass('nav-item--active')
-    expect(await screen.findByText('Scene 테스트 영상')).toBeInTheDocument()
-    expect(screen.getByText('00:12.345')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /Scene 테스트 영상/ })).toHaveAttribute('href', '/scenes/1')
-    expect(mockedGetScenes).toHaveBeenCalledWith('', 0)
+    expect(await screen.findByRole('heading', { name: '“sunset over the ocean”' })).toBeInTheDocument()
+    expect(await screen.findByText('1개의 Scene 검색됨')).toBeInTheDocument()
+    expect(mockedGetScenes).toHaveBeenCalledWith('sunset over the ocean', null)
+    expect(screen.getByRole('searchbox', { name: 'Scene 검색' })).toHaveValue('sunset over the ocean')
+    expect(screen.queryByText(/similarity|유사도 점수/i)).not.toBeInTheDocument()
   })
 
-  it('searches only when the form is submitted and hides similarity scores', async () => {
+  it('runs a new search from the global search bar and clears it', async () => {
     const user = userEvent.setup()
-    mockedGetScenes
-      .mockResolvedValueOnce(page([scene()]))
-      .mockResolvedValueOnce(page([scene({ id: 2, prompt: 'sunset over the ocean' })]))
-    renderExplorer()
-    await screen.findByText('Scene 테스트 영상')
-
-    await user.type(screen.getByLabelText('Scene 검색어'), '  sunset  ')
-    expect(mockedGetScenes).toHaveBeenCalledTimes(1)
-    await user.click(screen.getByRole('button', { name: '검색' }))
-
-    await waitFor(() => expect(mockedGetScenes).toHaveBeenLastCalledWith('sunset', 0))
-    expect(await screen.findByText('“sunset” 검색 결과')).toBeInTheDocument()
-    expect(screen.queryByText(/similarity|일치도/i)).not.toBeInTheDocument()
-  })
-
-  it('loads the next offset page when the sentinel intersects', async () => {
-    mockedGetScenes
-      .mockResolvedValueOnce(page([scene({ id: 2 })], { total: 2, next_offset: 48, has_more: true }))
-      .mockResolvedValueOnce(page([scene({ id: 1, movie_title: '이전 Scene 영상' })], { total: 2 }))
-    renderExplorer()
-    await screen.findByText('Scene 테스트 영상')
-
-    act(() => globalThis.__latestIntersectionObserver?.trigger())
-    expect(await screen.findByText('이전 Scene 영상')).toBeInTheDocument()
-    expect(mockedGetScenes).toHaveBeenLastCalledWith('', 48)
-  })
-
-  it('clears a submitted search and reloads the default list', async () => {
-    const user = userEvent.setup()
-    mockedGetScenes
-      .mockResolvedValueOnce(page())
-      .mockResolvedValueOnce(page())
-      .mockResolvedValueOnce(page([scene()]))
-    renderExplorer()
+    mockedGetScenes.mockResolvedValue(scenePage([]))
+    renderApp('/scenes')
     await screen.findByText('아직 생성된 Scene이 없습니다')
 
-    await user.type(screen.getByLabelText('Scene 검색어'), 'ocean')
-    await user.click(screen.getByRole('button', { name: '검색' }))
+    await user.type(screen.getByRole('searchbox', { name: 'Scene 검색' }), '  rainy street  {Enter}')
     expect(await screen.findByText('일치하는 Scene이 없습니다')).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: '검색 초기화' }))
+    expect(mockedGetScenes).toHaveBeenLastCalledWith('rainy street', null)
 
-    expect(await screen.findByText('Scene 테스트 영상')).toBeInTheDocument()
-    expect(screen.getByLabelText('Scene 검색어')).toHaveValue('')
-    expect(mockedGetScenes).toHaveBeenLastCalledWith('', 0)
+    await user.click(screen.getByRole('link', { name: /검색 초기화/ }))
+    expect(await screen.findByText('아직 생성된 Scene이 없습니다')).toBeInTheDocument()
+    expect(screen.getByTestId('location')).toHaveTextContent(/^\/scenes$/)
   })
 
-  it('shows search errors and retries the submitted query', async () => {
-    const user = userEvent.setup()
+  it('loads the next cursor page when the sentinel intersects', async () => {
     mockedGetScenes
-      .mockResolvedValueOnce(page())
-      .mockRejectedValueOnce(new Error('CLIP model load failure'))
-      .mockResolvedValueOnce(page([scene()]))
-    renderExplorer()
-    await screen.findByText('아직 생성된 Scene이 없습니다')
+      .mockResolvedValueOnce(scenePage([explorerScene({ id: 50, movie_title: '첫 Scene' })], { total: 2, next_cursor: 50 }))
+      .mockResolvedValueOnce(scenePage([explorerScene({ id: 49, movie_title: '다음 Scene' })], { total: 2 }))
+    renderApp('/scenes')
+    await screen.findByText('첫 Scene')
 
-    await user.type(screen.getByLabelText('Scene 검색어'), 'ocean')
-    await user.click(screen.getByRole('button', { name: '검색' }))
-    expect(await screen.findByText('Scene 검색을 완료하지 못했습니다')).toBeInTheDocument()
-    expect(screen.getByText('CLIP model load failure')).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: '다시 시도' }))
+    act(() => triggerIntersection())
 
-    expect(await screen.findByText('Scene 테스트 영상')).toBeInTheDocument()
-    expect(mockedGetScenes).toHaveBeenLastCalledWith('ocean', 0)
+    expect(await screen.findByText('다음 Scene')).toBeInTheDocument()
+    expect(mockedGetScenes).toHaveBeenLastCalledWith('', 50)
+  })
+
+  it('explains model warm-up on the first search and reports search errors with retry', async () => {
+    const user = userEvent.setup()
+    vi.mocked(getAiStatus).mockResolvedValue(aiStatus({ state: 'not_loaded' }))
+    let rejectSearch: ((error: Error) => void) | undefined
+    mockedGetScenes
+      .mockImplementationOnce(() => new Promise((_resolve, reject) => { rejectSearch = reject }))
+      .mockResolvedValue(scenePage([explorerScene({ movie_title: '재시도 결과' })]))
+    renderApp('/scenes?q=blue%20sky')
+
+    expect(await screen.findByText('검색 모델을 준비하고 있습니다')).toBeInTheDocument()
+    await act(async () => { rejectSearch?.(new ApiError(503, 'AI 모델을 불러오지 못했습니다')) })
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('AI 모델을 불러오지 못했습니다')
+    await user.click(screen.getByRole('button', { name: /다시 시도/ }))
+    expect(await screen.findByText('재시도 결과')).toBeInTheDocument()
   })
 })

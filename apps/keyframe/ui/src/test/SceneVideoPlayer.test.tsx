@@ -2,7 +2,7 @@ import { createRef } from 'react'
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
-import { SceneVideoPlayer, type SceneVideoPlayerHandle } from '../components/scene/SceneVideoPlayer'
+import { SceneVideoPlayer, type SceneVideoPlayerHandle } from '../components/player/SceneVideoPlayer'
 
 describe('SceneVideoPlayer', () => {
   it('applies the start timestamp and reapplies it for the same stream URL', async () => {

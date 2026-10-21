@@ -1,21 +1,33 @@
 [tool.poetry]
 name = "nemogrim-keyframe-api"
-version = "0.1.0"
+version = "0.2.0"
 description = "Video scene indexing API for Nemogrim Keyframe"
 authors = ["Jaehak Lee <leejaehak87@gmail.com>"]
 package-mode = false
 
 [tool.poetry.dependencies]
-python = ">=3.11,<3.14"
+python = ">=3.12,<3.14"
 fastapi = "^0.115.14"
 sqlalchemy = "^2.0.41"
 uvicorn = { version = "^0.34.3", extras = ["standard"] }
 pydantic-settings = "^2.10.1"
-gpstation-v1-master-python-sdk = { path = "../vendor/gpstation-master-python", develop = true }
+numpy = ">=2.1"
+pillow = ">=11.0"
+torch = { version = "~2.7.0", source = "pytorch-cu128" }
+torchvision = { version = "~0.22.0", source = "pytorch-cu128" }
+open-clip-torch = ">=2.32"
+timm = "^1.0.28"
+huggingface-hub = ">=0.33,<2"
+safetensors = ">=0.4"
 
 [tool.poetry.group.dev.dependencies]
 httpx = "^0.28.1"
 pytest = "^8.4.1"
+
+[[tool.poetry.source]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+priority = "explicit"
 
 [build-system]
 requires = ["poetry-core"]
@@ -23,4 +35,5 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-q"
+addopts = "-q -m 'not models'"
+markers = ["models: 실제 AI 모델을 로드하는 테스트 (KEYFRAME_RUN_MODEL_TESTS=1 필요, 최초 실행 시 약 3GB 다운로드)"]

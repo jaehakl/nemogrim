@@ -1,13 +1,14 @@
+"""영상 메타데이터와 Scene 분석을 처리하는 단일 워커 백그라운드 큐."""
+
 from __future__ import annotations
 
 import threading
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
-from typing import Callable
 
 from fastapi import FastAPI
 
 from .media_processing import process_movie_metadata, reset_interrupted_jobs
-from .playback import normalize_playback_states
 from .scene_processing import process_scene, reset_scene_jobs
 
 
@@ -52,7 +53,6 @@ def start_media_queue(app: FastAPI) -> None:
     )
     app.state.queue_lock = threading.Lock()
     app.state.queued_tasks = set()
-    normalize_playback_states()
     schedule_scenes(app, reset_scene_jobs())
     schedule_movies(app, reset_interrupted_jobs())
 

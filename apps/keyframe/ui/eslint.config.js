@@ -36,4 +36,9 @@ export default [
       ],
     },
   },
+  {
+    // 테스트 헬퍼는 HMR 대상이 아니다.
+    files: ['src/test/**/*.{ts,tsx}'],
+    rules: { 'react-refresh/only-export-components': 'off' },
+  },
 ]

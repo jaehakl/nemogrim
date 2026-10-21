@@ -8,12 +8,11 @@ from typing import Iterable
 
 from sqlalchemy import select
 
-from ..db import MovieFile, SessionLocal
+from ..db import MovieFile, new_session
+from ..schemas import ImportResultOut
 
 
-SUPPORTED_EXTENSIONS = frozenset(
-    {".mp4", ".m4v", ".webm"}
-)
+SUPPORTED_EXTENSIONS = frozenset({".mp4", ".m4v", ".webm"})
 _IMPORT_LOCK = threading.Lock()
 
 
@@ -48,7 +47,7 @@ def scan_video_folder(folder: str | os.PathLike[str]) -> tuple[list[str], list[s
 def register_movie_paths(
     paths: Iterable[str | os.PathLike[str]],
     initial_failures: Iterable[str] = (),
-) -> dict:
+) -> ImportResultOut:
     path_list = [os.fspath(path) for path in paths]
     failures = list(initial_failures)
     duplicate_count = 0
@@ -82,7 +81,7 @@ def register_movie_paths(
             failures.append(f"{raw_path}: {error}")
 
     added_ids: list[int] = []
-    with _IMPORT_LOCK, SessionLocal() as database:
+    with _IMPORT_LOCK, new_session() as database:
         normalized_paths = list(candidates)
         existing: set[str] = set()
         for start in range(0, len(normalized_paths), 500):
@@ -105,24 +104,12 @@ def register_movie_paths(
             added_ids.append(movie.id)
         database.commit()
 
-    return {
-        "cancelled": False,
-        "selected_count": len(path_list),
-        "added_count": len(added_ids),
-        "duplicate_count": duplicate_count,
-        "failed_count": len(failures),
-        "added_ids": added_ids,
-        "failures": failures[:20],
-    }
-
-
-def empty_import_result(cancelled: bool = True) -> dict:
-    return {
-        "cancelled": cancelled,
-        "selected_count": 0,
-        "added_count": 0,
-        "duplicate_count": 0,
-        "failed_count": 0,
-        "added_ids": [],
-        "failures": [],
-    }
+    return ImportResultOut(
+        cancelled=False,
+        selected_count=len(path_list),
+        added_count=len(added_ids),
+        duplicate_count=duplicate_count,
+        failed_count=len(failures),
+        added_ids=added_ids,
+        failures=failures[:20],
+    )

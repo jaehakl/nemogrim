@@ -4,25 +4,24 @@ from pathlib import Path
 
 from sqlalchemy import select
 
-from ..db import DATA_DIR, SCENE_DIR, MovieFile, Scene, SessionLocal, utc_now
-from .media_processing import _run_command
-from .scene_models import CLIP_MODEL_NAME, WD14_MODEL_REPO, analyze_scene
-
-
-ACTIVE_SCENE_STATUSES = ("pending", "processing")
+from ..ai.runtime import get_ai_runtime
+from ..ai.types import CLIP_MODEL_NAME, WD14_MODEL_REPO, SceneAnalysis
+from ..db import ACTIVE_JOB_STATUSES, MovieFile, Scene, new_session
+from ..paths import resolve_data_path, scene_dir, to_data_relative
+from .ffmpeg import extract_frame_webp
+from .vector_index import scene_index
 
 
 def process_scene(scene_id: int) -> None:
-    with SessionLocal() as database:
+    with new_session() as database:
         scene = database.get(Scene, scene_id)
-        if scene is None or scene.analysis_status not in ACTIVE_SCENE_STATUSES:
+        if scene is None or scene.analysis_status not in ACTIVE_JOB_STATUSES:
             return
         movie = database.get(MovieFile, scene.movie_file_id)
         if movie is None:
             return
         scene.analysis_status = "processing"
         scene.analysis_error = None
-        scene.updated_at = utc_now()
         source_path = movie.path
         movie_id = movie.id
         timestamp_ms = scene.timestamp_ms
@@ -30,37 +29,33 @@ def process_scene(scene_id: int) -> None:
         database.commit()
 
     error_message: str | None = None
+    analysis: SceneAnalysis | None = None
     snapshot: Path | None = None
     try:
-        snapshot = (DATA_DIR / snapshot_path).resolve() if snapshot_path else None
-        if (
-            snapshot is None
-            or not snapshot.is_relative_to(DATA_DIR.resolve())
-            or not snapshot.is_file()
-        ):
+        snapshot = resolve_data_path(snapshot_path)
+        if snapshot is None:
             snapshot = create_scene_snapshot(source_path, movie_id, scene_id, timestamp_ms)
-            with SessionLocal() as database:
+            with new_session() as database:
                 scene = database.get(Scene, scene_id)
                 if scene is None:
                     snapshot.unlink(missing_ok=True)
                     return
-                scene.snapshot_path = snapshot.relative_to(DATA_DIR).as_posix()
-                scene.updated_at = utc_now()
+                scene.snapshot_path = to_data_relative(snapshot)
                 database.commit()
 
-        analysis = analyze_scene(snapshot)
+        analysis = get_ai_runtime().analyze_image(snapshot)
     except Exception as error:
         error_message = str(error) or error.__class__.__name__
 
-    with SessionLocal() as database:
+    with new_session() as database:
         scene = database.get(Scene, scene_id)
         if scene is None:
-            if snapshot and snapshot.is_relative_to(SCENE_DIR.resolve()):
+            if snapshot and snapshot.is_relative_to(scene_dir().resolve()):
                 snapshot.unlink(missing_ok=True)
             return
-        if error_message:
+        if analysis is None:
             scene.analysis_status = "failed"
-            scene.analysis_error = error_message[-2000:]
+            scene.analysis_error = (error_message or "알 수 없는 오류")[-2000:]
         else:
             scene.embedding = analysis.embedding
             scene.embedding_model = CLIP_MODEL_NAME
@@ -69,8 +64,8 @@ def process_scene(scene_id: int) -> None:
             scene.prompt_model = WD14_MODEL_REPO
             scene.analysis_status = "ready"
             scene.analysis_error = None
-        scene.updated_at = utc_now()
         database.commit()
+    scene_index.invalidate()
 
 
 def create_scene_snapshot(
@@ -79,43 +74,26 @@ def create_scene_snapshot(
     scene_id: int,
     timestamp_ms: int,
 ) -> Path:
-    directory = SCENE_DIR / str(movie_id)
-    directory.mkdir(parents=True, exist_ok=True)
-    final_path = directory / f"{scene_id}.webp"
-    temporary_path = directory / f"{scene_id}.tmp.webp"
-    temporary_path.unlink(missing_ok=True)
-    try:
-        _run_command(
-            [
-                "ffmpeg", "-hide_banner", "-loglevel", "error", "-ss",
-                f"{timestamp_ms / 1000:.3f}", "-i", source_path, "-map", "0:v:0",
-                "-frames:v", "1", "-vf",
-                "scale=1280:-2:force_original_aspect_ratio=decrease",
-                "-c:v", "libwebp", "-q:v", "90", "-y", str(temporary_path),
-            ],
-            timeout=180,
-        )
-        if not temporary_path.is_file() or temporary_path.stat().st_size == 0:
-            raise RuntimeError("FFmpeg가 Scene snapshot을 만들지 못했습니다")
-        temporary_path.replace(final_path)
-        return final_path
-    except Exception:
-        temporary_path.unlink(missing_ok=True)
-        raise
+    return extract_frame_webp(
+        source_path,
+        timestamp_ms / 1000,
+        scene_dir(movie_id) / f"{scene_id}.webp",
+        max_width=1280,
+        quality=90,
+        timeout=180,
+    )
 
 
 def reset_scene_jobs() -> list[int]:
-    with SessionLocal() as database:
-        processing = database.scalars(
-            select(Scene).where(Scene.analysis_status == "processing")
-        ).all()
-        for scene in processing:
+    with new_session() as database:
+        for scene in database.scalars(select(Scene).where(Scene.analysis_status == "processing")):
             scene.analysis_status = "pending"
             scene.analysis_error = None
-            scene.updated_at = utc_now()
         database.flush()
-        ids = list(database.scalars(
-            select(Scene.id).where(Scene.analysis_status == "pending").order_by(Scene.id)
-        ).all())
+        pending_ids = list(
+            database.scalars(
+                select(Scene.id).where(Scene.analysis_status == "pending").order_by(Scene.id)
+            )
+        )
         database.commit()
-        return ids
+        return pending_ids

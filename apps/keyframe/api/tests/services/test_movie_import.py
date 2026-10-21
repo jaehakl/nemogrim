@@ -12,16 +12,16 @@ def test_registers_new_paths_and_skips_duplicates(session_factory, tmp_path):
     unsupported = tmp_path / "notes.txt"
     unsupported.write_text("not a video", encoding="utf-8")
     result = register_movie_paths([video, video, unsupported])
-    assert (result["selected_count"], result["added_count"]) == (3, 1)
-    assert (result["duplicate_count"], result["failed_count"]) == (1, 1)
+    assert (result.selected_count, result.added_count) == (3, 1)
+    assert (result.duplicate_count, result.failed_count) == (1, 1)
 
     with session_factory() as database:
         movie = database.scalar(select(MovieFile))
         assert (movie.title, movie.ext, movie.path) == ("한글 영상", ".mp4", str(video.resolve()))
 
     repeated = register_movie_paths([video])
-    assert repeated["added_count"] == 0
-    assert repeated["duplicate_count"] == 1
+    assert repeated.added_count == 0
+    assert repeated.duplicate_count == 1
 
 
 def test_same_filename_in_different_folders_is_not_duplicate(session_factory, tmp_path):
@@ -30,7 +30,7 @@ def test_same_filename_in_different_folders_is_not_duplicate(session_factory, tm
         path.parent.mkdir()
         path.write_bytes(b"video")
     result = register_movie_paths(paths)
-    assert result["added_count"] == 2
+    assert result.added_count == 2
     with session_factory() as database:
         assert database.scalar(select(func.count(MovieFile.id))) == 2
 
@@ -63,5 +63,5 @@ def test_rejects_old_non_playable_extensions(session_factory, tmp_path):
         path.write_bytes(b"video")
         paths.append(path)
     result = register_movie_paths(paths)
-    assert result["added_count"] == 0
-    assert result["failed_count"] == 5
+    assert result.added_count == 0
+    assert result.failed_count == 5

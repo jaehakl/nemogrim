@@ -5,7 +5,7 @@ import pytest
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 
-from app.db import Image, MovieFile, Scene
+from app.db import MovieFile, Scene
 from app.services.movie_import import normalize_path
 
 
@@ -27,12 +27,12 @@ def test_scene_timestamp_is_unique_and_cascades_on_delete(session_factory, tmp_p
         movie = make_movie(str(tmp_path / "movie.mp4"))
         database.add(movie)
         database.flush()
-        database.add(Scene(movie_file_id=movie.id, timestamp_ms=1500, play_count=0))
+        database.add(Scene(movie_file_id=movie.id, timestamp_ms=1500))
         database.commit()
         movie_id = movie.id
 
     with session_factory() as database:
-        database.add(Scene(movie_file_id=movie_id, timestamp_ms=1500, play_count=0))
+        database.add(Scene(movie_file_id=movie_id, timestamp_ms=1500))
         with pytest.raises(IntegrityError):
             database.commit()
         database.rollback()
@@ -43,21 +43,9 @@ def test_scene_timestamp_is_unique_and_cascades_on_delete(session_factory, tmp_p
         assert database.scalar(select(func.count(Scene.id))) == 0
 
 
-def test_image_persists_requested_columns(session_factory):
-    embedding = b"\x00\x01\x02\x03"
+@pytest.mark.parametrize("status", ["pending", "processing", "ready"])
+def test_legacy_playback_statuses_are_rejected(session_factory, tmp_path, status):
     with session_factory() as database:
-        image = Image(
-            file_path="scenes/1/1.webp",
-            prompt="blue sky",
-            embedding=embedding,
-        )
-        database.add(image)
-        database.commit()
-        image_id = image.id
-
-    with session_factory() as database:
-        image = database.get(Image, image_id)
-        assert image is not None
-        assert image.file_path == "scenes/1/1.webp"
-        assert image.prompt == "blue sky"
-        assert image.embedding == embedding
+        database.add(make_movie(str(tmp_path / "movie.mp4"), playback_status=status))
+        with pytest.raises(IntegrityError):
+            database.commit()

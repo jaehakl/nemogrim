@@ -1,46 +1,59 @@
-import { FiBarChart2, FiFilm, FiGrid, FiHardDrive, FiImage } from 'react-icons/fi'
-import { NavLink, Outlet } from 'react-router-dom'
-import './AppLayout.css'
+import { useCallback, useEffect, useState } from 'react'
+import { Outlet, useLocation } from 'react-router-dom'
+import { Sidebar } from './Sidebar'
+import { TopBar } from './TopBar'
+import './layout.css'
+
+const COLLAPSED_STORAGE_KEY = 'keyframe.sidebar.collapsed'
+
+function readCollapsed(): boolean {
+  try {
+    return window.localStorage.getItem(COLLAPSED_STORAGE_KEY) === '1'
+  } catch {
+    return false
+  }
+}
 
 export function AppLayout() {
+  const [collapsed, setCollapsed] = useState(readCollapsed)
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const location = useLocation()
+
+  const toggleCollapsed = useCallback(() => {
+    setCollapsed((current) => {
+      const next = !current
+      try {
+        window.localStorage.setItem(COLLAPSED_STORAGE_KEY, next ? '1' : '0')
+      } catch {
+        // 저장소를 쓸 수 없으면 이번 세션에서만 유지한다.
+      }
+      return next
+    })
+  }, [])
+
+  // 모바일 drawer는 페이지를 이동하면 닫는다.
+  useEffect(() => { setDrawerOpen(false) }, [location.pathname])
+
+  useEffect(() => {
+    if (!drawerOpen) return
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === 'Escape') setDrawerOpen(false) }
+    window.addEventListener('keydown', closeOnEscape)
+    return () => window.removeEventListener('keydown', closeOnEscape)
+  }, [drawerOpen])
+
   return (
-    <div className="app-shell">
-      <aside className="sidebar">
-        <div className="brand">
-          <span className="brand__mark" aria-hidden="true"><FiFilm /></span>
-          <span><strong>Keyframe</strong><small>Scene workspace</small></span>
-        </div>
-
-        <nav className="sidebar__nav" aria-label="주요 메뉴">
-          <NavLink
-            to="/scenes"
-            className={({ isActive }) => `nav-item${isActive ? ' nav-item--active' : ''}`}
-          >
-            <FiGrid aria-hidden="true" /><span>Scene 탐색</span>
-          </NavLink>
-          <NavLink
-            to="/movies"
-            className={({ isActive }) => `nav-item${isActive ? ' nav-item--active' : ''}`}
-          >
-            <FiFilm aria-hidden="true" /><span>영상 라이브러리</span>
-          </NavLink>
-          <NavLink
-            to="/images"
-            className={({ isActive }) => `nav-item${isActive ? ' nav-item--active' : ''}`}
-          >
-            <FiImage aria-hidden="true" /><span>이미지 생성</span>
-          </NavLink>
-          <button type="button" className="nav-item" disabled>
-            <FiBarChart2 aria-hidden="true" /><span>통계</span><small>준비 중</small>
-          </button>
-        </nav>
-
-        <div className="sidebar__footer">
-          <FiHardDrive aria-hidden="true" />
-          <span><strong>로컬 라이브러리</strong><small>원본 파일을 이동하지 않습니다</small></span>
-        </div>
-      </aside>
-      <main className="main-content"><Outlet /></main>
+    <div className={`app-shell${collapsed ? ' app-shell--collapsed' : ''}${drawerOpen ? ' app-shell--drawer-open' : ''}`}>
+      <a className="skip-link" href="#main-content">본문으로 건너뛰기</a>
+      <Sidebar collapsed={collapsed} onToggleCollapsed={toggleCollapsed} />
+      {drawerOpen ? (
+        <button type="button" className="app-shell__scrim" aria-label="메뉴 닫기" onClick={() => setDrawerOpen(false)} />
+      ) : null}
+      <div className="app-shell__main">
+        <TopBar drawerOpen={drawerOpen} onOpenDrawer={() => setDrawerOpen(true)} />
+        <main id="main-content" className="app-content" tabIndex={-1}>
+          <Outlet />
+        </main>
+      </div>
     </div>
   )
 }

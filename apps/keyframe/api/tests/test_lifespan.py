@@ -3,55 +3,67 @@ import asyncio
 import pytest
 
 from app import main
+from app.ai import runtime as ai_runtime
 
 
-def test_lifespan_validates_ai_before_queue_and_stops_queue_first(monkeypatch):
-    events = []
-    settings = object()
-    monkeypatch.setattr(main, "init_db", lambda: events.append("db"))
-    monkeypatch.setattr(main, "KeyframeSettings", lambda: settings)
-    monkeypatch.setattr(
-        main,
-        "start_scene_model_runtime",
-        lambda actual: events.append(("ai-start", actual)),
-    )
-    monkeypatch.setattr(main, "start_media_queue", lambda _app: events.append("queue-start"))
-    monkeypatch.setattr(main, "stop_media_queue", lambda _app: events.append("queue-stop"))
-    monkeypatch.setattr(main, "stop_scene_model_runtime", lambda: events.append("ai-stop"))
+class RecordingRuntime:
+    def __init__(self, events, settings):
+        self.events = events
+        events.append(("ai-create", settings))
 
+    def start(self):
+        self.events.append("ai-start")
+
+    def shutdown(self):
+        self.events.append("ai-shutdown")
+
+
+def run_lifespan(body=lambda: None):
     async def exercise():
         async with main.lifespan(main.app):
-            events.append("running")
+            body()
 
     asyncio.run(exercise())
+
+
+def test_lifespan_starts_ai_before_queue_and_stops_queue_first(monkeypatch):
+    events = []
+    monkeypatch.setattr(main, "init_db", lambda: events.append("db"))
+    monkeypatch.setattr(main, "AiRuntime", lambda settings: RecordingRuntime(events, settings))
+    monkeypatch.setattr(main, "start_media_queue", lambda _app: events.append("queue-start"))
+    monkeypatch.setattr(main, "stop_media_queue", lambda _app: events.append("queue-stop"))
+
+    def body():
+        events.append("running")
+        assert isinstance(ai_runtime.get_ai_runtime(), RecordingRuntime)
+
+    run_lifespan(body)
+
     assert events == [
         "db",
-        ("ai-start", settings),
+        ("ai-create", main.app.state.settings),
+        "ai-start",
         "queue-start",
         "running",
         "queue-stop",
-        "ai-stop",
+        "ai-shutdown",
     ]
+    with pytest.raises(Exception, match="시작되지 않았습니다"):
+        ai_runtime.get_ai_runtime()
 
 
-def test_lifespan_aborts_before_media_queue_when_ai_validation_fails(monkeypatch):
+def test_lifespan_shuts_down_ai_when_queue_fails_to_start(monkeypatch):
     events = []
-    monkeypatch.setattr(main, "init_db", lambda: events.append("db"))
-    monkeypatch.setattr(main, "KeyframeSettings", lambda: object())
+    monkeypatch.setattr(main, "init_db", lambda: None)
+    monkeypatch.setattr(main, "AiRuntime", lambda settings: RecordingRuntime(events, settings))
 
-    def fail_start(_settings):
-        events.append("ai-start")
-        raise RuntimeError("unauthorized")
+    def fail_queue(_app):
+        raise RuntimeError("queue failure")
 
-    monkeypatch.setattr(main, "start_scene_model_runtime", fail_start)
-    monkeypatch.setattr(main, "start_media_queue", lambda _app: events.append("queue-start"))
+    monkeypatch.setattr(main, "start_media_queue", fail_queue)
     monkeypatch.setattr(main, "stop_media_queue", lambda _app: events.append("queue-stop"))
-    monkeypatch.setattr(main, "stop_scene_model_runtime", lambda: events.append("ai-stop"))
 
-    async def exercise():
-        async with main.lifespan(main.app):
-            pass
-
-    with pytest.raises(RuntimeError, match="unauthorized"):
-        asyncio.run(exercise())
-    assert events == ["db", "ai-start"]
+    with pytest.raises(RuntimeError, match="queue failure"):
+        run_lifespan()
+    assert events[-1] == "ai-shutdown"
+    assert "queue-stop" not in events

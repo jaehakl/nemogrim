@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from pathlib import Path
 
 from sqlalchemy import (
     JSON,
     CheckConstraint,
     DateTime,
+    Engine,
     Float,
     ForeignKey,
     Index,
@@ -17,22 +17,28 @@ from sqlalchemy import (
     UniqueConstraint,
     create_engine,
     event,
+    inspect,
 )
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, sessionmaker
+from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship, sessionmaker
+
+from .paths import DATA_DIR, scene_dir, thumbnail_dir
 
 
-APP_ROOT = Path(__file__).resolve().parents[2]
-DATA_DIR = APP_ROOT / "data"
-THUMBNAIL_DIR = DATA_DIR / "thumbnails"
-SCENE_DIR = DATA_DIR / "scenes"
-IMAGE_DIR = DATA_DIR / "images"
+SCHEMA_VERSION = 2
 DATABASE_PATH = DATA_DIR / "keyframe.sqlite3"
-DATABASE_URL = f"sqlite:///{DATABASE_PATH.as_posix()}"
+
+JOB_STATUSES = ("pending", "processing", "ready", "failed")
+ACTIVE_JOB_STATUSES = ("pending", "processing")
+PLAYBACK_STATUSES = ("unprepared", "direct", "failed")
 
 
 def utc_now() -> datetime:
     """Return a naive UTC datetime for predictable SQLite storage."""
     return datetime.now(UTC).replace(tzinfo=None)
+
+
+def _in_check(column: str, values: tuple[str, ...]) -> str:
+    return f"{column} IN ({', '.join(repr(value) for value in values)})"
 
 
 class Base(DeclarativeBase):
@@ -43,15 +49,14 @@ class MovieFile(Base):
     __tablename__ = "movie_files"
     __table_args__ = (
         CheckConstraint(
-            "metadata_status IN ('pending', 'processing', 'ready', 'failed')",
+            _in_check("metadata_status", JOB_STATUSES),
             name="ck_movie_files_metadata_status",
         ),
         Index("ix_movie_files_status", "metadata_status"),
         CheckConstraint(
-            "playback_status IN ('unprepared', 'direct', 'pending', 'processing', 'ready', 'failed')",
+            _in_check("playback_status", PLAYBACK_STATUSES),
             name="ck_movie_files_playback_status",
         ),
-        Index("ix_movie_files_playback_status", "playback_status"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -73,14 +78,10 @@ class MovieFile(Base):
     playback_status: Mapped[str] = mapped_column(
         String(16), nullable=False, default="unprepared", server_default="unprepared"
     )
-    playback_path: Mapped[str | None] = mapped_column(Text)
     playback_error: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime,
-        nullable=False,
-        default=utc_now,
-        onupdate=utc_now,
+        DateTime, nullable=False, default=utc_now, onupdate=utc_now
     )
 
     scenes: Mapped[list["Scene"]] = relationship(
@@ -94,19 +95,16 @@ class Scene(Base):
     __tablename__ = "scenes"
     __table_args__ = (
         UniqueConstraint("movie_file_id", "timestamp_ms", name="uq_scenes_movie_timestamp"),
-        Index("ix_scenes_movie_timestamp", "movie_file_id", "timestamp_ms"),
-        Index("ix_scenes_play_count", "play_count"),
         CheckConstraint(
-            "analysis_status IN ('pending', 'processing', 'ready', 'failed')",
+            _in_check("analysis_status", JOB_STATUSES),
             name="ck_scenes_analysis_status",
         ),
-        Index("ix_scenes_analysis_status", "analysis_status"),
+        Index("ix_scenes_search", "analysis_status", "embedding_model"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     movie_file_id: Mapped[int] = mapped_column(
-        ForeignKey("movie_files.id", ondelete="CASCADE"),
-        nullable=False,
+        ForeignKey("movie_files.id", ondelete="CASCADE"), nullable=False
     )
     timestamp_ms: Mapped[int] = mapped_column(Integer, nullable=False)
     prompt: Mapped[str | None] = mapped_column(Text)
@@ -119,29 +117,16 @@ class Scene(Base):
         String(16), nullable=False, default="pending", server_default="pending"
     )
     analysis_error: Mapped[str | None] = mapped_column(Text)
-    play_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime,
-        nullable=False,
-        default=utc_now,
-        onupdate=utc_now,
+        DateTime, nullable=False, default=utc_now, onupdate=utc_now
     )
 
     movie_file: Mapped[MovieFile] = relationship(back_populates="scenes")
 
 
-class Image(Base):
-    __tablename__ = "images"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    file_path: Mapped[str] = mapped_column(Text, nullable=False)
-    prompt: Mapped[str | None] = mapped_column(Text)
-    embedding: Mapped[bytes | None] = mapped_column(LargeBinary)
-
-
 engine = create_engine(
-    DATABASE_URL,
+    f"sqlite:///{DATABASE_PATH.as_posix()}",
     connect_args={"check_same_thread": False, "timeout": 30},
 )
 
@@ -158,9 +143,27 @@ def configure_sqlite(connection, _connection_record) -> None:
 SessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
 
 
+def new_session() -> Session:
+    """호출 시점의 `SessionLocal`로 세션을 연다. 테스트는 `app.db.SessionLocal`만 바꾸면 된다."""
+    return SessionLocal()
+
+
+def ensure_schema(bind: Engine) -> None:
+    """빈 DB면 스키마를 만들고, 다른 버전의 DB면 기동을 중단한다. 마이그레이션은 하지 않는다."""
+    with bind.begin() as connection:
+        has_tables = bool(inspect(connection).get_table_names())
+        version = connection.exec_driver_sql("PRAGMA user_version").scalar()
+        if has_tables and version != SCHEMA_VERSION:
+            raise RuntimeError(
+                f"DB 스키마 버전(v{version})이 현재 버전(v{SCHEMA_VERSION})과 다릅니다. "
+                "data/keyframe.sqlite3* 파일을 백업한 뒤 삭제하고 다시 시작하세요."
+            )
+        Base.metadata.create_all(connection)
+        if version != SCHEMA_VERSION:
+            connection.exec_driver_sql(f"PRAGMA user_version = {SCHEMA_VERSION}")
+
+
 def init_db() -> None:
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-    THUMBNAIL_DIR.mkdir(parents=True, exist_ok=True)
-    SCENE_DIR.mkdir(parents=True, exist_ok=True)
-    IMAGE_DIR.mkdir(parents=True, exist_ok=True)
-    Base.metadata.create_all(bind=engine)
+    for directory in (DATA_DIR, thumbnail_dir(), scene_dir()):
+        directory.mkdir(parents=True, exist_ok=True)
+    ensure_schema(engine)

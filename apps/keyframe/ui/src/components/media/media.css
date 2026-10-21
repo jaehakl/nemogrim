@@ -1,0 +1,116 @@
+/* 포스터 카드 (영상, Scene 공용) ---------------------------------------- */
+.media-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+  border-radius: var(--radius-md);
+}
+.media-card__poster {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: 0 0 0 1px var(--color-border);
+  transition: box-shadow 180ms var(--ease), transform 180ms var(--ease);
+}
+.media-card__poster img { width: 100%; height: 100%; object-fit: cover; transition: transform 300ms var(--ease); }
+.media-card:hover .media-card__poster, .media-card:focus-visible .media-card__poster {
+  box-shadow: 0 0 0 2px var(--color-accent), var(--shadow-card);
+}
+.media-card:hover .media-card__poster img { transform: scale(1.04); }
+.media-card:focus-visible { box-shadow: none; }
+
+.media-card__placeholder {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  color: var(--color-text-subtle);
+  background: linear-gradient(145deg, var(--color-surface), var(--color-bg-elevated));
+}
+.media-card__placeholder svg { width: 26px; height: 26px; }
+
+.media-card__badge {
+  position: absolute;
+  bottom: var(--space-2);
+  padding: 2px 7px;
+  color: #fff;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.72);
+}
+.media-card__badge--start { left: var(--space-2); letter-spacing: 0.04em; }
+.media-card__badge--end { right: var(--space-2); }
+
+.media-card__body { display: grid; gap: 6px; padding: var(--space-3) 2px 0; min-width: 0; }
+.media-card__title, .media-card__eyebrow {
+  overflow: hidden;
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.media-card__eyebrow { color: var(--color-text-muted); font-size: var(--font-size-sm); font-weight: 600; }
+.media-card__meta { display: flex; align-items: center; gap: var(--space-2); color: var(--color-text-subtle); font-size: var(--font-size-sm); }
+.media-card__caption {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.media-card .status-badge { justify-self: start; }
+
+/* 영상 상세의 Scene 목록 항목 ------------------------------------------- */
+.scene-item {
+  display: grid;
+  grid-template-columns: 168px minmax(0, 1fr);
+  gap: var(--space-4);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+.scene-item--failed { border-color: rgba(240, 97, 109, 0.3); }
+.scene-item__play { padding: 0; border: 0; border-radius: var(--radius-sm); background: none; cursor: pointer; }
+.scene-item__thumb { position: relative; display: block; aspect-ratio: 16 / 9; overflow: hidden; border-radius: var(--radius-sm); background: var(--color-bg-elevated); }
+.scene-item__thumb img { width: 100%; height: 100%; object-fit: cover; }
+.scene-item__overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  transition: opacity 160ms var(--ease);
+}
+.scene-item__overlay svg { width: 26px; height: 26px; }
+.scene-item__play:hover .scene-item__overlay, .scene-item__play:focus-visible .scene-item__overlay { opacity: 1; }
+.scene-item__body { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+.scene-item__heading { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.scene-item__time { font-variant-numeric: tabular-nums; }
+.scene-item__caption {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.scene-item--failed .scene-item__caption { color: var(--color-danger); }
+.scene-item__actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-1); margin-top: auto; }
+.scene-item__delete:hover:not(:disabled) { color: var(--color-danger); }
+
+@media (max-width: 520px) {
+  .scene-item { grid-template-columns: 112px minmax(0, 1fr); gap: var(--space-3); }
+}
